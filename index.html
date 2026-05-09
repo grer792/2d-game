@@ -23,11 +23,11 @@
 </head>
 <body>
   <div id="hud">
-    <div>HP: <span id="ui-hp">100</span>/100 &nbsp; Food: <span id="ui-fm">10</span>/10</div>
+    <div>HP: <span id="ui-hp">100</span>/100 &nbsp; Hunger: <span id="ui-fm">10</span>/10</div>
     <div>Wood: <span id="ui-wood">0</span> &nbsp; Food: <span id="ui-food">0</span> &nbsp; Stone: <span id="ui-stone">0</span></div>
     <div id="ui-mode">Mode: EXPLORE</div>
   </div>
-  <div id="hint">WASD / Arrows: move &nbsp;|&nbsp; B: build wall (5 wood) &nbsp;|&nbsp; Click enemy wall: attack &nbsp;|&nbsp; ESC: cancel build</div>
+  <div id="hint">WASD: move | Click tree/rock/bush to gather | B: build wall (5 wood) | Click enemy wall: attack | ESC: cancel</div>
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
   <script type="module">
@@ -47,27 +47,35 @@
     });
     const db = getDatabase(firebaseApp);
 
+    // ── Constants ─────────────────────────────────────────────────────────────
     const PID      = 'p_' + Math.random().toString(36).substr(2, 9);
-    const PCOLORS  = [0xe74c3c, 0x3498db, 0x2ecc71, 0x9b59b6, 0xf39c12, 0x1abc9c];
+    const PCOLORS  = [0xe74c3c, 0x3498db, 0x9b59b6, 0xf39c12, 0x1abc9c, 0xe67e22];
     const MY_COLOR = PCOLORS[Math.floor(Math.random() * PCOLORS.length)];
 
-    const MAP_W    = 3000, MAP_H = 3000;
-    const SPEED    = 220;
-    const P_RAD    = 16;
-    const R_RAD    = 11;
-    const BLDG_SZ  = 44;
-    const ATK_RNG  = 90;
-    const ATK_DMG  = 15;
+    const MAP_W     = 3000;
+    const MAP_H     = 3000;
+    const SPEED     = 220;
+    const P_RAD     = 16;
+    const BLDG_SZ   = 44;
+    const ATK_RNG   = 90;
+    const ATK_DMG   = 15;
     const WALL_COST = 5;
-    const BLDG_HP  = 100;
-    const SYNC_MS  = 100;
-    const RES_N    = 60;
+    const BLDG_HP   = 100;
+    const SYNC_MS   = 100;
+    const RES_N     = 55;
     const FOOD_TICK = 20000;
-    const MAX_FOOD = 10;
-    const MAX_HP   = 100;
+    const MAX_FOOD  = 10;
+    const MAX_HP    = 100;
+    const HIT_CD    = 350;
 
-    const RCOL = { wood: 0x8B4513, food: 0x27ae60, stone: 0x7f8c8d };
+    // resource type definitions: maxHp, what loot they drop, hit radius
+    const RES_DEF = {
+      tree: { maxHp: 3, loot: 'wood',  hitR: 20 },
+      rock: { maxHp: 5, loot: 'stone', hitR: 16 },
+      bush: { maxHp: 1, loot: 'food',  hitR: 13 }
+    };
 
+    // ── Player state ──────────────────────────────────────────────────────────
     const state = {
       x: 300 + Math.random() * (MAP_W - 600),
       y: 300 + Math.random() * (MAP_H - 600),
@@ -75,42 +83,43 @@
       wood: 0, food: 0, stone: 0
     };
 
-    const others  = {};
-    const resSpr  = {};
-    const bldgSpr = {};
-    let buildMode = false;
+    const others     = {};
+    const resSpr     = {};
+    const bldgSpr    = {};
+    const resHitTime = {};
+    let buildMode    = false;
     let bPrev, lastSync = 0, foodTimer = 0;
 
+    // ── Scene ─────────────────────────────────────────────────────────────────
     class Game extends Phaser.Scene {
       constructor() { super('Game'); }
 
       create() {
-        // invisible texture for physics body
+        // tiny white square texture used as invisible physics body
         const tg = this.make.graphics({ x: 0, y: 0, add: false });
-        tg.fillStyle(0xffffff, 1);
-        tg.fillRect(0, 0, P_RAD * 2, P_RAD * 2);
+        tg.fillStyle(0xffffff, 1).fillRect(0, 0, P_RAD * 2, P_RAD * 2);
         tg.generateTexture('body', P_RAD * 2, P_RAD * 2);
         tg.destroy();
 
         this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
         this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
 
-        // white background + grid
+        // white background + subtle grid
         this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0xffffff).setDepth(0);
         const grid = this.add.graphics().setDepth(0);
-        grid.lineStyle(1, 0xe0e0e0, 1);
+        grid.lineStyle(1, 0xe8e8e8, 1);
         for (let x = 0; x <= MAP_W; x += 100) { grid.moveTo(x, 0); grid.lineTo(x, MAP_H); }
         for (let y = 0; y <= MAP_H; y += 100) { grid.moveTo(0, y); grid.lineTo(MAP_W, y); }
         grid.strokePath();
 
-        // player physics body (invisible) + visual
+        // player: invisible physics body + visible graphic
         this.pbody = this.physics.add.image(state.x, state.y, 'body');
         this.pbody.setAlpha(0.001).setCollideWorldBounds(true);
         this.pgfx = this.add.graphics().setDepth(4);
         this.redrawMe();
-
         this.cameras.main.startFollow(this.pbody, true, 0.12, 0.12);
 
+        // build mode preview ghost
         bPrev = this.add.graphics().setDepth(6).setVisible(false);
 
         this.keys = this.input.keyboard.addKeys({
@@ -118,26 +127,32 @@
           up2: 'UP', down2: 'DOWN', left2: 'LEFT', right2: 'RIGHT',
           b: 'B', esc: 'ESC'
         });
-
-        this.input.on('pointerdown', ptr => {
-          if (buildMode) this.placeWall(ptr);
-          else this.tryAttack(ptr);
-        });
+        this.input.on('pointerdown', ptr => this.handleClick(ptr));
 
         this.setupFirebase();
         window.addEventListener('beforeunload', () => remove(ref(db, 'players/' + PID)));
         this.updateHUD();
       }
 
+      // ── Firebase wiring ───────────────────────────────────────────────────────
       setupFirebase() {
         const sc = this;
 
         get(ref(db, 'resources')).then(snap => {
-          if (!snap.exists()) sc.seedMap();
+          const val = snap.val();
+          // reseed if empty, count too low, or old format (no hp field)
+          const keys = val ? Object.keys(val) : [];
+          const needsReseed = keys.length < 10 || (keys.length > 0 && val[keys[0]].hp === undefined);
+          if (needsReseed) {
+            remove(ref(db, 'resources')).then(() => sc.seedMap());
+          }
         });
 
         onChildAdded(ref(db, 'resources'), snap => {
           if (snap.val() && !resSpr[snap.key]) sc.mkRes(snap.key, snap.val());
+        });
+        onChildChanged(ref(db, 'resources'), snap => {
+          if (snap.val() && resSpr[snap.key]) sc.rxRes(snap.key, snap.val());
         });
         onChildRemoved(ref(db, 'resources'), snap => {
           if (resSpr[snap.key]) { resSpr[snap.key].destroy(); delete resSpr[snap.key]; }
@@ -168,67 +183,99 @@
         });
       }
 
-      // ── Draw helpers ──────────────────────────────────────────────────────────
-
+      // ── Drawing ───────────────────────────────────────────────────────────────
       redrawMe() {
         this.pgfx.clear();
-        this.pgfx.fillStyle(MY_COLOR, 1);
-        this.pgfx.fillCircle(0, 0, P_RAD);
-        this.pgfx.lineStyle(2, 0x000000, 1);
-        this.pgfx.strokeCircle(0, 0, P_RAD);
+        this.pgfx.fillStyle(MY_COLOR, 1).fillCircle(0, 0, P_RAD);
+        this.pgfx.lineStyle(2, 0x000000, 1).strokeCircle(0, 0, P_RAD);
       }
 
       drawOther(gfx, x, y, c) {
         gfx.clear();
-        gfx.fillStyle(c, 1);
-        gfx.fillCircle(x, y, P_RAD);
-        gfx.lineStyle(2, 0x000000, 1);
-        gfx.strokeCircle(x, y, P_RAD);
+        gfx.fillStyle(c, 1).fillCircle(x, y, P_RAD);
+        gfx.lineStyle(2, 0x000000, 1).strokeCircle(x, y, P_RAD);
       }
 
       drawRes(gfx, d) {
-        const c = RCOL[d.type] || 0x888888;
+        const { x, y, type } = d;
+        const hp    = d.hp    !== undefined ? d.hp    : 1;
+        const maxHp = d.maxHp !== undefined ? d.maxHp : 1;
+        const ratio = maxHp > 0 ? hp / maxHp : 1;
         gfx.clear();
-        gfx.fillStyle(c, 1);
-        gfx.lineStyle(2, 0x000000, 1);
-        if (d.type === 'wood') {
-          gfx.fillRect(d.x - R_RAD, d.y - R_RAD * 0.6, R_RAD * 2, R_RAD * 1.2);
-          gfx.strokeRect(d.x - R_RAD, d.y - R_RAD * 0.6, R_RAD * 2, R_RAD * 1.2);
-        } else if (d.type === 'food') {
-          gfx.fillCircle(d.x, d.y, R_RAD);
-          gfx.strokeCircle(d.x, d.y, R_RAD);
-        } else {
-          gfx.fillTriangle(d.x, d.y - R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
-          gfx.fillTriangle(d.x, d.y + R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
-          gfx.strokeTriangle(d.x, d.y - R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
-          gfx.strokeTriangle(d.x, d.y + R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
+
+        if (type === 'tree') {
+          // trunk
+          gfx.fillStyle(0x7d5a3c, 1);
+          gfx.fillRect(x - 5, y + 4, 10, 18);
+          gfx.lineStyle(1, 0x000000, 1);
+          gfx.strokeRect(x - 5, y + 4, 10, 18);
+          // canopy: green when healthy, yellow when half-damaged
+          gfx.fillStyle(ratio > 0.5 ? 0x27ae60 : 0xf0a500, 1);
+          gfx.fillCircle(x, y - 4, 20);
+          gfx.lineStyle(2, 0x000000, 1);
+          gfx.strokeCircle(x, y - 4, 20);
+
+        } else if (type === 'rock') {
+          gfx.fillStyle(0x95a5a6, 1);
+          gfx.fillCircle(x, y, 15);
+          gfx.lineStyle(2, 0x000000, 1);
+          gfx.strokeCircle(x, y, 15);
+          // crack when damaged
+          if (ratio < 0.8) {
+            gfx.lineStyle(1.5, 0x636e72, 1);
+            gfx.beginPath();
+            gfx.moveTo(x - 5, y - 7);
+            gfx.lineTo(x + 3, y + 5);
+            gfx.strokePath();
+          }
+
+        } else { // bush
+          gfx.fillStyle(0x2ecc71, 1);
+          gfx.fillCircle(x, y, 13);
+          gfx.lineStyle(2, 0x000000, 1);
+          gfx.strokeCircle(x, y, 13);
+          // small berries
+          gfx.fillStyle(0xe74c3c, 1);
+          gfx.fillCircle(x - 5, y - 4, 3);
+          gfx.fillCircle(x + 4, y - 6, 3);
+          gfx.fillCircle(x + 2, y + 4, 3);
+        }
+
+        // HP bar above if damaged
+        if (hp < maxHp) {
+          const bw = 32;
+          gfx.fillStyle(0x2ecc71, 1);
+          gfx.fillRect(x - bw / 2, y - 36, bw * ratio, 4);
+          gfx.fillStyle(0xe74c3c, 1);
+          gfx.fillRect(x - bw / 2 + bw * ratio, y - 36, bw * (1 - ratio), 4);
+          gfx.lineStyle(1, 0x000000, 1);
+          gfx.strokeRect(x - bw / 2, y - 36, bw, 4);
         }
       }
 
       drawBldg(gfx, d) {
-        const hp = d.hp / BLDG_HP;
+        const hpRatio = d.hp / BLDG_HP;
         const fill = d.ownerId === PID ? 0xdfe6e9 : 0xffdad2;
         const bx = d.x - BLDG_SZ / 2, by = d.y - BLDG_SZ / 2;
         gfx.clear();
-        gfx.fillStyle(fill, 1);
-        gfx.fillRect(bx, by, BLDG_SZ, BLDG_SZ);
-        gfx.lineStyle(2, 0x000000, 1);
-        gfx.strokeRect(bx, by, BLDG_SZ, BLDG_SZ);
-        gfx.fillStyle(0x2ecc71, 1);
-        gfx.fillRect(bx, by - 7, BLDG_SZ * hp, 4);
-        gfx.fillStyle(0xe74c3c, 1);
-        gfx.fillRect(bx + BLDG_SZ * hp, by - 7, BLDG_SZ * (1 - hp), 4);
-        gfx.lineStyle(1, 0x000000, 1);
-        gfx.strokeRect(bx, by - 7, BLDG_SZ, 4);
+        gfx.fillStyle(fill, 1).fillRect(bx, by, BLDG_SZ, BLDG_SZ);
+        gfx.lineStyle(2, 0x000000, 1).strokeRect(bx, by, BLDG_SZ, BLDG_SZ);
+        gfx.fillStyle(0x2ecc71, 1).fillRect(bx, by - 7, BLDG_SZ * hpRatio, 4);
+        gfx.fillStyle(0xe74c3c, 1).fillRect(bx + BLDG_SZ * hpRatio, by - 7, BLDG_SZ * (1 - hpRatio), 4);
+        gfx.lineStyle(1, 0x000000, 1).strokeRect(bx, by - 7, BLDG_SZ, 4);
       }
 
-      // ── Spawn helpers ─────────────────────────────────────────────────────────
-
+      // ── Spawn / update helpers ────────────────────────────────────────────────
       mkRes(id, d) {
         const g = this.add.graphics().setDepth(1);
         this.drawRes(g, d);
         g._d = d;
         resSpr[id] = g;
+      }
+
+      rxRes(id, d) {
+        resSpr[id]._d = d;
+        this.drawRes(resSpr[id], d);
       }
 
       mkOther(id, d) {
@@ -260,19 +307,89 @@
 
       seedMap() {
         const batch = {};
-        ['wood', 'food', 'stone'].forEach(type => {
+        Object.keys(RES_DEF).forEach(type => {
+          const maxHp = RES_DEF[type].maxHp;
           for (let i = 0; i < RES_N; i++) {
             batch[type + '_' + i] = {
-              x: 100 + Math.random() * (MAP_W - 200),
-              y: 100 + Math.random() * (MAP_H - 200),
-              type
+              x: 120 + Math.random() * (MAP_W - 240),
+              y: 120 + Math.random() * (MAP_H - 240),
+              type, hp: maxHp, maxHp
             };
           }
         });
         set(ref(db, 'resources'), batch);
       }
 
-      // ── Actions ───────────────────────────────────────────────────────────────
+      // ── Click handler ─────────────────────────────────────────────────────────
+      handleClick(ptr) {
+        if (buildMode) { this.placeWall(ptr); return; }
+        if (this.tryHitRes(ptr)) return;
+        this.tryAtkBldg(ptr);
+      }
+
+      tryHitRes(ptr) {
+        const px = this.pbody.x, py = this.pbody.y;
+        for (const [id, g] of Object.entries(resSpr)) {
+          const d = g._d;
+          if (!d || !RES_DEF[d.type]) continue;
+
+          // player must be within reach
+          const pdx = d.x - px, pdy = d.y - py;
+          if (Math.sqrt(pdx * pdx + pdy * pdy) > ATK_RNG + 30) continue;
+
+          // click must land on the resource
+          const hitR = RES_DEF[d.type].hitR;
+          const cy   = d.type === 'tree' ? d.y - 4 : d.y;  // tree canopy center
+          const cdx  = ptr.worldX - d.x;
+          const cdy  = ptr.worldY - cy;
+          if (Math.sqrt(cdx * cdx + cdy * cdy) > hitR + 8) continue;
+
+          // hit cooldown per resource
+          const now = Date.now();
+          if (resHitTime[id] && now - resHitTime[id] < HIT_CD) continue;
+          resHitTime[id] = now;
+
+          const hp    = d.hp !== undefined ? d.hp : 1;
+          const newHp = hp - 1;
+
+          if (newHp <= 0) {
+            // destroyed — give loot immediately, clean up locally right away
+            const loot = RES_DEF[d.type].loot;
+            state[loot]++;
+            if (loot === 'food') state.food_meter = Math.min(MAX_FOOD, state.food_meter + 3);
+            this.updateHUD();
+            g.destroy();
+            delete resSpr[id];
+            delete resHitTime[id];
+            remove(ref(db, 'resources/' + id));
+            this.pop(d.x, d.y - 40, '+1 ' + loot, '#000');
+          } else {
+            // damaged — update Firebase; onChildChanged redraws for all players
+            update(ref(db, 'resources/' + id), { hp: newHp });
+            this.pop(d.x, d.y - 28, '  *chop*', '#5d4037');
+          }
+          return true;
+        }
+        return false;
+      }
+
+      tryAtkBldg(ptr) {
+        const px = this.pbody.x, py = this.pbody.y;
+        for (const [id, g] of Object.entries(bldgSpr)) {
+          const d = g._d;
+          if (d.ownerId === PID) continue;
+          const dx = d.x - px, dy = d.y - py;
+          if (Math.sqrt(dx * dx + dy * dy) > ATK_RNG) continue;
+          if (Math.abs(ptr.worldX - d.x) < BLDG_SZ / 2 + 6 &&
+              Math.abs(ptr.worldY - d.y) < BLDG_SZ / 2 + 6) {
+            const newHp = d.hp - ATK_DMG;
+            if (newHp <= 0) remove(ref(db, 'buildings/' + id));
+            else update(ref(db, 'buildings/' + id), { hp: newHp });
+            this.pop(d.x, d.y - 24, '-' + ATK_DMG, '#e74c3c');
+            return;
+          }
+        }
+      }
 
       placeWall(ptr) {
         if (state.wood < WALL_COST) {
@@ -285,43 +402,8 @@
         set(ref(db, 'buildings/' + id), {
           x: Math.round(ptr.worldX),
           y: Math.round(ptr.worldY),
-          type: 'wall',
-          ownerId: PID,
-          hp: BLDG_HP
+          type: 'wall', ownerId: PID, hp: BLDG_HP
         });
-      }
-
-      tryAttack(ptr) {
-        const px = this.pbody.x, py = this.pbody.y;
-        for (const [id, g] of Object.entries(bldgSpr)) {
-          const d = g._d;
-          if (d.ownerId === PID) continue;
-          const dx = d.x - px, dy = d.y - py;
-          if (Math.sqrt(dx * dx + dy * dy) > ATK_RNG + BLDG_SZ) continue;
-          if (Math.abs(ptr.worldX - d.x) < BLDG_SZ / 2 + 6 &&
-              Math.abs(ptr.worldY - d.y) < BLDG_SZ / 2 + 6) {
-            const newHp = d.hp - ATK_DMG;
-            if (newHp <= 0) remove(ref(db, 'buildings/' + id));
-            else update(ref(db, 'buildings/' + id), { hp: newHp });
-            this.pop(d.x, d.y - 24, '-' + ATK_DMG, '#e74c3c');
-            return;
-          }
-        }
-      }
-
-      collectRes() {
-        const px = this.pbody.x, py = this.pbody.y;
-        for (const [id, g] of Object.entries(resSpr)) {
-          const d = g._d;
-          const dx = d.x - px, dy = d.y - py;
-          if (Math.sqrt(dx * dx + dy * dy) < P_RAD + R_RAD + 4) {
-            state[d.type]++;
-            if (d.type === 'food') state.food_meter = Math.min(MAX_FOOD, state.food_meter + 3);
-            this.pop(px, py - 36, '+1 ' + d.type, '#222');
-            this.updateHUD();
-            remove(ref(db, 'resources/' + id));
-          }
-        }
       }
 
       pop(x, y, msg, color) {
@@ -341,11 +423,10 @@
         document.getElementById('ui-food').textContent  = state.food;
         document.getElementById('ui-stone').textContent = state.stone;
         document.getElementById('ui-mode').textContent  =
-          'Mode: ' + (buildMode ? 'BUILD  (5 wood/wall)' : 'EXPLORE');
+          'Mode: ' + (buildMode ? 'BUILD  (5 wood per wall)' : 'EXPLORE');
       }
 
-      // ── Main loop ─────────────────────────────────────────────────────────────
-
+      // ── Game loop ─────────────────────────────────────────────────────────────
       update(time, delta) {
         const k = this.keys;
         let vx = 0, vy = 0;
@@ -380,8 +461,7 @@
           bPrev.strokeRect(p.worldX - BLDG_SZ / 2, p.worldY - BLDG_SZ / 2, BLDG_SZ, BLDG_SZ);
         }
 
-        this.collectRes();
-
+        // hunger drain
         foodTimer += delta;
         if (foodTimer >= FOOD_TICK) {
           foodTimer = 0;
@@ -393,6 +473,7 @@
           this.updateHUD();
         }
 
+        // sync position to Firebase
         if (time - lastSync > SYNC_MS) {
           lastSync = time;
           set(ref(db, 'players/' + PID), {
