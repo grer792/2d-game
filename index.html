@@ -6,7 +6,7 @@
   <title>Survival</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #f0ece2; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    body { background: #4a8a3a; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
 
     #hud {
       position: fixed; top: 12px; left: 12px;
@@ -310,7 +310,8 @@ class Game extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(99000);
 
     this.redrawMe();
-    this.cameras.main.startFollow(this.pbody, true, 0.1, 0.1);
+    this.cameras.main.startFollow(this.pbody, true, 0.08, 0.08);
+    this.cameras.main.setZoom(1.8);
 
     bPrev = this.add.graphics().setDepth(98000).setVisible(false);
 
@@ -333,34 +334,13 @@ class Game extends Phaser.Scene {
   // ── Terrain ───────────────────────────────────────────────────────────────
   drawTerrain() {
     const bg = this.add.graphics().setDepth(-10);
-    bg.fillStyle(0xf5f1e8, 1).fillRect(0, 0, MAP_W, MAP_H);
+    bg.fillStyle(0x4a8a3a, 1).fillRect(0, 0, MAP_W, MAP_H);
 
-    const r = seededRand(9182);
-    // scattered ground patches — grass, sand, dirt
-    const patches = [
-      { n:100, col:0xe8dfc8, minR:50, maxR:160 },
-      { n:70,  col:0xd9cfb4, minR:30, maxR:90  },
-      { n:50,  col:0xc8bc9c, minR:20, maxR:60  },
-      { n:30,  col:0xe2d8bc, minR:15, maxR:45  },
-    ];
-    patches.forEach(({ n, col, minR, maxR }) => {
-      bg.fillStyle(col, 1);
-      for (let i = 0; i < n; i++) {
-        const x  = r() * MAP_W, y  = r() * MAP_H;
-        const rx = minR + r() * (maxR - minR);
-        bg.fillEllipse(x, y, rx * 2, rx * (0.55 + r() * 0.6));
-      }
-    });
-
-    // pebble dots
-    bg.fillStyle(0xc0b898, 1);
-    for (let i = 0; i < 400; i++) bg.fillCircle(r() * MAP_W, r() * MAP_H, 1.5 + r() * 2);
-
-    // subtle grid
+    // subtle darker green grid — just enough to give sense of distance
     const grid = this.add.graphics().setDepth(-9);
-    grid.lineStyle(1, 0xe0d8c8, 0.6);
-    for (let x = 0; x <= MAP_W; x += 60) { grid.moveTo(x,0); grid.lineTo(x, MAP_H); }
-    for (let y = 0; y <= MAP_H; y += 60) { grid.moveTo(0,y); grid.lineTo(MAP_W, y); }
+    grid.lineStyle(1, 0x3d7830, 0.5);
+    for (let x = 0; x <= MAP_W; x += 80) { grid.moveTo(x, 0); grid.lineTo(x, MAP_H); }
+    for (let y = 0; y <= MAP_H; y += 80) { grid.moveTo(0, y); grid.lineTo(MAP_W, y); }
     grid.strokePath();
   }
 
@@ -747,9 +727,11 @@ class Game extends Phaser.Scene {
     });
   }
 
-  // ── Wall collision ────────────────────────────────────────────────────────
+  // ── Collision: walls, fences, doors, trees, rocks ────────────────────────
   resolveWalls() {
     let px = this.pbody.x, py = this.pbody.y;
+
+    // buildings (AABB vs circle)
     for (const g of Object.values(bldgSpr)) {
       const d = g._d;
       if (d.type !== 'wall' && d.type !== 'door') continue;
@@ -766,6 +748,29 @@ class Game extends Phaser.Scene {
         py += (dy / dist) * push;
       }
     }
+
+    // trees and rocks (circle vs circle)
+    for (const g of Object.values(resSpr)) {
+      const d = g._d;
+      // tree: collide with trunk base; rock: collide with main boulder
+      let cx, cy, colR;
+      if (d.type === 'tree') {
+        cx = d.x; cy = d.y + 12; colR = 9;
+      } else if (d.type === 'rock') {
+        cx = d.x - 2; cy = d.y; colR = 15;
+      } else {
+        continue; // bushes don't block
+      }
+      const dx = px - cx, dy = py - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const minD = P_RAD + colR;
+      if (dist < minD && dist > 0.01) {
+        const push = minD - dist;
+        px += (dx / dist) * push;
+        py += (dy / dist) * push;
+      }
+    }
+
     px = Math.max(P_RAD, Math.min(MAP_W - P_RAD, px));
     py = Math.max(P_RAD, Math.min(MAP_H - P_RAD, py));
     this.pbody.setPosition(px, py);
@@ -927,7 +932,7 @@ new Phaser.Game({
   type: Phaser.AUTO,
   width: window.innerWidth,
   height: window.innerHeight,
-  backgroundColor: '#f5f1e8',
+  backgroundColor: '#4a8a3a',
   physics: { default: 'arcade', arcade: { debug: false } },
   scene: Game
 });
