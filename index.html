@@ -6,28 +6,66 @@
   <title>Survival</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; overflow: hidden; }
+    body { background: #3d6b2a; overflow: hidden; }
     #hud {
       position: fixed; top: 10px; left: 10px;
-      background: rgba(255,255,255,0.95); border: 2px solid #000;
-      padding: 8px 14px; font-family: monospace; font-size: 13px;
-      z-index: 10; line-height: 1.8; pointer-events: none;
+      background: rgba(0,0,0,0.72); border: 1px solid #555;
+      padding: 10px 16px; font-family: 'Courier New', monospace; font-size: 13px;
+      color: #ccc; z-index: 10; line-height: 2; pointer-events: none;
     }
+    #hud b { color: #fff; }
+    #hud .bar { display: inline-block; width: 90px; height: 8px;
+      background: #333; vertical-align: middle; margin: 0 4px; }
+    #hud .bar-fill { height: 100%; transition: width 0.3s; }
+    #scores {
+      position: fixed; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.72); border: 1px solid #555;
+      padding: 8px 14px; font-family: 'Courier New', monospace; font-size: 12px;
+      color: #ccc; z-index: 10; line-height: 1.9; pointer-events: none; min-width: 150px;
+    }
+    #scores .title { color: #f0c040; margin-bottom: 2px; }
     #hint {
-      position: fixed; bottom: 10px; left: 10px;
-      background: rgba(255,255,255,0.95); border: 2px solid #000;
-      padding: 6px 12px; font-family: monospace; font-size: 11px;
-      z-index: 10; pointer-events: none;
+      position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.72); border: 1px solid #555;
+      padding: 6px 18px; font-family: 'Courier New', monospace; font-size: 11px;
+      color: #aaa; z-index: 10; pointer-events: none; white-space: nowrap;
     }
+    #build-bar {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); border: 1px solid #666;
+      padding: 6px 18px; font-family: 'Courier New', monospace; font-size: 12px;
+      color: #aaa; z-index: 10; pointer-events: none; display: none; white-space: nowrap;
+    }
+    .bsel { color: #f0c040 !important; }
   </style>
 </head>
 <body>
   <div id="hud">
-    <div>HP: <span id="ui-hp">100</span>/100 &nbsp; Hunger: <span id="ui-fm">10</span>/10</div>
-    <div>Wood: <span id="ui-wood">0</span> &nbsp; Food: <span id="ui-food">0</span> &nbsp; Stone: <span id="ui-stone">0</span></div>
-    <div id="ui-mode">Mode: EXPLORE</div>
+    <div>
+      HP&nbsp;
+      <span class="bar"><span id="hp-fill" class="bar-fill" style="background:#e74c3c;width:100%"></span></span>
+      <b id="ui-hp">100</b>
+    </div>
+    <div>
+      Hunger&nbsp;
+      <span class="bar"><span id="hunger-fill" class="bar-fill" style="background:#f39c12;width:100%"></span></span>
+      <b id="ui-fm">10</b>
+    </div>
+    <div>Wood <b id="ui-wood">0</b> &nbsp; Stone <b id="ui-stone">0</b> &nbsp; Food <b id="ui-food">0</b></div>
+    <div>Score <b id="ui-score">0</b> &nbsp; <span id="ui-mode" style="color:#7ec8e3">EXPLORE</span></div>
   </div>
-  <div id="hint">WASD: move | Click tree/rock/bush to gather | B: build wall (5 wood) | Click enemy wall: attack | ESC: cancel</div>
+
+  <div id="scores">
+    <div class="title">LEADERBOARD</div>
+    <div id="score-list">—</div>
+  </div>
+
+  <div id="build-bar">
+    <span id="b1">[1] Wall&nbsp;5w</span> &nbsp;&nbsp;
+    <span id="b2">[2] Door&nbsp;3w</span> &nbsp;&nbsp;
+    <span id="b3">[3] Campfire&nbsp;3w</span>
+  </div>
+  <div id="hint">WASD move &nbsp;|&nbsp; Click resource: gather &nbsp;|&nbsp; B: build &nbsp;|&nbsp; Click enemy wall: attack</div>
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
   <script type="module">
@@ -49,84 +87,99 @@
 
     // ── Constants ─────────────────────────────────────────────────────────────
     const PID      = 'p_' + Math.random().toString(36).substr(2, 9);
+    const PNAME    = PID.substr(-4).toUpperCase();
     const PCOLORS  = [0xe74c3c, 0x3498db, 0x9b59b6, 0xf39c12, 0x1abc9c, 0xe67e22];
     const MY_COLOR = PCOLORS[Math.floor(Math.random() * PCOLORS.length)];
 
-    const MAP_W     = 3000;
-    const MAP_H     = 3000;
-    const SPEED     = 220;
-    const P_RAD     = 16;
-    const BLDG_SZ   = 44;
-    const ATK_RNG   = 90;
-    const ATK_DMG   = 15;
-    const WALL_COST = 5;
-    const BLDG_HP   = 100;
-    const SYNC_MS   = 100;
-    const RES_N     = 55;
-    const FOOD_TICK = 20000;
-    const MAX_FOOD  = 10;
-    const MAX_HP    = 100;
-    const HIT_CD    = 350;
+    const MAP_W    = 3000, MAP_H = 3000;
+    const SPEED    = 220;
+    const P_RAD    = 14;
+    const BLDG_SZ  = 40;
+    const ATK_RNG  = 85;
+    const ATK_DMG  = 15;
+    const SYNC_MS  = 100;
+    const RES_N    = 55;
+    const FOOD_TICK = 18000;
+    const MAX_FOOD = 10;
+    const MAX_HP   = 100;
+    const HIT_CD   = 320;
+    const FIRE_RNG = 65; // campfire healing range
 
-    // resource type definitions: maxHp, what loot they drop, hit radius
+    const COSTS = { wall: { wood: 5 }, door: { wood: 3 }, campfire: { wood: 3 } };
+    const BLDG_HP = { wall: 120, door: 60, campfire: 40 };
+
     const RES_DEF = {
-      tree: { maxHp: 3, loot: 'wood',  hitR: 20 },
-      rock: { maxHp: 5, loot: 'stone', hitR: 16 },
-      bush: { maxHp: 1, loot: 'food',  hitR: 13 }
+      tree: { maxHp: 3, loot: 'wood',  hitR: 22 },
+      rock: { maxHp: 5, loot: 'stone', hitR: 17 },
+      bush: { maxHp: 1, loot: 'food',  hitR: 14 }
     };
 
-    // ── Player state ──────────────────────────────────────────────────────────
+    // seeded rand — same terrain on every client
+    function mkRand(seed) {
+      let s = seed >>> 0;
+      return () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 0x100000000; };
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
     const state = {
-      x: 300 + Math.random() * (MAP_W - 600),
-      y: 300 + Math.random() * (MAP_H - 600),
+      x: 400 + Math.random() * (MAP_W - 800),
+      y: 400 + Math.random() * (MAP_H - 800),
       hp: MAX_HP, food_meter: MAX_FOOD,
-      wood: 0, food: 0, stone: 0
+      wood: 0, food: 0, stone: 0, score: 0,
+      dirX: 0, dirY: -1,
+      prevX: 0, prevY: 0
     };
 
-    const others     = {};
-    const resSpr     = {};
-    const bldgSpr    = {};
-    const resHitTime = {};
-    let buildMode    = false;
-    let bPrev, lastSync = 0, foodTimer = 0;
+    const others      = {};  // pid → { g, nameTag }
+    const playerData  = {};  // pid → full data for scoreboard
+    const resSpr      = {};  // id  → gfx
+    const bldgSpr     = {};  // id  → gfx (visual only)
+    const resHitTime  = {};
 
-    // ── Scene ─────────────────────────────────────────────────────────────────
+    let buildMode  = false;
+    let buildType  = 'wall'; // wall | door | campfire
+    let bPrev;
+    let lastSync   = 0;
+    let foodTimer  = 0;
+    let fireTimer  = 0;
+    let scoreTimer = 0;
+
+    // ── Phaser Scene ──────────────────────────────────────────────────────────
     class Game extends Phaser.Scene {
       constructor() { super('Game'); }
 
       create() {
-        // tiny white square texture used as invisible physics body
-        const tg = this.make.graphics({ x: 0, y: 0, add: false });
-        tg.fillStyle(0xffffff, 1).fillRect(0, 0, P_RAD * 2, P_RAD * 2);
-        tg.generateTexture('body', P_RAD * 2, P_RAD * 2);
-        tg.destroy();
+        // textures
+        const mk = (key, w, h) => {
+          const g = this.make.graphics({ add: false });
+          g.fillStyle(0xffffff, 1).fillRect(0, 0, w, h);
+          g.generateTexture(key, w, h); g.destroy();
+        };
+        mk('body', P_RAD * 2, P_RAD * 2);
 
         this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
         this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
 
-        // white background + subtle grid
-        this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0xffffff).setDepth(0);
-        const grid = this.add.graphics().setDepth(0);
-        grid.lineStyle(1, 0xe8e8e8, 1);
-        for (let x = 0; x <= MAP_W; x += 100) { grid.moveTo(x, 0); grid.lineTo(x, MAP_H); }
-        for (let y = 0; y <= MAP_H; y += 100) { grid.moveTo(0, y); grid.lineTo(MAP_W, y); }
-        grid.strokePath();
+        this.drawTerrain();
 
-        // player: invisible physics body + visible graphic
+        // player
         this.pbody = this.physics.add.image(state.x, state.y, 'body');
         this.pbody.setAlpha(0.001).setCollideWorldBounds(true);
-        this.pgfx = this.add.graphics().setDepth(4);
+        this.pgfx = this.add.graphics().setDepth(5);
         this.redrawMe();
-        this.cameras.main.startFollow(this.pbody, true, 0.12, 0.12);
+        this.cameras.main.startFollow(this.pbody, true, 0.1, 0.1);
 
-        // build mode preview ghost
-        bPrev = this.add.graphics().setDepth(6).setVisible(false);
+        bPrev = this.add.graphics().setDepth(7).setVisible(false);
 
         this.keys = this.input.keyboard.addKeys({
-          up: 'W', down: 'S', left: 'A', right: 'D',
-          up2: 'UP', down2: 'DOWN', left2: 'LEFT', right2: 'RIGHT',
-          b: 'B', esc: 'ESC'
+          up:'W', down:'S', left:'A', right:'D',
+          up2:'UP', down2:'DOWN', left2:'LEFT', right2:'RIGHT',
+          b:'B', esc:'ESC',
+          k1: Phaser.Input.Keyboard.KeyCodes.ONE,
+          k2: Phaser.Input.Keyboard.KeyCodes.TWO,
+          k3: Phaser.Input.Keyboard.KeyCodes.THREE
         });
+
         this.input.on('pointerdown', ptr => this.handleClick(ptr));
 
         this.setupFirebase();
@@ -134,66 +187,65 @@
         this.updateHUD();
       }
 
-      // ── Firebase wiring ───────────────────────────────────────────────────────
-      setupFirebase() {
-        const sc = this;
+      // ── Terrain ───────────────────────────────────────────────────────────────
+      drawTerrain() {
+        const bg = this.add.graphics().setDepth(-2);
+        bg.fillStyle(0x5a8c38, 1).fillRect(0, 0, MAP_W, MAP_H);
 
-        get(ref(db, 'resources')).then(snap => {
-          const val = snap.val();
-          // reseed if empty, count too low, or old format (no hp field)
-          const keys = val ? Object.keys(val) : [];
-          const needsReseed = keys.length < 10 || (keys.length > 0 && val[keys[0]].hp === undefined);
-          if (needsReseed) {
-            remove(ref(db, 'resources')).then(() => sc.seedMap());
+        const r = mkRand(7777);
+        // scattered grass patches
+        const patches = [
+          { n: 120, col: 0x4d7c2e, minR: 40, maxR: 130 },
+          { n: 80,  col: 0x6aa33f, minR: 25, maxR:  80 },
+          { n: 50,  col: 0x3d6922, minR: 20, maxR:  60 },
+          { n: 35,  col: 0x9c8040, minR: 18, maxR:  50 }, // dirt
+          { n: 20,  col: 0x7a6030, minR: 12, maxR:  35 }, // mud
+        ];
+        patches.forEach(({ n, col, minR, maxR }) => {
+          bg.fillStyle(col, 1);
+          for (let i = 0; i < n; i++) {
+            const x  = r() * MAP_W;
+            const y  = r() * MAP_H;
+            const rx = minR + r() * (maxR - minR);
+            const ry = rx * (0.5 + r() * 0.7);
+            bg.fillEllipse(x, y, rx * 2, ry * 2);
           }
         });
 
-        onChildAdded(ref(db, 'resources'), snap => {
-          if (snap.val() && !resSpr[snap.key]) sc.mkRes(snap.key, snap.val());
-        });
-        onChildChanged(ref(db, 'resources'), snap => {
-          if (snap.val() && resSpr[snap.key]) sc.rxRes(snap.key, snap.val());
-        });
-        onChildRemoved(ref(db, 'resources'), snap => {
-          if (resSpr[snap.key]) { resSpr[snap.key].destroy(); delete resSpr[snap.key]; }
-        });
-
-        onChildAdded(ref(db, 'players'), snap => {
-          if (snap.key !== PID && snap.val()) sc.mkOther(snap.key, snap.val());
-        });
-        onChildChanged(ref(db, 'players'), snap => {
-          if (snap.key !== PID && snap.val()) sc.mvOther(snap.key, snap.val());
-        });
-        onChildRemoved(ref(db, 'players'), snap => {
-          if (others[snap.key]) {
-            others[snap.key].g.destroy();
-            others[snap.key].l.destroy();
-            delete others[snap.key];
-          }
-        });
-
-        onChildAdded(ref(db, 'buildings'), snap => {
-          if (snap.val() && !bldgSpr[snap.key]) sc.mkBldg(snap.key, snap.val());
-        });
-        onChildChanged(ref(db, 'buildings'), snap => {
-          if (snap.val() && bldgSpr[snap.key]) sc.rxBldg(snap.key, snap.val());
-        });
-        onChildRemoved(ref(db, 'buildings'), snap => {
-          if (bldgSpr[snap.key]) { bldgSpr[snap.key].destroy(); delete bldgSpr[snap.key]; }
-        });
+        // grid — very subtle
+        const grid = this.add.graphics().setDepth(-1);
+        grid.lineStyle(1, 0x3a6b22, 0.45);
+        for (let x = 0; x <= MAP_W; x += 80) { grid.moveTo(x, 0); grid.lineTo(x, MAP_H); }
+        for (let y = 0; y <= MAP_H; y += 80) { grid.moveTo(0, y); grid.lineTo(MAP_W, y); }
+        grid.strokePath();
       }
 
       // ── Drawing ───────────────────────────────────────────────────────────────
       redrawMe() {
-        this.pgfx.clear();
-        this.pgfx.fillStyle(MY_COLOR, 1).fillCircle(0, 0, P_RAD);
-        this.pgfx.lineStyle(2, 0x000000, 1).strokeCircle(0, 0, P_RAD);
+        const g = this.pgfx;
+        g.clear();
+        // shadow
+        g.fillStyle(0x000000, 0.18).fillEllipse(2, P_RAD + 4, P_RAD * 2.2, 8);
+        // body
+        g.fillStyle(MY_COLOR, 1).fillCircle(0, 0, P_RAD);
+        g.lineStyle(2, 0x000000, 0.9).strokeCircle(0, 0, P_RAD);
+        // direction arrow
+        const ang = Math.atan2(state.dirY, state.dirX);
+        const tx = Math.cos(ang) * (P_RAD - 2);
+        const ty = Math.sin(ang) * (P_RAD - 2);
+        const lx = Math.cos(ang + 2.5) * 5;
+        const ly = Math.sin(ang + 2.5) * 5;
+        const rx = Math.cos(ang - 2.5) * 5;
+        const ry2 = Math.sin(ang - 2.5) * 5;
+        g.fillStyle(0x000000, 0.5);
+        g.fillTriangle(tx, ty, lx, ly, rx, ry2);
       }
 
       drawOther(gfx, x, y, c) {
         gfx.clear();
+        gfx.fillStyle(0x000000, 0.18).fillEllipse(x + 2, y + P_RAD + 4, P_RAD * 2.2, 8);
         gfx.fillStyle(c, 1).fillCircle(x, y, P_RAD);
-        gfx.lineStyle(2, 0x000000, 1).strokeCircle(x, y, P_RAD);
+        gfx.lineStyle(2, 0x000000, 0.9).strokeCircle(x, y, P_RAD);
       }
 
       drawRes(gfx, d) {
@@ -204,106 +256,154 @@
         gfx.clear();
 
         if (type === 'tree') {
+          // shadow
+          gfx.fillStyle(0x000000, 0.15).fillEllipse(x + 3, y + 22, 36, 12);
           // trunk
-          gfx.fillStyle(0x7d5a3c, 1);
-          gfx.fillRect(x - 5, y + 4, 10, 18);
-          gfx.lineStyle(1, 0x000000, 1);
-          gfx.strokeRect(x - 5, y + 4, 10, 18);
-          // canopy: green when healthy, yellow when half-damaged
-          gfx.fillStyle(ratio > 0.5 ? 0x27ae60 : 0xf0a500, 1);
-          gfx.fillCircle(x, y - 4, 20);
-          gfx.lineStyle(2, 0x000000, 1);
-          gfx.strokeCircle(x, y - 4, 20);
+          gfx.fillStyle(0x5c3310, 1).fillRect(x - 5, y + 2, 10, 20);
+          gfx.fillStyle(0x7a4620, 1).fillRect(x - 3, y + 2, 4, 20);
+          gfx.lineStyle(1.5, 0x2a1a08, 1).strokeRect(x - 5, y + 2, 10, 20);
+          // canopy layers (back → front)
+          const leafDark  = ratio > 0.5 ? 0x236b23 : 0x7a7a1a;
+          const leafMid   = ratio > 0.5 ? 0x2d8c2d : 0x9a9a22;
+          const leafLight = ratio > 0.5 ? 0x44b044 : 0xb8b82e;
+          gfx.fillStyle(leafDark,  1).fillCircle(x - 5, y - 4, 16);
+          gfx.fillStyle(leafDark,  1).fillCircle(x + 5, y - 2, 14);
+          gfx.fillStyle(leafMid,   1).fillCircle(x,     y - 8, 18);
+          gfx.fillStyle(leafLight, 1).fillCircle(x - 2, y - 16, 11);
+          gfx.lineStyle(2, 0x1a4d1a, 1).strokeCircle(x, y - 8, 18);
 
         } else if (type === 'rock') {
-          gfx.fillStyle(0x95a5a6, 1);
-          gfx.fillCircle(x, y, 15);
-          gfx.lineStyle(2, 0x000000, 1);
-          gfx.strokeCircle(x, y, 15);
-          // crack when damaged
+          // shadow
+          gfx.fillStyle(0x000000, 0.18).fillEllipse(x + 4, y + 18, 38, 12);
+          // boulders
+          gfx.fillStyle(0x8796a0, 1).fillCircle(x - 3, y,     15);
+          gfx.fillStyle(0x9ba8b2, 1).fillCircle(x + 7, y - 2, 11);
+          gfx.fillStyle(0x7f8d96, 1).fillCircle(x - 2, y + 5, 10);
+          // highlight
+          gfx.fillStyle(0xb2c0c8, 1).fillCircle(x - 7, y - 6,  5);
+          gfx.lineStyle(2, 0x4a5560, 1);
+          gfx.strokeCircle(x - 3, y, 15);
+          // cracks when damaged
           if (ratio < 0.8) {
-            gfx.lineStyle(1.5, 0x636e72, 1);
+            gfx.lineStyle(1.5, 0x4a5560, 1);
             gfx.beginPath();
-            gfx.moveTo(x - 5, y - 7);
-            gfx.lineTo(x + 3, y + 5);
+            gfx.moveTo(x - 6, y - 8); gfx.lineTo(x + 1, y + 4);
+            gfx.moveTo(x + 2, y - 4); gfx.lineTo(x + 8, y + 2);
             gfx.strokePath();
           }
 
         } else { // bush
-          gfx.fillStyle(0x2ecc71, 1);
-          gfx.fillCircle(x, y, 13);
-          gfx.lineStyle(2, 0x000000, 1);
-          gfx.strokeCircle(x, y, 13);
-          // small berries
-          gfx.fillStyle(0xe74c3c, 1);
-          gfx.fillCircle(x - 5, y - 4, 3);
+          // shadow
+          gfx.fillStyle(0x000000, 0.15).fillEllipse(x + 2, y + 16, 30, 9);
+          // three leaf clusters
+          gfx.fillStyle(0x1f8f3a, 1).fillCircle(x - 6, y + 2, 10);
+          gfx.fillStyle(0x27ae60, 1).fillCircle(x + 5, y + 1, 10);
+          gfx.fillStyle(0x2ecc71, 1).fillCircle(x,     y - 4, 12);
+          gfx.lineStyle(1.5, 0x145a28, 1).strokeCircle(x, y - 4, 12);
+          // berries
+          gfx.lineStyle(0);
+          gfx.fillStyle(0xc0392b, 1);
+          gfx.fillCircle(x - 4, y - 2, 3);
           gfx.fillCircle(x + 4, y - 6, 3);
-          gfx.fillCircle(x + 2, y + 4, 3);
+          gfx.fillStyle(0xe74c3c, 1).fillCircle(x + 1, y + 2, 2.5);
         }
 
-        // HP bar above if damaged
+        // HP bar if damaged
         if (hp < maxHp) {
           const bw = 32;
-          gfx.fillStyle(0x2ecc71, 1);
-          gfx.fillRect(x - bw / 2, y - 36, bw * ratio, 4);
-          gfx.fillStyle(0xe74c3c, 1);
-          gfx.fillRect(x - bw / 2 + bw * ratio, y - 36, bw * (1 - ratio), 4);
-          gfx.lineStyle(1, 0x000000, 1);
-          gfx.strokeRect(x - bw / 2, y - 36, bw, 4);
+          gfx.fillStyle(0x27ae60, 1).fillRect(x - bw/2, y - 38, bw * ratio, 4);
+          gfx.fillStyle(0xc0392b, 1).fillRect(x - bw/2 + bw * ratio, y - 38, bw * (1-ratio), 4);
+          gfx.lineStyle(1, 0x000000, 0.6).strokeRect(x - bw/2, y - 38, bw, 4);
         }
       }
 
       drawBldg(gfx, d) {
-        const hpRatio = d.hp / BLDG_HP;
-        const fill = d.ownerId === PID ? 0xdfe6e9 : 0xffdad2;
-        const bx = d.x - BLDG_SZ / 2, by = d.y - BLDG_SZ / 2;
+        const { x, y, type, hp, ownerId } = d;
+        const maxHp  = BLDG_HP[type] || 100;
+        const hpR    = Math.max(0, hp / maxHp);
+        const mine   = ownerId === PID;
         gfx.clear();
-        gfx.fillStyle(fill, 1).fillRect(bx, by, BLDG_SZ, BLDG_SZ);
-        gfx.lineStyle(2, 0x000000, 1).strokeRect(bx, by, BLDG_SZ, BLDG_SZ);
-        gfx.fillStyle(0x2ecc71, 1).fillRect(bx, by - 7, BLDG_SZ * hpRatio, 4);
-        gfx.fillStyle(0xe74c3c, 1).fillRect(bx + BLDG_SZ * hpRatio, by - 7, BLDG_SZ * (1 - hpRatio), 4);
-        gfx.lineStyle(1, 0x000000, 1).strokeRect(bx, by - 7, BLDG_SZ, 4);
+
+        if (type === 'wall') {
+          // stone wall
+          const c = mine ? 0xb0bec5 : 0x9e9e9e;
+          gfx.fillStyle(c, 1).fillRect(x - 20, y - 20, 40, 40);
+          // brick lines
+          gfx.lineStyle(1, 0x78909c, 1);
+          for (let r = y - 20; r < y + 20; r += 10) gfx.moveTo(x-20,r), gfx.lineTo(x+20,r);
+          gfx.moveTo(x, y-20); gfx.moveTo(x-10, y-10); gfx.lineTo(x+20, y-10);
+          gfx.moveTo(x-20, y);  gfx.lineTo(x+10, y);
+          gfx.moveTo(x-10, y+10); gfx.lineTo(x+20, y+10);
+          gfx.strokePath();
+          gfx.lineStyle(2, mine ? 0x546e7a : 0x616161, 1).strokeRect(x-20, y-20, 40, 40);
+
+        } else if (type === 'door') {
+          // wooden door frame
+          gfx.fillStyle(mine ? 0x8d6534 : 0x795548, 1).fillRect(x-20, y-20, 40, 40);
+          // planks
+          gfx.lineStyle(1, mine ? 0x6d4c20 : 0x5d4037, 1);
+          for (let row = y - 14; row <= y + 14; row += 9) {
+            gfx.moveTo(x-17, row); gfx.lineTo(x+17, row);
+          }
+          gfx.strokePath();
+          // opening arch
+          gfx.fillStyle(mine ? 0xd4a065 : 0xc49048, 0.35);
+          gfx.fillRect(x-8, y-18, 16, 36);
+          gfx.lineStyle(2, mine ? 0x5d3a10 : 0x4e342e, 1).strokeRect(x-20, y-20, 40, 40);
+          // handle
+          gfx.fillStyle(0xf5c842, 1).fillCircle(mine ? x + 6 : x - 6, y, 3);
+
+        } else if (type === 'campfire') {
+          // stone ring
+          const angles = [0, 1.05, 2.09, 3.14, 4.19, 5.24];
+          angles.forEach(a => {
+            gfx.fillStyle(0x78909c, 1).fillCircle(x + Math.cos(a)*13, y + Math.sin(a)*13, 5);
+          });
+          // embers / coals
+          gfx.fillStyle(0x4a2010, 1).fillEllipse(x, y, 20, 12);
+          // fire layers
+          gfx.fillStyle(0xe65100, 1).fillTriangle(x-7, y+3, x+7, y+3, x, y-10);
+          gfx.fillStyle(0xf57c00, 1).fillTriangle(x-5, y+2, x+5, y+2, x-2, y-14);
+          gfx.fillStyle(0xffcc02, 1).fillTriangle(x-3, y+1, x+3, y+1, x+1, y-10);
+        }
+
+        // HP bar
+        gfx.fillStyle(0x27ae60, 1).fillRect(x-20, y-28, 40*hpR, 4);
+        gfx.fillStyle(0xc0392b, 1).fillRect(x-20+40*hpR, y-28, 40*(1-hpR), 4);
+        gfx.lineStyle(1, 0x000000, 0.5).strokeRect(x-20, y-28, 40, 4);
       }
 
       // ── Spawn / update helpers ────────────────────────────────────────────────
       mkRes(id, d) {
-        const g = this.add.graphics().setDepth(1);
-        this.drawRes(g, d);
-        g._d = d;
-        resSpr[id] = g;
+        const g = this.add.graphics().setDepth(2);
+        this.drawRes(g, d); g._d = d; resSpr[id] = g;
       }
-
-      rxRes(id, d) {
-        resSpr[id]._d = d;
-        this.drawRes(resSpr[id], d);
-      }
+      rxRes(id, d) { resSpr[id]._d = d; this.drawRes(resSpr[id], d); }
 
       mkOther(id, d) {
-        const g = this.add.graphics().setDepth(4);
-        this.drawOther(g, d.x, d.y, d.color);
-        const l = this.add.text(d.x, d.y - P_RAD - 10, id.substr(-4), {
-          fontSize: '10px', color: '#000', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(5);
+        const g = this.add.graphics().setDepth(5);
+        this.drawOther(g, d.x, d.y, d.color || 0x888888);
+        const l = this.add.text(d.x, d.y - P_RAD - 14, (d.name || id.substr(-4)), {
+          fontSize: '11px', color: '#fff',
+          stroke: '#000', strokeThickness: 3,
+          fontFamily: 'Courier New'
+        }).setOrigin(0.5).setDepth(6);
         others[id] = { g, l };
+        playerData[id] = d;
       }
-
       mvOther(id, d) {
+        playerData[id] = d;
         if (!others[id]) { this.mkOther(id, d); return; }
-        this.drawOther(others[id].g, d.x, d.y, d.color);
-        others[id].l.setPosition(d.x, d.y - P_RAD - 10);
+        this.drawOther(others[id].g, d.x, d.y, d.color || 0x888888);
+        others[id].l.setPosition(d.x, d.y - P_RAD - 14);
+        this.updateScoreboard();
       }
 
       mkBldg(id, d) {
-        const g = this.add.graphics().setDepth(2);
-        this.drawBldg(g, d);
-        g._d = d;
-        bldgSpr[id] = g;
+        const g = this.add.graphics().setDepth(3);
+        this.drawBldg(g, d); g._d = d; bldgSpr[id] = g;
       }
-
-      rxBldg(id, d) {
-        bldgSpr[id]._d = d;
-        this.drawBldg(bldgSpr[id], d);
-      }
+      rxBldg(id, d) { bldgSpr[id]._d = d; this.drawBldg(bldgSpr[id], d); }
 
       seedMap() {
         const batch = {};
@@ -311,8 +411,8 @@
           const maxHp = RES_DEF[type].maxHp;
           for (let i = 0; i < RES_N; i++) {
             batch[type + '_' + i] = {
-              x: 120 + Math.random() * (MAP_W - 240),
-              y: 120 + Math.random() * (MAP_H - 240),
+              x: 150 + Math.random() * (MAP_W - 300),
+              y: 150 + Math.random() * (MAP_H - 300),
               type, hp: maxHp, maxHp
             };
           }
@@ -320,9 +420,36 @@
         set(ref(db, 'resources'), batch);
       }
 
-      // ── Click handler ─────────────────────────────────────────────────────────
+      // ── Firebase ──────────────────────────────────────────────────────────────
+      setupFirebase() {
+        const sc = this;
+        get(ref(db, 'resources')).then(snap => {
+          const val = snap.val();
+          const keys = val ? Object.keys(val) : [];
+          if (keys.length < 10 || (keys.length && val[keys[0]].hp === undefined))
+            remove(ref(db, 'resources')).then(() => sc.seedMap());
+        });
+
+        onChildAdded(ref(db, 'resources'),   s => { if (s.val() && !resSpr[s.key])   sc.mkRes(s.key,  s.val()); });
+        onChildChanged(ref(db, 'resources'), s => { if (s.val() && resSpr[s.key])    sc.rxRes(s.key,  s.val()); });
+        onChildRemoved(ref(db, 'resources'), s => { if (resSpr[s.key]) { resSpr[s.key].destroy(); delete resSpr[s.key]; } });
+
+        onChildAdded(ref(db, 'players'),   s => { if (s.key !== PID && s.val()) sc.mkOther(s.key, s.val()); });
+        onChildChanged(ref(db, 'players'), s => { if (s.key !== PID && s.val()) sc.mvOther(s.key, s.val()); });
+        onChildRemoved(ref(db, 'players'), s => {
+          if (others[s.key]) { others[s.key].g.destroy(); others[s.key].l.destroy(); delete others[s.key]; }
+          delete playerData[s.key];
+          sc.updateScoreboard();
+        });
+
+        onChildAdded(ref(db, 'buildings'),   s => { if (s.val() && !bldgSpr[s.key]) sc.mkBldg(s.key, s.val()); });
+        onChildChanged(ref(db, 'buildings'), s => { if (s.val() && bldgSpr[s.key])  sc.rxBldg(s.key, s.val()); });
+        onChildRemoved(ref(db, 'buildings'), s => { if (bldgSpr[s.key]) { bldgSpr[s.key].destroy(); delete bldgSpr[s.key]; } });
+      }
+
+      // ── Actions ───────────────────────────────────────────────────────────────
       handleClick(ptr) {
-        if (buildMode) { this.placeWall(ptr); return; }
+        if (buildMode) { this.placeBuilding(ptr); return; }
         if (this.tryHitRes(ptr)) return;
         this.tryAtkBldg(ptr);
       }
@@ -332,41 +459,27 @@
         for (const [id, g] of Object.entries(resSpr)) {
           const d = g._d;
           if (!d || !RES_DEF[d.type]) continue;
-
-          // player must be within reach
           const pdx = d.x - px, pdy = d.y - py;
-          if (Math.sqrt(pdx * pdx + pdy * pdy) > ATK_RNG + 30) continue;
-
-          // click must land on the resource
-          const hitR = RES_DEF[d.type].hitR;
-          const cy   = d.type === 'tree' ? d.y - 4 : d.y;  // tree canopy center
-          const cdx  = ptr.worldX - d.x;
-          const cdy  = ptr.worldY - cy;
-          if (Math.sqrt(cdx * cdx + cdy * cdy) > hitR + 8) continue;
-
-          // hit cooldown per resource
+          if (Math.sqrt(pdx*pdx + pdy*pdy) > ATK_RNG + 30) continue;
+          const cy   = d.type === 'tree' ? d.y - 8 : d.y;
+          const cdx  = ptr.worldX - d.x, cdy = ptr.worldY - cy;
+          if (Math.sqrt(cdx*cdx + cdy*cdy) > RES_DEF[d.type].hitR + 8) continue;
           const now = Date.now();
           if (resHitTime[id] && now - resHitTime[id] < HIT_CD) continue;
           resHitTime[id] = now;
 
-          const hp    = d.hp !== undefined ? d.hp : 1;
-          const newHp = hp - 1;
-
-          if (newHp <= 0) {
-            // destroyed — give loot immediately, clean up locally right away
+          const hp = d.hp !== undefined ? d.hp : 1;
+          if (hp - 1 <= 0) {
             const loot = RES_DEF[d.type].loot;
-            state[loot]++;
+            state[loot]++; state.score++;
             if (loot === 'food') state.food_meter = Math.min(MAX_FOOD, state.food_meter + 3);
             this.updateHUD();
-            g.destroy();
-            delete resSpr[id];
-            delete resHitTime[id];
+            g.destroy(); delete resSpr[id]; delete resHitTime[id];
             remove(ref(db, 'resources/' + id));
-            this.pop(d.x, d.y - 40, '+1 ' + loot, '#000');
+            this.pop(d.x, d.y - 44, '+1 ' + loot, '#a5d6a7');
           } else {
-            // damaged — update Firebase; onChildChanged redraws for all players
-            update(ref(db, 'resources/' + id), { hp: newHp });
-            this.pop(d.x, d.y - 28, '  *chop*', '#5d4037');
+            update(ref(db, 'resources/' + id), { hp: hp - 1 });
+            this.pop(d.x, d.y - 30, '•chop•', '#8d6534');
           }
           return true;
         }
@@ -379,56 +492,111 @@
           const d = g._d;
           if (d.ownerId === PID) continue;
           const dx = d.x - px, dy = d.y - py;
-          if (Math.sqrt(dx * dx + dy * dy) > ATK_RNG) continue;
-          if (Math.abs(ptr.worldX - d.x) < BLDG_SZ / 2 + 6 &&
-              Math.abs(ptr.worldY - d.y) < BLDG_SZ / 2 + 6) {
+          if (Math.sqrt(dx*dx + dy*dy) > ATK_RNG) continue;
+          if (Math.abs(ptr.worldX - d.x) < 22 && Math.abs(ptr.worldY - d.y) < 22) {
             const newHp = d.hp - ATK_DMG;
-            if (newHp <= 0) remove(ref(db, 'buildings/' + id));
-            else update(ref(db, 'buildings/' + id), { hp: newHp });
-            this.pop(d.x, d.y - 24, '-' + ATK_DMG, '#e74c3c');
+            if (newHp <= 0) {
+              remove(ref(db, 'buildings/' + id));
+              state.score += 10; this.updateHUD();
+              this.pop(d.x, d.y - 24, 'DESTROYED!', '#e74c3c');
+            } else {
+              update(ref(db, 'buildings/' + id), { hp: newHp });
+              this.pop(d.x, d.y - 20, '-' + ATK_DMG, '#e74c3c');
+            }
             return;
           }
         }
       }
 
-      placeWall(ptr) {
-        if (state.wood < WALL_COST) {
-          this.pop(this.pbody.x, this.pbody.y - 30, 'Need 5 wood!', '#e74c3c');
-          return;
+      placeBuilding(ptr) {
+        const cost = COSTS[buildType];
+        for (const [res, amt] of Object.entries(cost)) {
+          if (state[res] < amt) {
+            this.pop(this.pbody.x, this.pbody.y - 30,
+              `Need ${amt} ${res}!`, '#e74c3c'); return;
+          }
         }
-        state.wood -= WALL_COST;
-        this.updateHUD();
-        const id = 'b_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        for (const [res, amt] of Object.entries(cost)) state[res] -= amt;
+        state.score += 3; this.updateHUD();
+        const id = buildType[0] + '_' + Date.now() + '_' + Math.random().toString(36).substr(2,3);
         set(ref(db, 'buildings/' + id), {
-          x: Math.round(ptr.worldX),
-          y: Math.round(ptr.worldY),
-          type: 'wall', ownerId: PID, hp: BLDG_HP
+          x: Math.round(ptr.worldX), y: Math.round(ptr.worldY),
+          type: buildType, ownerId: PID, hp: BLDG_HP[buildType]
         });
       }
 
+      // ── Wall collision (AABB vs circle) ───────────────────────────────────────
+      resolveWalls() {
+        let px = this.pbody.x, py = this.pbody.y;
+        for (const g of Object.values(bldgSpr)) {
+          const d = g._d;
+          if (d.type !== 'wall' && d.type !== 'door') continue;
+          if (d.type === 'door' && d.ownerId === PID) continue;
+          const nearX = Math.max(d.x - 20, Math.min(px, d.x + 20));
+          const nearY = Math.max(d.y - 20, Math.min(py, d.y + 20));
+          const dx = px - nearX, dy = py - nearY;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < P_RAD && dist > 0.01) {
+            const push = P_RAD - dist;
+            px += (dx / dist) * push;
+            py += (dy / dist) * push;
+          }
+        }
+        px = Math.max(P_RAD, Math.min(MAP_W - P_RAD, px));
+        py = Math.max(P_RAD, Math.min(MAP_H - P_RAD, py));
+        this.pbody.setPosition(px, py);
+      }
+
+      // ── Helpers ───────────────────────────────────────────────────────────────
       pop(x, y, msg, color) {
         const t = this.add.text(x, y, msg, {
-          fontSize: '13px', color, fontFamily: 'monospace', fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(10);
-        this.tweens.add({
-          targets: t, y: y - 28, alpha: 0, duration: 900,
-          onComplete: () => t.destroy()
-        });
+          fontSize: '13px', color,
+          stroke: '#000', strokeThickness: 2,
+          fontFamily: 'Courier New', fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(12);
+        this.tweens.add({ targets: t, y: y - 32, alpha: 0, duration: 950,
+          onComplete: () => t.destroy() });
       }
 
       updateHUD() {
-        document.getElementById('ui-hp').textContent    = Math.max(0, state.hp);
+        const hpPct     = (state.hp / MAX_HP) * 100;
+        const hungerPct = (state.food_meter / MAX_FOOD) * 100;
+        document.getElementById('hp-fill').style.width     = hpPct + '%';
+        document.getElementById('hunger-fill').style.width = hungerPct + '%';
+        document.getElementById('ui-hp').textContent    = Math.max(0, Math.round(state.hp));
         document.getElementById('ui-fm').textContent    = state.food_meter;
         document.getElementById('ui-wood').textContent  = state.wood;
-        document.getElementById('ui-food').textContent  = state.food;
         document.getElementById('ui-stone').textContent = state.stone;
-        document.getElementById('ui-mode').textContent  =
-          'Mode: ' + (buildMode ? 'BUILD  (5 wood per wall)' : 'EXPLORE');
+        document.getElementById('ui-food').textContent  = state.food;
+        document.getElementById('ui-score').textContent = state.score;
+        document.getElementById('ui-mode').textContent  = buildMode
+          ? 'BUILD: ' + buildType.toUpperCase()
+          : 'EXPLORE';
+        document.getElementById('build-bar').style.display = buildMode ? 'block' : 'none';
+        ['b1','b2','b3'].forEach((id, i) => {
+          const t = ['wall','door','campfire'][i];
+          document.getElementById(id).className = t === buildType ? 'bsel' : '';
+        });
+        this.updateScoreboard();
       }
 
-      // ── Game loop ─────────────────────────────────────────────────────────────
+      updateScoreboard() {
+        const all = [
+          { name: PNAME, score: state.score, me: true },
+          ...Object.entries(playerData).map(([id, d]) => ({
+            name: (d.name || id.substr(-4).toUpperCase()),
+            score: d.score || 0
+          }))
+        ].sort((a, b) => b.score - a.score).slice(0, 6);
+        document.getElementById('score-list').innerHTML =
+          all.map(p => `<span style="color:${p.me ? '#7ec8e3' : '#ccc'}">${p.name}: ${p.score}</span>`).join('<br>');
+      }
+
+      // ── Main loop ─────────────────────────────────────────────────────────────
       update(time, delta) {
         const k = this.keys;
+
+        // movement
         let vx = 0, vy = 0;
         if (k.left.isDown  || k.left2.isDown)  vx = -SPEED;
         if (k.right.isDown || k.right2.isDown) vx =  SPEED;
@@ -437,28 +605,61 @@
         if (vx && vy) { vx *= 0.707; vy *= 0.707; }
         this.pbody.setVelocity(vx, vy);
 
-        state.x = this.pbody.x;
-        state.y = this.pbody.y;
+        // direction tracking for arrow
+        if (vx !== 0 || vy !== 0) {
+          const len = Math.sqrt(vx*vx + vy*vy);
+          state.dirX = vx / len; state.dirY = vy / len;
+          this.redrawMe();
+        }
+
+        // wall collision resolution (after velocity applied)
+        this.resolveWalls();
+
+        state.x = this.pbody.x; state.y = this.pbody.y;
         this.pgfx.setPosition(state.x, state.y);
 
+        // build mode key handling
         if (Phaser.Input.Keyboard.JustDown(k.b)) {
           buildMode = !buildMode;
           bPrev.setVisible(buildMode);
           this.updateHUD();
         }
         if (Phaser.Input.Keyboard.JustDown(k.esc)) {
-          buildMode = false;
-          bPrev.setVisible(false);
-          this.updateHUD();
+          buildMode = false; bPrev.setVisible(false); this.updateHUD();
         }
-
         if (buildMode) {
+          if (Phaser.Input.Keyboard.JustDown(k.k1)) { buildType = 'wall';     this.updateHUD(); }
+          if (Phaser.Input.Keyboard.JustDown(k.k2)) { buildType = 'door';     this.updateHUD(); }
+          if (Phaser.Input.Keyboard.JustDown(k.k3)) { buildType = 'campfire'; this.updateHUD(); }
           const p = this.input.activePointer;
           bPrev.clear();
-          bPrev.fillStyle(0xdfe6e9, 0.55);
-          bPrev.fillRect(p.worldX - BLDG_SZ / 2, p.worldY - BLDG_SZ / 2, BLDG_SZ, BLDG_SZ);
-          bPrev.lineStyle(2, 0x000000, 1);
-          bPrev.strokeRect(p.worldX - BLDG_SZ / 2, p.worldY - BLDG_SZ / 2, BLDG_SZ, BLDG_SZ);
+          if (buildType === 'campfire') {
+            bPrev.fillStyle(0xf57c00, 0.4).fillCircle(p.worldX, p.worldY, 20);
+            bPrev.lineStyle(2, 0xe65100, 0.8).strokeCircle(p.worldX, p.worldY, 20);
+          } else {
+            const col = buildType === 'door' ? 0x8d6534 : 0xb0bec5;
+            bPrev.fillStyle(col, 0.4).fillRect(p.worldX-20, p.worldY-20, 40, 40);
+            bPrev.lineStyle(2, 0xffffff, 0.6).strokeRect(p.worldX-20, p.worldY-20, 40, 40);
+          }
+        }
+
+        // campfire healing
+        fireTimer += delta;
+        if (fireTimer >= 1500) {
+          fireTimer = 0;
+          if (state.hp < MAX_HP) {
+            for (const g of Object.values(bldgSpr)) {
+              const d = g._d;
+              if (d.type !== 'campfire') continue;
+              const dx = d.x - state.x, dy = d.y - state.y;
+              if (Math.sqrt(dx*dx + dy*dy) < FIRE_RNG) {
+                state.hp = Math.min(MAX_HP, state.hp + 2);
+                this.updateHUD();
+                this.pop(state.x, state.y - 30, '+2 HP', '#f57c00');
+                break;
+              }
+            }
+          }
         }
 
         // hunger drain
@@ -468,19 +669,18 @@
           if (state.food_meter > 0) {
             state.food_meter--;
           } else {
-            state.hp = Math.max(0, state.hp - 5);
+            state.hp = Math.max(0, state.hp - 6);
           }
           this.updateHUD();
         }
 
-        // sync position to Firebase
+        // Firebase sync
         if (time - lastSync > SYNC_MS) {
           lastSync = time;
           set(ref(db, 'players/' + PID), {
-            x: Math.round(state.x),
-            y: Math.round(state.y),
-            color: MY_COLOR,
-            hp: state.hp
+            x: Math.round(state.x), y: Math.round(state.y),
+            color: MY_COLOR, hp: state.hp,
+            score: state.score, name: PNAME
           });
         }
       }
@@ -490,7 +690,7 @@
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#3d6b2a',
       physics: { default: 'arcade', arcade: { debug: false } },
       scene: Game
     });
