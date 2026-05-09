@@ -2,40 +2,417 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>2D Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Survival</title>
   <style>
-    * { margin: 0; padding: 0; }
-    body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    #hud {
+      position: fixed; top: 10px; left: 10px;
+      background: rgba(255,255,255,0.95); border: 2px solid #000;
+      padding: 8px 14px; font-family: monospace; font-size: 13px;
+      z-index: 10; line-height: 1.8; pointer-events: none;
+    }
+    #hint {
+      position: fixed; bottom: 10px; left: 10px;
+      background: rgba(255,255,255,0.95); border: 2px solid #000;
+      padding: 6px 12px; font-family: monospace; font-size: 11px;
+      z-index: 10; pointer-events: none;
+    }
   </style>
 </head>
 <body>
+  <div id="hud">
+    <div>HP: <span id="ui-hp">100</span>/100 &nbsp; Food: <span id="ui-fm">10</span>/10</div>
+    <div>Wood: <span id="ui-wood">0</span> &nbsp; Food: <span id="ui-food">0</span> &nbsp; Stone: <span id="ui-stone">0</span></div>
+    <div id="ui-mode">Mode: EXPLORE</div>
+  </div>
+  <div id="hint">WASD / Arrows: move &nbsp;|&nbsp; B: build wall (5 wood) &nbsp;|&nbsp; Click enemy wall: attack &nbsp;|&nbsp; ESC: cancel build</div>
 
-  <!-- Phaser game engine -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
-
-  <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-    import { getDatabase } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+    import {
+      getDatabase, ref, set, get, remove, update,
+      onChildAdded, onChildChanged, onChildRemoved
+    } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU",
-      authDomain: "d-game-b50ef.firebaseapp.com",
-      projectId: "d-game-b50ef",
-      storageBucket: "d-game-b50ef.firebasestorage.app",
-      messagingSenderId: "80712714092",
-      appId: "1:80712714092:web:4b15f70196f05942905549"
+    const firebaseApp = initializeApp({
+      apiKey: 'AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU',
+      authDomain: 'd-game-b50ef.firebaseapp.com',
+      projectId: 'd-game-b50ef',
+      storageBucket: 'd-game-b50ef.firebasestorage.app',
+      messagingSenderId: '80712714092',
+      appId: '1:80712714092:web:4b15f70196f05942905549'
+    });
+    const db = getDatabase(firebaseApp);
+
+    const PID      = 'p_' + Math.random().toString(36).substr(2, 9);
+    const PCOLORS  = [0xe74c3c, 0x3498db, 0x2ecc71, 0x9b59b6, 0xf39c12, 0x1abc9c];
+    const MY_COLOR = PCOLORS[Math.floor(Math.random() * PCOLORS.length)];
+
+    const MAP_W    = 3000, MAP_H = 3000;
+    const SPEED    = 220;
+    const P_RAD    = 16;
+    const R_RAD    = 11;
+    const BLDG_SZ  = 44;
+    const ATK_RNG  = 90;
+    const ATK_DMG  = 15;
+    const WALL_COST = 5;
+    const BLDG_HP  = 100;
+    const SYNC_MS  = 100;
+    const RES_N    = 60;
+    const FOOD_TICK = 20000;
+    const MAX_FOOD = 10;
+    const MAX_HP   = 100;
+
+    const RCOL = { wood: 0x8B4513, food: 0x27ae60, stone: 0x7f8c8d };
+
+    const state = {
+      x: 300 + Math.random() * (MAP_W - 600),
+      y: 300 + Math.random() * (MAP_H - 600),
+      hp: MAX_HP, food_meter: MAX_FOOD,
+      wood: 0, food: 0, stone: 0
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const others  = {};
+    const resSpr  = {};
+    const bldgSpr = {};
+    let buildMode = false;
+    let bPrev, lastSync = 0, foodTimer = 0;
 
-    window.db = db;
-    console.log("Firebase connected!");
+    class Game extends Phaser.Scene {
+      constructor() { super('Game'); }
+
+      create() {
+        // invisible texture for physics body
+        const tg = this.make.graphics({ x: 0, y: 0, add: false });
+        tg.fillStyle(0xffffff, 1);
+        tg.fillRect(0, 0, P_RAD * 2, P_RAD * 2);
+        tg.generateTexture('body', P_RAD * 2, P_RAD * 2);
+        tg.destroy();
+
+        this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
+        this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
+
+        // white background + grid
+        this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0xffffff).setDepth(0);
+        const grid = this.add.graphics().setDepth(0);
+        grid.lineStyle(1, 0xe0e0e0, 1);
+        for (let x = 0; x <= MAP_W; x += 100) { grid.moveTo(x, 0); grid.lineTo(x, MAP_H); }
+        for (let y = 0; y <= MAP_H; y += 100) { grid.moveTo(0, y); grid.lineTo(MAP_W, y); }
+        grid.strokePath();
+
+        // player physics body (invisible) + visual
+        this.pbody = this.physics.add.image(state.x, state.y, 'body');
+        this.pbody.setAlpha(0.001).setCollideWorldBounds(true);
+        this.pgfx = this.add.graphics().setDepth(4);
+        this.redrawMe();
+
+        this.cameras.main.startFollow(this.pbody, true, 0.12, 0.12);
+
+        bPrev = this.add.graphics().setDepth(6).setVisible(false);
+
+        this.keys = this.input.keyboard.addKeys({
+          up: 'W', down: 'S', left: 'A', right: 'D',
+          up2: 'UP', down2: 'DOWN', left2: 'LEFT', right2: 'RIGHT',
+          b: 'B', esc: 'ESC'
+        });
+
+        this.input.on('pointerdown', ptr => {
+          if (buildMode) this.placeWall(ptr);
+          else this.tryAttack(ptr);
+        });
+
+        this.setupFirebase();
+        window.addEventListener('beforeunload', () => remove(ref(db, 'players/' + PID)));
+        this.updateHUD();
+      }
+
+      setupFirebase() {
+        const sc = this;
+
+        get(ref(db, 'resources')).then(snap => {
+          if (!snap.exists()) sc.seedMap();
+        });
+
+        onChildAdded(ref(db, 'resources'), snap => {
+          if (snap.val() && !resSpr[snap.key]) sc.mkRes(snap.key, snap.val());
+        });
+        onChildRemoved(ref(db, 'resources'), snap => {
+          if (resSpr[snap.key]) { resSpr[snap.key].destroy(); delete resSpr[snap.key]; }
+        });
+
+        onChildAdded(ref(db, 'players'), snap => {
+          if (snap.key !== PID && snap.val()) sc.mkOther(snap.key, snap.val());
+        });
+        onChildChanged(ref(db, 'players'), snap => {
+          if (snap.key !== PID && snap.val()) sc.mvOther(snap.key, snap.val());
+        });
+        onChildRemoved(ref(db, 'players'), snap => {
+          if (others[snap.key]) {
+            others[snap.key].g.destroy();
+            others[snap.key].l.destroy();
+            delete others[snap.key];
+          }
+        });
+
+        onChildAdded(ref(db, 'buildings'), snap => {
+          if (snap.val() && !bldgSpr[snap.key]) sc.mkBldg(snap.key, snap.val());
+        });
+        onChildChanged(ref(db, 'buildings'), snap => {
+          if (snap.val() && bldgSpr[snap.key]) sc.rxBldg(snap.key, snap.val());
+        });
+        onChildRemoved(ref(db, 'buildings'), snap => {
+          if (bldgSpr[snap.key]) { bldgSpr[snap.key].destroy(); delete bldgSpr[snap.key]; }
+        });
+      }
+
+      // ── Draw helpers ──────────────────────────────────────────────────────────
+
+      redrawMe() {
+        this.pgfx.clear();
+        this.pgfx.fillStyle(MY_COLOR, 1);
+        this.pgfx.fillCircle(0, 0, P_RAD);
+        this.pgfx.lineStyle(2, 0x000000, 1);
+        this.pgfx.strokeCircle(0, 0, P_RAD);
+      }
+
+      drawOther(gfx, x, y, c) {
+        gfx.clear();
+        gfx.fillStyle(c, 1);
+        gfx.fillCircle(x, y, P_RAD);
+        gfx.lineStyle(2, 0x000000, 1);
+        gfx.strokeCircle(x, y, P_RAD);
+      }
+
+      drawRes(gfx, d) {
+        const c = RCOL[d.type] || 0x888888;
+        gfx.clear();
+        gfx.fillStyle(c, 1);
+        gfx.lineStyle(2, 0x000000, 1);
+        if (d.type === 'wood') {
+          gfx.fillRect(d.x - R_RAD, d.y - R_RAD * 0.6, R_RAD * 2, R_RAD * 1.2);
+          gfx.strokeRect(d.x - R_RAD, d.y - R_RAD * 0.6, R_RAD * 2, R_RAD * 1.2);
+        } else if (d.type === 'food') {
+          gfx.fillCircle(d.x, d.y, R_RAD);
+          gfx.strokeCircle(d.x, d.y, R_RAD);
+        } else {
+          gfx.fillTriangle(d.x, d.y - R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
+          gfx.fillTriangle(d.x, d.y + R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
+          gfx.strokeTriangle(d.x, d.y - R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
+          gfx.strokeTriangle(d.x, d.y + R_RAD, d.x + R_RAD, d.y, d.x - R_RAD, d.y);
+        }
+      }
+
+      drawBldg(gfx, d) {
+        const hp = d.hp / BLDG_HP;
+        const fill = d.ownerId === PID ? 0xdfe6e9 : 0xffdad2;
+        const bx = d.x - BLDG_SZ / 2, by = d.y - BLDG_SZ / 2;
+        gfx.clear();
+        gfx.fillStyle(fill, 1);
+        gfx.fillRect(bx, by, BLDG_SZ, BLDG_SZ);
+        gfx.lineStyle(2, 0x000000, 1);
+        gfx.strokeRect(bx, by, BLDG_SZ, BLDG_SZ);
+        gfx.fillStyle(0x2ecc71, 1);
+        gfx.fillRect(bx, by - 7, BLDG_SZ * hp, 4);
+        gfx.fillStyle(0xe74c3c, 1);
+        gfx.fillRect(bx + BLDG_SZ * hp, by - 7, BLDG_SZ * (1 - hp), 4);
+        gfx.lineStyle(1, 0x000000, 1);
+        gfx.strokeRect(bx, by - 7, BLDG_SZ, 4);
+      }
+
+      // ── Spawn helpers ─────────────────────────────────────────────────────────
+
+      mkRes(id, d) {
+        const g = this.add.graphics().setDepth(1);
+        this.drawRes(g, d);
+        g._d = d;
+        resSpr[id] = g;
+      }
+
+      mkOther(id, d) {
+        const g = this.add.graphics().setDepth(4);
+        this.drawOther(g, d.x, d.y, d.color);
+        const l = this.add.text(d.x, d.y - P_RAD - 10, id.substr(-4), {
+          fontSize: '10px', color: '#000', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(5);
+        others[id] = { g, l };
+      }
+
+      mvOther(id, d) {
+        if (!others[id]) { this.mkOther(id, d); return; }
+        this.drawOther(others[id].g, d.x, d.y, d.color);
+        others[id].l.setPosition(d.x, d.y - P_RAD - 10);
+      }
+
+      mkBldg(id, d) {
+        const g = this.add.graphics().setDepth(2);
+        this.drawBldg(g, d);
+        g._d = d;
+        bldgSpr[id] = g;
+      }
+
+      rxBldg(id, d) {
+        bldgSpr[id]._d = d;
+        this.drawBldg(bldgSpr[id], d);
+      }
+
+      seedMap() {
+        const batch = {};
+        ['wood', 'food', 'stone'].forEach(type => {
+          for (let i = 0; i < RES_N; i++) {
+            batch[type + '_' + i] = {
+              x: 100 + Math.random() * (MAP_W - 200),
+              y: 100 + Math.random() * (MAP_H - 200),
+              type
+            };
+          }
+        });
+        set(ref(db, 'resources'), batch);
+      }
+
+      // ── Actions ───────────────────────────────────────────────────────────────
+
+      placeWall(ptr) {
+        if (state.wood < WALL_COST) {
+          this.pop(this.pbody.x, this.pbody.y - 30, 'Need 5 wood!', '#e74c3c');
+          return;
+        }
+        state.wood -= WALL_COST;
+        this.updateHUD();
+        const id = 'b_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        set(ref(db, 'buildings/' + id), {
+          x: Math.round(ptr.worldX),
+          y: Math.round(ptr.worldY),
+          type: 'wall',
+          ownerId: PID,
+          hp: BLDG_HP
+        });
+      }
+
+      tryAttack(ptr) {
+        const px = this.pbody.x, py = this.pbody.y;
+        for (const [id, g] of Object.entries(bldgSpr)) {
+          const d = g._d;
+          if (d.ownerId === PID) continue;
+          const dx = d.x - px, dy = d.y - py;
+          if (Math.sqrt(dx * dx + dy * dy) > ATK_RNG + BLDG_SZ) continue;
+          if (Math.abs(ptr.worldX - d.x) < BLDG_SZ / 2 + 6 &&
+              Math.abs(ptr.worldY - d.y) < BLDG_SZ / 2 + 6) {
+            const newHp = d.hp - ATK_DMG;
+            if (newHp <= 0) remove(ref(db, 'buildings/' + id));
+            else update(ref(db, 'buildings/' + id), { hp: newHp });
+            this.pop(d.x, d.y - 24, '-' + ATK_DMG, '#e74c3c');
+            return;
+          }
+        }
+      }
+
+      collectRes() {
+        const px = this.pbody.x, py = this.pbody.y;
+        for (const [id, g] of Object.entries(resSpr)) {
+          const d = g._d;
+          const dx = d.x - px, dy = d.y - py;
+          if (Math.sqrt(dx * dx + dy * dy) < P_RAD + R_RAD + 4) {
+            state[d.type]++;
+            if (d.type === 'food') state.food_meter = Math.min(MAX_FOOD, state.food_meter + 3);
+            this.pop(px, py - 36, '+1 ' + d.type, '#222');
+            this.updateHUD();
+            remove(ref(db, 'resources/' + id));
+          }
+        }
+      }
+
+      pop(x, y, msg, color) {
+        const t = this.add.text(x, y, msg, {
+          fontSize: '13px', color, fontFamily: 'monospace', fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(10);
+        this.tweens.add({
+          targets: t, y: y - 28, alpha: 0, duration: 900,
+          onComplete: () => t.destroy()
+        });
+      }
+
+      updateHUD() {
+        document.getElementById('ui-hp').textContent    = Math.max(0, state.hp);
+        document.getElementById('ui-fm').textContent    = state.food_meter;
+        document.getElementById('ui-wood').textContent  = state.wood;
+        document.getElementById('ui-food').textContent  = state.food;
+        document.getElementById('ui-stone').textContent = state.stone;
+        document.getElementById('ui-mode').textContent  =
+          'Mode: ' + (buildMode ? 'BUILD  (5 wood/wall)' : 'EXPLORE');
+      }
+
+      // ── Main loop ─────────────────────────────────────────────────────────────
+
+      update(time, delta) {
+        const k = this.keys;
+        let vx = 0, vy = 0;
+        if (k.left.isDown  || k.left2.isDown)  vx = -SPEED;
+        if (k.right.isDown || k.right2.isDown) vx =  SPEED;
+        if (k.up.isDown    || k.up2.isDown)    vy = -SPEED;
+        if (k.down.isDown  || k.down2.isDown)  vy =  SPEED;
+        if (vx && vy) { vx *= 0.707; vy *= 0.707; }
+        this.pbody.setVelocity(vx, vy);
+
+        state.x = this.pbody.x;
+        state.y = this.pbody.y;
+        this.pgfx.setPosition(state.x, state.y);
+
+        if (Phaser.Input.Keyboard.JustDown(k.b)) {
+          buildMode = !buildMode;
+          bPrev.setVisible(buildMode);
+          this.updateHUD();
+        }
+        if (Phaser.Input.Keyboard.JustDown(k.esc)) {
+          buildMode = false;
+          bPrev.setVisible(false);
+          this.updateHUD();
+        }
+
+        if (buildMode) {
+          const p = this.input.activePointer;
+          bPrev.clear();
+          bPrev.fillStyle(0xdfe6e9, 0.55);
+          bPrev.fillRect(p.worldX - BLDG_SZ / 2, p.worldY - BLDG_SZ / 2, BLDG_SZ, BLDG_SZ);
+          bPrev.lineStyle(2, 0x000000, 1);
+          bPrev.strokeRect(p.worldX - BLDG_SZ / 2, p.worldY - BLDG_SZ / 2, BLDG_SZ, BLDG_SZ);
+        }
+
+        this.collectRes();
+
+        foodTimer += delta;
+        if (foodTimer >= FOOD_TICK) {
+          foodTimer = 0;
+          if (state.food_meter > 0) {
+            state.food_meter--;
+          } else {
+            state.hp = Math.max(0, state.hp - 5);
+          }
+          this.updateHUD();
+        }
+
+        if (time - lastSync > SYNC_MS) {
+          lastSync = time;
+          set(ref(db, 'players/' + PID), {
+            x: Math.round(state.x),
+            y: Math.round(state.y),
+            color: MY_COLOR,
+            hp: state.hp
+          });
+        }
+      }
+    }
+
+    new Phaser.Game({
+      type: Phaser.AUTO,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#ffffff',
+      physics: { default: 'arcade', arcade: { debug: false } },
+      scene: Game
+    });
   </script>
-
-  <!-- Game -->
-  <script src="game.js"></script>
-
 </body>
 </html>
