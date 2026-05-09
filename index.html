@@ -3,8 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <title>2D Game</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { background: #000; }
+  </style>
 </head>
 <body>
-  <h1>Game coming soon</h1>
+
+  <!-- Phaser game engine -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU",
+      authDomain: "d-game-b50ef.firebaseapp.com",
+      projectId: "d-game-b50ef",
+      storageBucket: "d-game-b50ef.firebasestorage.app",
+      messagingSenderId: "80712714092",
+      appId: "1:80712714092:web:4b15f70196f05942905549"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.db = db;
+    console.log("Firebase connected!");
+  </script>
+
+  <!-- Game -->
+  <script src="game.js"></script>
+
 </body>
 </html>
