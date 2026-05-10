@@ -1326,8 +1326,14 @@ class Game extends Phaser.Scene {
       g.fillStyle(0x2a1804,1);
       g.fillTriangle(hx+Math.cos(la)*8,hy+Math.sin(la)*8,hx+Math.cos(la)*14,hy+Math.sin(la)*14,hx+Math.cos(a)*8,hy+Math.sin(a)*8);
       g.fillTriangle(hx+Math.cos(ra)*8,hy+Math.sin(ra)*8,hx+Math.cos(ra)*14,hy+Math.sin(ra)*14,hx+Math.cos(a)*8,hy+Math.sin(a)*8);
-      g.fillStyle(0xff2200,1).fillCircle(hx+Math.cos(la)*4,hy+Math.sin(la)*4,2.5);
-      g.fillStyle(0xff2200,1).fillCircle(hx+Math.cos(ra)*4,hy+Math.sin(ra)*4,2.5);
+      const elx=hx+Math.cos(la)*4,ely=hy+Math.sin(la)*4;
+      const erx=hx+Math.cos(ra)*4,ery=hy+Math.sin(ra)*4;
+      g.fillStyle(0xff2200,0.22).fillCircle(elx,ely,7);
+      g.fillStyle(0xff2200,0.22).fillCircle(erx,ery,7);
+      g.fillStyle(0xff3300,1).fillCircle(elx,ely,3);
+      g.fillStyle(0xff3300,1).fillCircle(erx,ery,3);
+      g.fillStyle(0xffffff,0.7).fillCircle(elx-0.8,ely-0.8,1);
+      g.fillStyle(0xffffff,0.7).fillCircle(erx-0.8,ery-0.8,1);
       const r=(hp??maxHp)/maxHp;
       g.fillStyle(0x27ae60,1).fillRect(wx-14,wy-20,28*r,3);
       g.fillStyle(0xc0392b,1).fillRect(wx-14+28*r,wy-20,28*(1-r),3);
@@ -1587,25 +1593,26 @@ class Game extends Phaser.Scene {
     const phase=dayTimer/DAY_CYCLE;
     let nightAlpha=0;
     if(phase<0.45)nightAlpha=0;
-    else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.88;
-    else if(phase<0.9)nightAlpha=0.88;
-    else nightAlpha=((1-phase)/0.1)*0.88;
+    else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.65;
+    else if(phase<0.9)nightAlpha=0.65;
+    else nightAlpha=((1-phase)/0.1)*0.65;
     this.nightOverlay.clear();
-    if(nightAlpha>0.01)this.nightOverlay.fillStyle(0x030208,nightAlpha).fillRect(0,0,MAP_W,MAP_H);
+    if(nightAlpha>0.01)this.nightOverlay.fillStyle(0x020108,nightAlpha).fillRect(0,0,MAP_W,MAP_H);
     this.lightGfx.clear();
     if(nightAlpha>0.05){
-      // Simulated radial gradient via stacked concentric rings — no hard edges
-      // Each smaller circle adds a bit more warm tint, creating a soft falloff
-      const cx=state.x,cy=state.y,na=nightAlpha,w=0x160c04;
-      this.lightGfx.fillStyle(w,Math.min(0.07,na*0.08)).fillCircle(cx,cy,210);
-      this.lightGfx.fillStyle(w,Math.min(0.08,na*0.09)).fillCircle(cx,cy,165);
-      this.lightGfx.fillStyle(w,Math.min(0.10,na*0.11)).fillCircle(cx,cy,118);
-      this.lightGfx.fillStyle(w,Math.min(0.10,na*0.12)).fillCircle(cx,cy,74);
-      this.lightGfx.fillStyle(w,Math.min(0.08,na*0.09)).fillCircle(cx,cy,36);
+      // ADD blend mode — need LIGHT colors; each smaller circle layers more warm amber
+      // outer→inner stacking creates smooth radial falloff without a hard circle edge
+      const cx=state.x,cy=state.y,na=nightAlpha,wc=0xc08848;
+      this.lightGfx.fillStyle(wc,Math.min(0.05,na*0.08)).fillCircle(cx,cy,250);
+      this.lightGfx.fillStyle(wc,Math.min(0.07,na*0.11)).fillCircle(cx,cy,195);
+      this.lightGfx.fillStyle(wc,Math.min(0.10,na*0.15)).fillCircle(cx,cy,145);
+      this.lightGfx.fillStyle(wc,Math.min(0.13,na*0.20)).fillCircle(cx,cy,95);
+      this.lightGfx.fillStyle(wc,Math.min(0.15,na*0.23)).fillCircle(cx,cy,52);
+      this.lightGfx.fillStyle(wc,Math.min(0.11,na*0.17)).fillCircle(cx,cy,22);
       for(const g of Object.values(bldgSpr)){
         const d=g._d; if(d.type!=='tc')continue;
-        this.lightGfx.fillStyle(0x060814,Math.min(0.09,na*0.11)).fillCircle(d.x,d.y,TC_ZONE);
-        this.lightGfx.fillStyle(0x080a18,Math.min(0.06,na*0.07)).fillCircle(d.x,d.y,TC_ZONE*0.55);
+        this.lightGfx.fillStyle(0x4060c0,Math.min(0.08,na*0.12)).fillCircle(d.x,d.y,TC_ZONE);
+        this.lightGfx.fillStyle(0x6080d0,Math.min(0.05,na*0.08)).fillCircle(d.x,d.y,TC_ZONE*0.5);
       }
     }
     const timeStr=phase<0.45?'🌞 DAY':phase<0.55?'🌅 DUSK':phase<0.9?'🌙 NIGHT':'🌄 DAWN';
