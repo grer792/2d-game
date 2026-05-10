@@ -1587,18 +1587,25 @@ class Game extends Phaser.Scene {
     const phase=dayTimer/DAY_CYCLE;
     let nightAlpha=0;
     if(phase<0.45)nightAlpha=0;
-    else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.82;
-    else if(phase<0.9)nightAlpha=0.82;
-    else nightAlpha=((1-phase)/0.1)*0.82;
+    else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.88;
+    else if(phase<0.9)nightAlpha=0.88;
+    else nightAlpha=((1-phase)/0.1)*0.88;
     this.nightOverlay.clear();
-    if(nightAlpha>0.01)this.nightOverlay.fillStyle(0x000820,nightAlpha).fillRect(0,0,MAP_W,MAP_H);
+    if(nightAlpha>0.01)this.nightOverlay.fillStyle(0x030208,nightAlpha).fillRect(0,0,MAP_W,MAP_H);
     this.lightGfx.clear();
     if(nightAlpha>0.05){
-      this.lightGfx.fillStyle(0x334422,Math.min(0.5,nightAlpha*0.6)).fillCircle(state.x,state.y,170);
-      this.lightGfx.fillStyle(0x446633,Math.min(0.3,nightAlpha*0.35)).fillCircle(state.x,state.y,100);
+      // Simulated radial gradient via stacked concentric rings — no hard edges
+      // Each smaller circle adds a bit more warm tint, creating a soft falloff
+      const cx=state.x,cy=state.y,na=nightAlpha,w=0x160c04;
+      this.lightGfx.fillStyle(w,Math.min(0.07,na*0.08)).fillCircle(cx,cy,210);
+      this.lightGfx.fillStyle(w,Math.min(0.08,na*0.09)).fillCircle(cx,cy,165);
+      this.lightGfx.fillStyle(w,Math.min(0.10,na*0.11)).fillCircle(cx,cy,118);
+      this.lightGfx.fillStyle(w,Math.min(0.10,na*0.12)).fillCircle(cx,cy,74);
+      this.lightGfx.fillStyle(w,Math.min(0.08,na*0.09)).fillCircle(cx,cy,36);
       for(const g of Object.values(bldgSpr)){
         const d=g._d; if(d.type!=='tc')continue;
-        this.lightGfx.fillStyle(0x3355aa,Math.min(0.18,nightAlpha*0.22)).fillCircle(d.x,d.y,TC_ZONE);
+        this.lightGfx.fillStyle(0x060814,Math.min(0.09,na*0.11)).fillCircle(d.x,d.y,TC_ZONE);
+        this.lightGfx.fillStyle(0x080a18,Math.min(0.06,na*0.07)).fillCircle(d.x,d.y,TC_ZONE*0.55);
       }
     }
     const timeStr=phase<0.45?'🌞 DAY':phase<0.55?'🌅 DUSK':phase<0.9?'🌙 NIGHT':'🌄 DAWN';
