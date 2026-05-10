@@ -491,6 +491,7 @@ let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={};
+let wolfSyncLast=0; const remoteWolves={};
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
@@ -633,7 +634,7 @@ class Game extends Phaser.Scene {
     });
     this.input.on('pointerdown',ptr=>this.handleClick(ptr));
     this.setupFirebase();
-    window.addEventListener('beforeunload',()=>remove(sref('players/'+PID)));
+    window.addEventListener('beforeunload',()=>{remove(sref('players/'+PID));remove(sref('wolves/'+PID));});
     refreshHotbar();
     this.updateHUD();
   }
@@ -999,6 +1000,11 @@ class Game extends Phaser.Scene {
       sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
       if(state.hp<=0)sc.handleDeath();
     });
+    onValue(sref('wolves'),snap=>{
+      const all=snap.val()||{};
+      for(const pid of Object.keys(remoteWolves)){if(!all[pid])delete remoteWolves[pid];}
+      for(const [pid,wlist] of Object.entries(all)){if(pid!==PID)remoteWolves[pid]=wlist?Object.values(wlist):[];}
+    });
   }
 
   handleClick(ptr){
@@ -1267,20 +1273,22 @@ class Game extends Phaser.Scene {
     }
     wolvesSpawned=true;
     this.pop(state.x,state.y-50,'🐺 Wolves are coming!','#c0392b');
+    const wd={}; wolves.forEach((w,i)=>{wd[i]={x:Math.round(w.x),y:Math.round(w.y),hp:w.hp,maxHp:w.maxHp};});
+    set(sref('wolves/'+PID),wd);
   }
 
   despawnWolves(){
     wolves=[]; wolvesSpawned=false; this.wolfGfx.clear();
+    remove(sref('wolves/'+PID));
   }
 
   drawWolves(){
     const g=this.wolfGfx; g.clear();
-    for(const w of wolves){
-      if(!w.alive)continue;
-      const dx=state.x-w.x, dy=state.y-w.y, a=Math.atan2(dy,dx);
-      const hx=w.x+Math.cos(a)*10, hy=w.y+Math.sin(a)*10;
-      g.fillStyle(0x000000,0.2).fillEllipse(w.x+3,w.y+12,34,12);
-      g.fillStyle(0x3d2208,1).fillEllipse(w.x,w.y,30,20);
+    const drawWolf=(wx,wy,hp,maxHp,faceAng)=>{
+      const a=faceAng??0;
+      const hx=wx+Math.cos(a)*10, hy=wy+Math.sin(a)*10;
+      g.fillStyle(0x000000,0.2).fillEllipse(wx+3,wy+12,34,12);
+      g.fillStyle(0x3d2208,1).fillEllipse(wx,wy,30,20);
       g.fillStyle(0x5c3410,1).fillCircle(hx,hy,10);
       const la=a+0.45, ra=a-0.45;
       g.fillStyle(0x2a1804,1);
@@ -1288,9 +1296,17 @@ class Game extends Phaser.Scene {
       g.fillTriangle(hx+Math.cos(ra)*8,hy+Math.sin(ra)*8,hx+Math.cos(ra)*14,hy+Math.sin(ra)*14,hx+Math.cos(a)*8,hy+Math.sin(a)*8);
       g.fillStyle(0xff2200,1).fillCircle(hx+Math.cos(la)*4,hy+Math.sin(la)*4,2.5);
       g.fillStyle(0xff2200,1).fillCircle(hx+Math.cos(ra)*4,hy+Math.sin(ra)*4,2.5);
-      const r=w.hp/w.maxHp;
-      g.fillStyle(0x27ae60,1).fillRect(w.x-14,w.y-20,28*r,3);
-      g.fillStyle(0xc0392b,1).fillRect(w.x-14+28*r,w.y-20,28*(1-r),3);
+      const r=(hp??maxHp)/maxHp;
+      g.fillStyle(0x27ae60,1).fillRect(wx-14,wy-20,28*r,3);
+      g.fillStyle(0xc0392b,1).fillRect(wx-14+28*r,wy-20,28*(1-r),3);
+    };
+    for(const w of wolves){
+      if(!w.alive)continue;
+      const a=Math.atan2(state.y-w.y,state.x-w.x);
+      drawWolf(w.x,w.y,w.hp,w.maxHp,a);
+    }
+    for(const rwolves of Object.values(remoteWolves)){
+      for(const w of rwolves) drawWolf(w.x,w.y,w.hp,w.maxHp,null);
     }
   }
 
@@ -1299,6 +1315,7 @@ class Game extends Phaser.Scene {
       if(!w.alive)continue;
       const dx=state.x-w.x, dy=state.y-w.y, d=Math.sqrt(dx*dx+dy*dy);
       if(d>WOLF_ATK_RNG){w.x+=(dx/d)*WOLF_SPEED*(delta/1000);w.y+=(dy/d)*WOLF_SPEED*(delta/1000);}
+      /* position synced below */
       // wall push
       for(const g of Object.values(bldgSpr)){
         const bd=g._d; if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
@@ -1316,6 +1333,15 @@ class Game extends Phaser.Scene {
         this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
         if(state.hp<=0)this.handleDeath();
       }
+    }
+    // Throttled position sync so others can see our wolves
+    const now2=Date.now();
+    if(now2-wolfSyncLast>200){
+      wolfSyncLast=now2;
+      const wd={};
+      wolves.forEach((w,i)=>{if(w.alive)wd[i]={x:Math.round(w.x),y:Math.round(w.y),hp:w.hp,maxHp:w.maxHp};});
+      if(Object.keys(wd).length)set(sref('wolves/'+PID),wd);
+      else remove(sref('wolves/'+PID));
     }
   }
 
@@ -1558,7 +1584,7 @@ class Game extends Phaser.Scene {
     // Firebase sync
     if(time-lastSync>SYNC_MS){
       lastSync=time;
-      set(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100});
+      update(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100});
     }
   }
 }
