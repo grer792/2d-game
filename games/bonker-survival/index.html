@@ -122,9 +122,65 @@
       padding:6px 12px; color:#888; font-size:10px;
       border-radius:5px; z-index:20; pointer-events:none; line-height:1.8;
     }
+    /* ── LOBBY ── */
+    #lobby {
+      position:fixed; inset:0; z-index:200;
+      background:radial-gradient(ellipse at 50% 30%, #1a2a1a 0%, #0d0d0d 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:0;
+    }
+    .lobby-title {
+      font-size:48px; font-weight:900; color:#f0c040;
+      text-shadow:0 0 40px rgba(240,192,64,0.5);
+      letter-spacing:3px; margin-bottom:6px;
+    }
+    .lobby-sub {
+      color:#888; font-size:14px; letter-spacing:2px; text-transform:uppercase;
+      margin-bottom:40px;
+    }
+    .lobby-servers { display:flex; flex-direction:column; gap:12px; width:480px; }
+    .srv-card {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px; padding:20px 24px;
+      display:flex; align-items:center; gap:20px;
+      transition:border-color .2s, background .2s;
+    }
+    .srv-card:hover { border-color:rgba(240,192,64,0.4); background:rgba(255,255,255,0.07); }
+    .srv-dot { width:10px; height:10px; border-radius:50%; background:#2ecc71; flex-shrink:0; box-shadow:0 0 8px #2ecc71; }
+    .srv-info { flex:1; }
+    .srv-name { font-size:17px; font-weight:700; color:#fff; margin-bottom:4px; }
+    .srv-meta { font-size:12px; color:#666; display:flex; gap:14px; }
+    .srv-players { color:#aaa; }
+    .srv-region { color:#555; }
+    .srv-join {
+      background:#f0c040; color:#111; border:none;
+      padding:11px 26px; border-radius:8px;
+      font-size:14px; font-weight:800; cursor:pointer;
+      transition:background .15s, transform .1s;
+      font-family:'Segoe UI',sans-serif; letter-spacing:0.5px;
+    }
+    .srv-join:hover { background:#ffd060; transform:scale(1.04); }
   </style>
 </head>
 <body>
+
+<div id="lobby">
+  <div class="lobby-title">⚔ BONKER SURVIVAL</div>
+  <div class="lobby-sub">Select a server</div>
+  <div class="lobby-servers" id="lobby-servers">
+    <div class="srv-card">
+      <div class="srv-dot"></div>
+      <div class="srv-info">
+        <div class="srv-name">Bonker World #1</div>
+        <div class="srv-meta">
+          <span class="srv-players" id="srv1-count">... players online</span>
+          <span class="srv-region">🌍 Global</span>
+        </div>
+      </div>
+      <button class="srv-join" onclick="joinServer('server1')">JOIN</button>
+    </div>
+  </div>
+</div>
 
 <div id="hud">
   <div class="stat-row">
@@ -238,6 +294,24 @@ const firebaseApp = initializeApp({
   appId: '1:80712714092:web:4b15f70196f05942905549'
 });
 const db = getDatabase(firebaseApp);
+
+let SERVER_KEY = null;
+function sref(path){ return ref(db,'servers/'+SERVER_KEY+'/'+path); }
+
+// Live player count for lobby
+onValue(ref(db,'servers/server1/players'),snap=>{
+  const n=snap.val()?Object.keys(snap.val()).length:0;
+  const el=document.getElementById('srv1-count');
+  if(el)el.textContent=n+' player'+(n===1?'':'s')+' online';
+});
+
+window.joinServer=function(key){
+  SERVER_KEY=key;
+  document.getElementById('lobby').style.display='none';
+  startGame();
+};
+
+function startGame(){
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PID      = 'p_' + Math.random().toString(36).substr(2,9);
@@ -362,7 +436,7 @@ function invAdd(type, count){
   for(let i=0;i<5;i++){ if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;} }
   // Inventory full — drop on ground
   const id='overflow_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
-  bag[type]=count; set(ref(db,'loot/'+id),bag);
+  bag[type]=count; set(sref('loot/'+id),bag);
   return false;
 }
 function invCount(type){ return inv.reduce((s,sl)=>s+(sl?.type===type?sl.count:0),0); }
@@ -400,7 +474,7 @@ function dropSelected(){
   const id='drop_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
   bag[item.type]=item.count;
   inv[selectedSlot]=null; refreshHotbar();
-  set(ref(db,'loot/'+id),bag);
+  set(sref('loot/'+id),bag);
   window._scene&&window._scene.pop(state.x,state.y-30,'Dropped '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#aaa');
 }
 
@@ -487,7 +561,7 @@ window.chestDepFromSlot=function(i){
   const item=inv[i]; if(!item||!RESOURCES.includes(item.type))return;
   const d=bldgSpr[activeChestId]?._d; if(!d)return;
   const cur=(d.storage||{})[item.type]||0;
-  update(ref(db,'buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
+  update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
   inv[i]=null; refreshHotbar();
   setTimeout(renderChestPanel,300);
   window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+ITEM_ICON[item.type],'#3498db');
@@ -498,7 +572,7 @@ window.chestWithdraw=function(res){
   const stored=(d.storage||{})[res]||0; if(stored<1)return;
   const take=Math.min(stored,stored); // take all
   if(invAdd(res,take)){
-    update(ref(db,'buildings/'+activeChestId+'/storage'),{[res]:stored-take});
+    update(sref('buildings/'+activeChestId+'/storage'),{[res]:stored-take});
     setTimeout(renderChestPanel,300);
     window._scene&&window._scene.pop(state.x,state.y-34,'Took '+take+'x '+ITEM_ICON[res],'#2ecc71');
   }
@@ -509,7 +583,7 @@ function openChat(){ chatOpen=true; document.getElementById('chat-wrap').style.d
 function closeChat(){ chatOpen=false; document.getElementById('chat-wrap').style.display='none'; }
 function sendChat(){
   const msg=document.getElementById('chat-input').value.trim(); closeChat(); if(!msg)return;
-  update(ref(db,'players/'+PID),{chat:msg,chatT:Date.now()});
+  update(sref('players/'+PID),{chat:msg,chatT:Date.now()});
   window._scene&&window._scene.startMyChatBubble(msg);
 }
 document.getElementById('chat-input').addEventListener('keydown',e=>{
@@ -558,7 +632,7 @@ class Game extends Phaser.Scene {
     });
     this.input.on('pointerdown',ptr=>this.handleClick(ptr));
     this.setupFirebase();
-    window.addEventListener('beforeunload',()=>remove(ref(db,'players/'+PID)));
+    window.addEventListener('beforeunload',()=>remove(sref('players/'+PID)));
     refreshHotbar();
     this.updateHUD();
   }
@@ -878,43 +952,43 @@ class Game extends Phaser.Scene {
       const maxHp=RES_DEF[type].maxHp, n=counts[type]||RES_N;
       for(let i=0;i<n;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
     });
-    set(ref(db,'resources'),batch);
+    set(sref('resources'),batch);
   }
 
   setupFirebase(){
     const sc=this;
-    get(ref(db,'resources')).then(snap=>{
+    get(sref('resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
       const hasOre=keys.some(k=>k.startsWith('ore_'));
-      if(!hasOre||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(ref(db,'resources')).then(()=>sc.seedMap());
+      if(!hasOre||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
     });
-    onChildAdded(ref(db,'resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
-    onChildChanged(ref(db,'resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
-    onChildRemoved(ref(db,'resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}});
-    onChildAdded(ref(db,'players'),  s=>{if(s.key!==PID&&s.val())sc.mkOther(s.key,s.val());});
-    onChildChanged(ref(db,'players'),s=>{if(s.key!==PID&&s.val())sc.mvOther(s.key,s.val());});
-    onChildRemoved(ref(db,'players'),s=>{
+    onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
+    onChildChanged(sref('resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
+    onChildRemoved(sref('resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}});
+    onChildAdded(sref('players'),  s=>{if(s.key!==PID&&s.val())sc.mkOther(s.key,s.val());});
+    onChildChanged(sref('players'),s=>{if(s.key!==PID&&s.val())sc.mvOther(s.key,s.val());});
+    onChildRemoved(sref('players'),s=>{
       if(others[s.key]){others[s.key].g.destroy();others[s.key].l.destroy();others[s.key].chat.destroy();delete others[s.key];}
       delete playerData[s.key]; sc.updateScoreboard();
     });
-    onChildAdded(ref(db,'buildings'),  s=>{if(s.val()&&!bldgSpr[s.key])sc.mkBldg(s.key,s.val());});
-    onChildChanged(ref(db,'buildings'),s=>{if(s.val()&&bldgSpr[s.key]) sc.rxBldg(s.key,s.val());});
-    onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(roofSpr[s.key])delete roofSpr[s.key];if(activeChestId===s.key)activeChestId=null;});
-    onChildAdded(ref(db,'loot'),  s=>{if(s.val()&&!lootSpr[s.key])sc.mkLoot(s.key,s.val());});
-    onChildRemoved(ref(db,'loot'),s=>{const spr=lootSpr[s.key];if(spr){spr.g.destroy();if(spr.txt)spr.txt.destroy();delete lootSpr[s.key];}});
-    onValue(ref(db,'monument_hold'),snap=>{
+    onChildAdded(sref('buildings'),  s=>{if(s.val()&&!bldgSpr[s.key])sc.mkBldg(s.key,s.val());});
+    onChildChanged(sref('buildings'),s=>{if(s.val()&&bldgSpr[s.key]) sc.rxBldg(s.key,s.val());});
+    onChildRemoved(sref('buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(roofSpr[s.key])delete roofSpr[s.key];if(activeChestId===s.key)activeChestId=null;});
+    onChildAdded(sref('loot'),  s=>{if(s.val()&&!lootSpr[s.key])sc.mkLoot(s.key,s.val());});
+    onChildRemoved(sref('loot'),s=>{const spr=lootSpr[s.key];if(spr){spr.g.destroy();if(spr.txt)spr.txt.destroy();delete lootSpr[s.key];}});
+    onValue(sref('monument_hold'),snap=>{
       const v=snap.val(); if(!v)return;
       if(v.pid!==PID&&Date.now()-v.startTime>=MON_HOLD){
         document.getElementById('vic-msg').textContent=v.name+' held the Monument!';
         document.getElementById('victory-screen').style.display='flex';
       }
     });
-    onChildAdded(ref(db,'players/'+PID+'/hits'),snap=>{
+    onChildAdded(sref('players/'+PID+'/hits'),snap=>{
       if(!snap.val())return;
       const {dmg}=snap.val();
       state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe();
       sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
-      remove(ref(db,'players/'+PID+'/hits/'+snap.key));
+      remove(sref('players/'+PID+'/hits/'+snap.key));
       if(state.hp<=0)sc.handleDeath();
     });
   }
@@ -945,7 +1019,7 @@ class Game extends Phaser.Scene {
         if(invCanAfford(upgCost)){
           for(const[k,v]of Object.entries(upgCost))invRemove(k,v);
           const newHp=next.hp;
-          update(ref(db,'buildings/'+id),{tier:tier+1,hp:newHp});
+          update(sref('buildings/'+id),{tier:tier+1,hp:newHp});
           const matName=Object.keys(upgCost)[0];
           this.pop(d.x,d.y-32,'Upgraded to '+matName+'! ('+newHp+' HP)','#2ecc71');
         } else {
@@ -956,8 +1030,8 @@ class Game extends Phaser.Scene {
         const cost=BLDG_COST[d.type]||{};
         const bag={x:d.x,y:d.y+10}; let hasDrop=false;
         for(const[res,amt]of Object.entries(cost)){const ref2=Math.max(1,Math.floor(amt*0.5));bag[res]=(bag[res]||0)+ref2;hasDrop=true;}
-        if(hasDrop)set(ref(db,'loot/demo_'+id),bag);
-        remove(ref(db,'buildings/'+id));
+        if(hasDrop)set(sref('loot/demo_'+id),bag);
+        remove(sref('buildings/'+id));
         this.pop(d.x,d.y-28,'Demolished','#aaa');
       }
       return true;
@@ -979,7 +1053,7 @@ class Game extends Phaser.Scene {
       }
       state.score+=5; this.updateHUD();
       spr.g.destroy(); if(spr.txt)spr.txt.destroy();
-      delete lootSpr[id]; remove(ref(db,'loot/'+id));
+      delete lootSpr[id]; remove(sref('loot/'+id));
       if(picked.length)this.pop(d.x,d.y-30,'Looted! '+picked.join(' '),'#f0c040');
       return true;
     }
@@ -1009,13 +1083,13 @@ class Game extends Phaser.Scene {
         if(loot==='food') state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);
         this.updateHUD();
         g.destroy(); delete resSpr[id]; delete resHitTime[id];
-        remove(ref(db,'resources/'+id));
+        remove(sref('resources/'+id));
         this.pop(d.x,d.y-44,'+'+amt+' '+ITEM_ICON[loot],'#a8d8a8');
         // Respawn after 30-60s
         const _rx=d.x,_ry=d.y,_rt=d.type,_def=RES_DEF[_rt];
-        setTimeout(()=>set(ref(db,'resources/'+id),{x:_rx,y:_ry,type:_rt,hp:_def.maxHp,maxHp:_def.maxHp}),30000+Math.random()*30000);
+        setTimeout(()=>set(sref('resources/'+id),{x:_rx,y:_ry,type:_rt,hp:_def.maxHp,maxHp:_def.maxHp}),30000+Math.random()*30000);
       } else {
-        update(ref(db,'resources/'+id),{hp:hp-1});
+        update(sref('resources/'+id),{hp:hp-1});
         this.pop(d.x,d.y-32,'hit!','#8b5e3c');
       }
       return true;
@@ -1031,7 +1105,7 @@ class Game extends Phaser.Scene {
       if(dist2(od.x,od.y,px,py)>ATK_RNG)continue;
       if(dist2(ptr.worldX,ptr.worldY,od.x,od.y)>P_RAD+10)continue;
       const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
-      set(ref(db,'players/'+id+'/hits/'+Date.now()),{dmg,from:PID});
+      set(sref('players/'+id+'/hits/'+Date.now()),{dmg,from:PID});
       state.score+=5; this.updateHUD();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
@@ -1065,10 +1139,10 @@ class Game extends Phaser.Scene {
         if(d.type==='chest'){
           const storage=d.storage||{}; const bag={x:d.x,y:d.y+10}; let hasDrop=false;
           for(const [res,amt] of Object.entries(storage)){if((amt||0)>0){bag[res]=amt;hasDrop=true;}}
-          if(hasDrop) set(ref(db,'loot/cr_'+id),bag);
+          if(hasDrop) set(sref('loot/cr_'+id),bag);
         }
-        remove(ref(db,'buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');
-      } else {update(ref(db,'buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,'#e74c3c');}
+        remove(sref('buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');
+      } else {update(sref('buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,'#e74c3c');}
       return;
     }
   }
@@ -1120,7 +1194,7 @@ class Game extends Phaser.Scene {
     for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
     const id=buildType[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
-    set(ref(db,'buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
+    set(sref('buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
     if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
     if(buildType==='monument')this.pop(placeX,placeY-40,'Monument! Stand on it 90s to win!','#f0c040');
   }
@@ -1160,7 +1234,7 @@ class Game extends Phaser.Scene {
       bag[item.type]=(bag[item.type]||0)+item.count;
       inv[i]=null; hasDrop=true;
     }
-    if(hasDrop) set(ref(db,'loot/bag_'+PID+'_'+Date.now()),bag);
+    if(hasDrop) set(sref('loot/bag_'+PID+'_'+Date.now()),bag);
     refreshHotbar();
     state.hp=MAX_HP; state.food_meter=MAX_FOOD; state.thirst=MAX_THIRST;
     let rx=400+Math.random()*(MAP_W-800), ry=400+Math.random()*(MAP_H-800);
@@ -1343,7 +1417,7 @@ class Game extends Phaser.Scene {
         const d=g._d; if(d.type!=='door')continue;
         if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
         if(dist2(state.x,state.y,d.x,d.y)>55)continue;
-        update(ref(db,'buildings/'+id),{open:!d.open});
+        update(sref('buildings/'+id),{open:!d.open});
         this.pop(state.x,state.y-30,d.open?'Door closed':'Door opened','#f0c040');
         doorToggled=true; break;
       }
@@ -1447,20 +1521,20 @@ class Game extends Phaser.Scene {
     let nearMon=false, nearMonId=null;
     for(const [id,g] of Object.entries(bldgSpr)){const d=g._d;if(d.type==='monument'&&dist2(state.x,state.y,d.x,d.y)<50){nearMon=true;nearMonId=id;break;}}
     if(nearMon&&nearMonId){
-      if(!monHoldStart){monHoldStart=Date.now();monHoldId=nearMonId;set(ref(db,'monument_hold'),{pid:PID,name:PNAME,startTime:monHoldStart});}
+      if(!monHoldStart){monHoldStart=Date.now();monHoldId=nearMonId;set(sref('monument_hold'),{pid:PID,name:PNAME,startTime:monHoldStart});}
       const elapsed=Date.now()-monHoldStart, pct=Math.min(1,elapsed/MON_HOLD);
       if(bldgSpr[nearMonId]){bldgSpr[nearMonId]._d._holdPct=pct;this.drawBldg(bldgSpr[nearMonId],bldgSpr[nearMonId]._d);}
-      if(elapsed>=MON_HOLD){document.getElementById('vic-msg').textContent=PNAME+' held the Monument!';document.getElementById('victory-screen').style.display='flex';remove(ref(db,'monument_hold'));monHoldStart=null;}
+      if(elapsed>=MON_HOLD){document.getElementById('vic-msg').textContent=PNAME+' held the Monument!';document.getElementById('victory-screen').style.display='flex';remove(sref('monument_hold'));monHoldStart=null;}
     } else if(monHoldId){
       if(bldgSpr[monHoldId]){bldgSpr[monHoldId]._d._holdPct=0;this.drawBldg(bldgSpr[monHoldId],bldgSpr[monHoldId]._d);}
-      get(ref(db,'monument_hold')).then(s=>{if(s.val()?.pid===PID)remove(ref(db,'monument_hold'));});
+      get(sref('monument_hold')).then(s=>{if(s.val()?.pid===PID)remove(sref('monument_hold'));});
       monHoldStart=null;monHoldId=null;
     }
 
     // Firebase sync
     if(time-lastSync>SYNC_MS){
       lastSync=time;
-      set(ref(db,'players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null});
+      set(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null});
     }
   }
 }
@@ -1473,6 +1547,7 @@ new Phaser.Game({
   physics:{default:'arcade',arcade:{debug:false}},
   scene:Game
 });
+} // end startGame
 </script>
 </body>
 </html>
