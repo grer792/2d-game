@@ -712,7 +712,7 @@ h1 {
         <div class="friend-title"><span>FR</span> Friend game</div>
         <button class="online-btn primary" id="createFriendBtn">Create game code</button>
         <div class="code-row">
-          <input class="code-input" id="joinCodeInput" maxlength="12" placeholder="Enter code">
+          <input class="code-input" id="joinCodeInput" placeholder="Enter code or invite link">
           <button class="small-btn" id="joinCodeBtn">Join</button>
         </div>
         <div class="mode-room-line" id="modeRoomLine">
@@ -766,7 +766,7 @@ h1 {
         <button class="online-btn primary" id="friendBtn">Create friend code</button>
       </div>
       <div class="join-line">
-        <input class="code-input" id="sideJoinCodeInput" maxlength="12" placeholder="Enter code">
+        <input class="code-input" id="sideJoinCodeInput" placeholder="Enter code or invite link">
         <button class="small-btn" id="sideJoinCodeBtn">Join</button>
       </div>
       <div class="room-line" id="roomLine">
@@ -890,10 +890,10 @@ function ranks() {
 }
 
 function getPlayerId() {
-  const existing = localStorage.getItem('bonkerChessPlayerId');
+  const existing = sessionStorage.getItem('bonkerChessPlayerId');
   if (existing) return existing;
   const id = `p_${Math.random().toString(36).slice(2, 10)}_${Date.now().toString(36)}`;
-  localStorage.setItem('bonkerChessPlayerId', id);
+  sessionStorage.setItem('bonkerChessPlayerId', id);
   return id;
 }
 
@@ -1288,7 +1288,13 @@ async function joinRoom(id) {
   const target = roomRef(cleanedId);
   const result = await runTransaction(target, current => {
     if (!current) return;
-    if (current.white === playerId || current.black === playerId) return current;
+    if (current.black === playerId) return current;
+    if (current.white === playerId && !current.black) {
+      current.black = playerId;
+      current.status = 'playing';
+      return current;
+    }
+    if (current.white === playerId) return current;
     if (!current.white) {
       current.white = playerId;
       current.status = current.black ? 'playing' : 'waiting';
@@ -1315,7 +1321,7 @@ async function joinRoom(id) {
 
   const state = result.snapshot.val();
   currentRoomId = cleanedId;
-  playerColor = state.white === playerId ? 'w' : state.black === playerId ? 'b' : null;
+  playerColor = state.black === playerId ? 'b' : state.white === playerId ? 'w' : null;
   onlineMode = true;
   roomState = state;
   flipped = playerColor === 'b';
