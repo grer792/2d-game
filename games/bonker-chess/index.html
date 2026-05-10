@@ -229,6 +229,31 @@ button {
   line-height: 1.35;
 }
 
+.mode-room-line {
+  display: none;
+  gap: 8px;
+  align-items: center;
+}
+
+.mode-room-line.active {
+  display: flex;
+}
+
+.mode-room-code {
+  flex: 1;
+  min-width: 0;
+  background: #24221f;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  padding: 10px 11px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .board-zone {
   grid-column: 1;
   grid-row: 1;
@@ -685,6 +710,11 @@ h1 {
           <input class="code-input" id="joinCodeInput" maxlength="12" placeholder="Enter code">
           <button class="small-btn" id="joinCodeBtn">Join</button>
         </div>
+        <div class="mode-room-line" id="modeRoomLine">
+          <div class="mode-room-code" id="modeRoomCode"></div>
+          <button class="small-btn" id="modeCopyBtn">Copy</button>
+          <button class="small-btn" id="modeCancelBtn">Cancel</button>
+        </div>
         <div class="mode-note" id="modeNote"></div>
       </div>
     </div>
@@ -798,6 +828,10 @@ const createFriendBtn = document.getElementById('createFriendBtn');
 const joinCodeInput = document.getElementById('joinCodeInput');
 const joinCodeBtn = document.getElementById('joinCodeBtn');
 const modeNote = document.getElementById('modeNote');
+const modeRoomLine = document.getElementById('modeRoomLine');
+const modeRoomCode = document.getElementById('modeRoomCode');
+const modeCopyBtn = document.getElementById('modeCopyBtn');
+const modeCancelBtn = document.getElementById('modeCancelBtn');
 const friendBtn = document.getElementById('friendBtn');
 const randomBtn = document.getElementById('randomBtn');
 const roomLine = document.getElementById('roomLine');
@@ -896,6 +930,20 @@ function setModeNote(text) {
   modeNote.textContent = text;
 }
 
+function setModeBusy(isBusy) {
+  randomModeBtn.disabled = isBusy;
+  createFriendBtn.disabled = isBusy;
+  joinCodeBtn.disabled = isBusy;
+  joinCodeInput.disabled = isBusy;
+  sameDeviceBtn.disabled = isBusy;
+}
+
+function showModeRoom(roomId, label = roomId) {
+  modeRoomLine.classList.toggle('active', Boolean(roomId));
+  modeRoomCode.textContent = roomId ? label : '';
+  modeCopyBtn.style.display = roomId && roomId !== 'RANDOM' ? '' : 'none';
+}
+
 function showModeScreen() {
   document.body.classList.add('mode-active');
   modeScreen.classList.remove('hidden');
@@ -927,7 +975,14 @@ async function startSameDevice() {
 }
 
 function cleanJoinCode(value) {
-  return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    const room = url.searchParams.get('room');
+    if (room) return cleanJoinCode(room);
+  } catch {}
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
 }
 
 function showRoomControls(roomId) {
@@ -1186,7 +1241,7 @@ async function syncOnlineMove(move) {
 
 async function createRoom(kind = 'friend') {
   await leaveOnline(false);
-  hideModeScreen();
+  showModeScreen();
   setModeNote('');
   waitingRandom = false;
   const id = makeRoomId();
@@ -1225,15 +1280,23 @@ async function createRoom(kind = 'friend') {
   await set(ref(db, `chessRooms/${id}/whiteOnline`), true);
   setUrlRoom(id);
   listenToRoom(id);
+  showModeRoom(id, `Code: ${id}`);
+  setModeBusy(true);
+  setModeNote(`Waiting for your friend. Send them code ${id} or copy the invite link.`);
   render();
 }
 
 async function joinRoom(id) {
   const cleanedId = String(id || '').trim().toUpperCase();
   if (!cleanedId) {
+    showModeScreen();
+    showModeRoom(null);
     setModeNote('Enter a room code first.');
     return;
   }
+  showModeScreen();
+  setModeNote(`Joining ${cleanedId}...`);
+  setModeBusy(true);
   await leaveOnline(false);
   waitingRandom = false;
   const target = roomRef(cleanedId);
@@ -1256,6 +1319,8 @@ async function joinRoom(id) {
   if (!result.committed || !result.snapshot.exists()) {
     showModeScreen();
     friendSetup.classList.add('active');
+    showModeRoom(null);
+    setModeBusy(false);
     setModeNote('That code is full or does not exist.');
     setOnlineNote('That room is full or does not exist.');
     render();
@@ -1270,6 +1335,8 @@ async function joinRoom(id) {
   flipped = playerColor === 'b';
   applyRemoteGame(state);
   hideModeScreen();
+  showModeRoom(null);
+  setModeBusy(false);
   setModeNote('');
   const onlineKey = playerColor === 'w' ? 'whiteOnline' : 'blackOnline';
   if (onlineKey) {
@@ -1294,15 +1361,23 @@ function listenToRoom(id) {
     roomState = state;
     if (!playerColor) playerColor = state.white === playerId ? 'w' : state.black === playerId ? 'b' : null;
     applyRemoteGame(state);
+    if (onlineMode && state.white && state.black) {
+      hideModeScreen();
+      showModeRoom(null);
+      setModeBusy(false);
+    }
     render();
   });
 }
 
 async function playRandom() {
   await leaveOnline(false);
-  hideModeScreen();
+  showModeScreen();
+  showModeRoom('RANDOM', 'Searching...');
+  setModeBusy(true);
   waitingRandom = false;
   setOnlineNote('Looking for a random opponent...');
+  setModeNote('Looking for a random opponent. You can cancel while waiting.');
   const queueSnap = await get(ref(db, 'chessQueue'));
   const queue = queueSnap.val() || {};
   const candidateId = Object.keys(queue).find(id => id !== playerId);
@@ -1335,6 +1410,9 @@ async function playRandom() {
     await set(ref(db, `chessRooms/${id}/blackOnline`), true);
     setUrlRoom(id);
     listenToRoom(id);
+    hideModeScreen();
+    showModeRoom(null);
+    setModeBusy(false);
     render();
     return;
   }
@@ -1349,6 +1427,7 @@ async function playRandom() {
   playerColor = 'w';
   roomState = { white: playerId, black: null, status: 'waiting' };
   setOnlineNote('Waiting for a random opponent...');
+  setModeNote('Waiting for a random opponent. You can cancel while waiting.');
   render();
 
   if (queueUnsubscribe) queueUnsubscribe();
@@ -1380,6 +1459,8 @@ async function leaveOnline(updateUrl = true) {
   currentRoomId = null;
   playerColor = null;
   roomState = null;
+  setModeBusy(false);
+  showModeRoom(null);
   if (updateUrl) setUrlRoom(null);
 }
 
@@ -1436,6 +1517,8 @@ randomModeBtn.addEventListener('click', () => {
   playRandom().catch(error => {
     console.error(error);
     showModeScreen();
+    showModeRoom(null);
+    setModeBusy(false);
     setModeNote('Could not start random matchmaking. Try again.');
     setOnlineNote('Could not start random matchmaking. Try again.');
   });
@@ -1446,6 +1529,8 @@ createFriendBtn.addEventListener('click', () => {
     console.error(error);
     showModeScreen();
     friendSetup.classList.add('active');
+    showModeRoom(null);
+    setModeBusy(false);
     setModeNote('Could not create room. Try again.');
     setOnlineNote('Could not create friend room. Try again.');
   });
@@ -1456,6 +1541,8 @@ joinCodeBtn.addEventListener('click', () => {
     console.error(error);
     showModeScreen();
     friendSetup.classList.add('active');
+    showModeRoom(null);
+    setModeBusy(false);
     setModeNote('Could not join that room.');
   });
 });
@@ -1475,6 +1562,8 @@ randomBtn.addEventListener('click', () => {
   playRandom().catch(error => {
     console.error(error);
     showModeScreen();
+    showModeRoom(null);
+    setModeBusy(false);
     setOnlineNote('Could not start random matchmaking. Try again.');
   });
 });
@@ -1501,11 +1590,33 @@ copyBtn.addEventListener('click', async () => {
   }
 });
 
+modeCopyBtn.addEventListener('click', async () => {
+  if (!currentRoomId) return;
+  const link = roomUrl(currentRoomId);
+  try {
+    await navigator.clipboard.writeText(link);
+    setModeNote('Invite link copied.');
+  } catch {
+    setModeNote(link);
+  }
+});
+
+modeCancelBtn.addEventListener('click', async () => {
+  await leaveOnline();
+  resetLocalGame();
+  showModeScreen();
+  setModeNote('Canceled. Choose a mode.');
+  setOnlineNote('Canceled. Choose a mode.');
+  render();
+});
+
 leaveBtn.addEventListener('click', async () => {
   await leaveOnline();
   resetLocalGame();
   showModeScreen();
+  showModeRoom(null);
   setOnlineNote('Left online match. Choose a mode.');
+  setModeNote('Left online match. Choose a mode.');
   render();
 });
 
@@ -1526,6 +1637,8 @@ if (urlRoom) {
   });
 } else {
   showModeScreen();
+  showModeRoom(null);
+  setModeBusy(false);
   render();
 }
 
