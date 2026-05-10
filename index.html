@@ -9,9 +9,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --sw-icon: 54px;
-  --sw-full: 220px;
-  --header-h: 56px;
+  --sw-icon: 62px;
+  --sw-full: 230px;
+  --header-h: 64px;
   --bg: #13131f;
   --bg2: #1c1c2e;
   --bg3: #252538;
@@ -43,20 +43,24 @@ a { text-decoration: none; color: inherit; }
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center;
-  padding: 0 14px; gap: 10px;
+  padding: 0 16px; gap: 0;
   z-index: 300;
+}
+.header-left {
+  display: flex; align-items: center; gap: 6px;
+  flex: 1; min-width: 0;
 }
 
 .hamburger {
-  width: 36px; height: 36px; flex-shrink: 0;
+  width: 40px; height: 40px; flex-shrink: 0;
   background: transparent; border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--text2);
   transition: background 0.15s, color 0.15s;
 }
 .hamburger:hover { background: var(--bg3); color: var(--text); }
-.hamburger svg { width: 22px; height: 22px; fill: currentColor; }
+.hamburger svg { width: 24px; height: 24px; fill: currentColor; }
 
 .header-logo {
   display: flex; align-items: center;
@@ -67,21 +71,21 @@ a { text-decoration: none; color: inherit; }
 }
 .header-logo:hover { background: var(--bg3); }
 .logo-img {
-  height: 34px; width: auto;
+  height: 46px; width: auto;
   mix-blend-mode: screen;
   display: block;
 }
 
 .header-search {
-  flex: 1; max-width: 520px; margin: 0 auto; position: relative;
+  flex: 0 0 420px; position: relative; margin: 0 16px;
 }
 .header-search input {
   width: 100%;
   background: var(--bg3); border: 1.5px solid var(--border);
   color: var(--text);
-  padding: 8px 18px 8px 40px;
-  border-radius: 22px;
-  font-family: 'Inter', sans-serif; font-size: 0.88rem;
+  padding: 10px 18px 10px 44px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem;
   outline: none; transition: border-color 0.2s;
 }
 .header-search input:focus { border-color: var(--accent); }
@@ -93,17 +97,17 @@ a { text-decoration: none; color: inherit; }
 }
 .search-ico svg { width: 19px; height: 19px; fill: currentColor; }
 
-.header-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: auto; }
+.header-right { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
 
 .icon-btn {
-  width: 38px; height: 38px; border-radius: 8px;
+  width: 44px; height: 44px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--text2);
   background: transparent; border: none;
   transition: background 0.15s, color 0.15s; position: relative;
 }
 .icon-btn:hover { background: var(--bg3); color: var(--text); }
-.icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+.icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
 .notif-dot {
   position: absolute; top: 7px; right: 7px;
   width: 8px; height: 8px;
@@ -113,8 +117,8 @@ a { text-decoration: none; color: inherit; }
 .header-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
 .btn-login {
   background: var(--accent); border: none; color: white;
-  padding: 8px 18px; border-radius: 8px;
-  font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700;
+  padding: 10px 22px; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700;
   cursor: pointer; transition: background 0.2s; margin-left: 4px;
   white-space: nowrap;
 }
@@ -145,8 +149,8 @@ body.sidebar-on .sidebar:hover {
 
 .sidebar-scroll {
   flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 8px 6px 4px;
-  display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 7px 4px;
+  display: flex; flex-direction: column; gap: 2px;
 }
 .sidebar-scroll::-webkit-scrollbar { width: 0; }
 
@@ -161,52 +165,52 @@ body.sidebar-on .sidebar:hover .sidebar-label { opacity: 1; }
 .sidebar-divider { height: 1px; background: var(--border); margin: 5px 0; }
 
 .sidebar-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 7px 7px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; gap: 13px;
+  padding: 11px 9px; border-radius: 9px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  font-size: 0.85rem; font-weight: 500;
+  font-size: 0.875rem; font-weight: 500;
   color: var(--text2); white-space: nowrap; overflow: hidden;
 }
 .sidebar-item:hover { background: var(--bg3); color: var(--text); }
 .sidebar-item.active { background: var(--bg3); color: var(--text); }
 .sidebar-item .ico {
-  width: 22px; height: 22px; flex-shrink: 0;
+  width: 26px; height: 26px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
-.sidebar-item .ico svg { width: 18px; height: 18px; fill: currentColor; }
+.sidebar-item .ico svg { width: 22px; height: 22px; fill: currentColor; }
 .sidebar-item .label { opacity: 0; transition: opacity var(--ease); pointer-events: none; }
 body.sidebar-on .sidebar:hover .sidebar-item .label { opacity: 1; }
 
 /* ── SIDEBAR BOTTOM ── */
 .sidebar-bottom {
   border-top: 1px solid var(--border);
-  padding: 6px 6px 8px; display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 7px 10px; display: flex; flex-direction: column; gap: 2px;
 }
 
 .sb-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 7px 7px; border-radius: 8px; cursor: pointer;
-  color: var(--text2); font-size: 0.85rem; font-weight: 500;
+  display: flex; align-items: center; gap: 13px;
+  padding: 10px 9px; border-radius: 9px; cursor: pointer;
+  color: var(--text2); font-size: 0.875rem; font-weight: 500;
   white-space: nowrap; overflow: hidden;
   transition: background 0.15s, color 0.15s;
 }
 .sb-item:hover { background: var(--bg3); color: var(--text); }
-.sb-item .ico { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.sb-item .ico svg { width: 18px; height: 18px; fill: currentColor; }
+.sb-item .ico { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.sb-item .ico svg { width: 22px; height: 22px; fill: currentColor; }
 .sb-item .label { opacity: 0; transition: opacity var(--ease); }
 body.sidebar-on .sidebar:hover .sb-item .label { opacity: 1; }
 
 .sb-contact {
-  display: flex; align-items: center; gap: 12px;
-  padding: 7px 7px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; gap: 13px;
+  padding: 10px 9px; border-radius: 9px; cursor: pointer;
   background: var(--accent); color: white;
-  font-size: 0.85rem; font-weight: 600;
+  font-size: 0.875rem; font-weight: 600;
   white-space: nowrap; overflow: hidden;
   transition: background 0.15s;
 }
 .sb-contact:hover { background: var(--accent-h); }
-.sb-contact .ico { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.sb-contact .ico svg { width: 18px; height: 18px; fill: white; }
+.sb-contact .ico { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.sb-contact .ico svg { width: 22px; height: 22px; fill: white; }
 .sb-contact .label { opacity: 0; transition: opacity var(--ease); }
 body.sidebar-on .sidebar:hover .sb-contact .label { opacity: 1; }
 
@@ -351,13 +355,14 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 
 <!-- HEADER -->
 <header class="header">
-  <button class="hamburger" id="sidebarToggle" title="Toggle sidebar">
-    <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-  </button>
-
-  <a class="header-logo" href="/">
-    <img src="assets/logo.png" alt="BonkerGames" class="logo-img">
-  </a>
+  <div class="header-left">
+    <button class="hamburger" id="sidebarToggle" title="Toggle sidebar">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <a class="header-logo" href="/">
+      <img src="assets/logo.png" alt="BonkerGames" class="logo-img">
+    </a>
+  </div>
 
   <div class="header-search">
     <span class="search-ico">
