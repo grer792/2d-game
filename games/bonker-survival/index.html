@@ -8,34 +8,31 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:#4a8a3a; overflow:hidden; font-family:'Segoe UI',sans-serif; }
     #hud {
-      position:fixed; top:12px; left:12px;
-      background:rgba(12,12,14,0.92); border:1px solid rgba(255,255,255,0.09);
-      padding:10px 12px 8px; color:#fff;
-      z-index:20; pointer-events:none; min-width:190px; border-radius:10px;
+      position:fixed; bottom:80px; left:12px;
+      background:rgba(8,8,10,0.82);
+      padding:7px 8px 7px 6px; color:#fff;
+      z-index:20; pointer-events:none; width:200px; border-radius:7px;
       font-family:'Segoe UI',sans-serif;
     }
-    #hud-comfort {
-      display:flex; justify-content:space-between; align-items:center;
-      font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
-      color:#e67e22; margin-bottom:7px;
+    .sbar { display:flex; align-items:center; margin-bottom:4px; }
+    .sbar:last-of-type { margin-bottom:0; }
+    .sbar-icon {
+      width:28px; height:24px; display:flex; align-items:center; justify-content:center;
+      font-size:14px; flex-shrink:0;
     }
-    #hud-comfort-pct { color:#f0c040; font-size:11px; }
-    .sbar { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
-    .sbar-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
     .sbar-bg {
-      flex:1; height:20px; background:rgba(255,255,255,0.07);
-      border-radius:5px; overflow:hidden; position:relative;
+      flex:1; height:24px; border-radius:4px; overflow:hidden; position:relative;
     }
-    .sbar-fill { height:100%; border-radius:5px; transition:width .2s; }
+    .sbar-fill { height:100%; transition:width .2s; border-radius:4px; }
     .sbar-val {
-      position:absolute; right:7px; top:50%; transform:translateY(-50%);
-      font-size:11px; font-weight:700; color:rgba(255,255,255,0.92);
-      text-shadow:0 1px 3px rgba(0,0,0,0.9); pointer-events:none;
+      position:absolute; left:8px; top:50%; transform:translateY(-50%);
+      font-size:12px; font-weight:700; color:#fff;
+      text-shadow:0 1px 4px rgba(0,0,0,0.95); pointer-events:none;
     }
-    #ui-tools { font-size:11px; color:#888; margin-top:4px; }
+    #ui-tools { font-size:11px; color:#888; margin-top:5px; padding-left:2px; }
     #ui-tools b { color:#f0c040; }
-    #ui-mode-row { color:#7ec8e3; font-size:10px; margin-top:1px; }
-    #ui-time { color:#f0c040; font-size:10px; }
+    #ui-mode-row { color:#7ec8e3; font-size:10px; margin-top:1px; padding-left:2px; }
+    #ui-time { color:#f0c040; font-size:10px; padding-left:2px; }
     #scores {
       position:fixed; top:12px; right:12px;
       background:rgba(20,20,20,0.85); border:1px solid #444;
@@ -197,26 +194,22 @@
 </div>
 
 <div id="hud">
-  <div id="hud-comfort">
-    <span>🔥 COMFORT</span>
-    <span id="hud-comfort-pct">100%</span>
-  </div>
   <div class="sbar">
-    <span class="sbar-icon">❤️</span>
+    <div class="sbar-icon">➕</div>
     <div class="sbar-bg">
-      <div id="hp-bar" class="sbar-fill" style="background:#2ecc71;width:100%"></div>
+      <div id="hp-bar" class="sbar-fill" style="background:#4caf50;width:100%"></div>
       <span class="sbar-val" id="ui-hp">100</span>
     </div>
   </div>
   <div class="sbar">
-    <span class="sbar-icon">💧</span>
+    <div class="sbar-icon">🪣</div>
     <div class="sbar-bg">
-      <div id="thirst-bar" class="sbar-fill" style="background:#3498db;width:100%"></div>
+      <div id="thirst-bar" class="sbar-fill" style="background:#2196f3;width:100%"></div>
       <span class="sbar-val" id="ui-th">10</span>
     </div>
   </div>
   <div class="sbar">
-    <span class="sbar-icon">🍎</span>
+    <div class="sbar-icon">🍴</div>
     <div class="sbar-bg">
       <div id="hunger-bar" class="sbar-fill" style="background:#e67e22;width:100%"></div>
       <span class="sbar-val" id="ui-fm">10</span>
@@ -636,7 +629,7 @@ class Game extends Phaser.Scene {
     this.myChatBubble=null;
     this.redrawMe();
     this.cameras.main.startFollow(this.pbody,true,0.08,0.08);
-    this.cameras.main.setZoom(1.8);
+    this.cameras.main.setZoom(2.5);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
     this.hammerGfx=this.add.graphics().setDepth(98001);
     this.hammerHintTxt=this.add.text(0,0,'🔨 Click: green=upgrade (costs met)  orange=can\'t afford  red=demolish',{fontSize:'8px',color:'#ffe',stroke:'#111',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.65)',padding:{x:5,y:3}}).setOrigin(0.5).setDepth(99002).setVisible(false);
@@ -1194,8 +1187,8 @@ class Game extends Phaser.Scene {
     let placeX=Math.round(ptr.worldX), placeY=Math.round(ptr.worldY), extra={};
     if(buildType==='foundation'){
       const snap=getFoundationSnap(ptr.worldX,ptr.worldY);
-      if(!snap){this.pop(this.pbody.x,this.pbody.y-30,'Must connect to existing floor!','#e74c3c');return;}
-      placeX=snap.x; placeY=snap.y;
+      placeX=snap?snap.x:Math.round(ptr.worldX);
+      placeY=snap?snap.y:Math.round(ptr.worldY);
     } else if(buildType==='wall'||buildType==='door'){
       const snap=getSnapPos(ptr.worldX,ptr.worldY);
       if(!snap){this.pop(this.pbody.x,this.pbody.y-30,'Snap to a floor tile first!','#e74c3c');return;}
@@ -1403,8 +1396,6 @@ class Game extends Phaser.Scene {
     document.getElementById('ui-hp').textContent=Math.max(0,Math.round(state.hp));
     document.getElementById('ui-fm').textContent=state.food_meter;
     document.getElementById('ui-th').textContent=state.thirst;
-    const comfort=Math.round((state.hp/MAX_HP+state.food_meter/MAX_FOOD+state.thirst/MAX_THIRST)/3*100);
-    document.getElementById('hud-comfort-pct').textContent=comfort+'%';
     document.getElementById('ui-score').textContent=state.score;
     const teamLabel=state.teamId?` [${state.teamId}]`:'';
     document.getElementById('ui-mode').textContent=buildMode?'BUILD: '+buildType.toUpperCase():('EXPLORE'+teamLabel);
@@ -1497,7 +1488,13 @@ class Game extends Phaser.Scene {
     // Build preview
     if(buildMode){
       const p=this.input.activePointer; bPrev.clear().setVisible(true);
-      if(buildType==='foundation'){const fsnap=getFoundationSnap(p.worldX,p.worldY);const fx=fsnap?fsnap.x:p.worldX,fy=fsnap?fsnap.y:p.worldY,fcol=fsnap?0xd4a96a:0xe74c3c;bPrev.fillStyle(fcol,0.35).fillRect(fx-30,fy-30,60,60);bPrev.lineStyle(2,fcol,0.7).strokeRect(fx-30,fy-30,60,60);}
+      if(buildType==='foundation'){
+        const fsnap=getFoundationSnap(p.worldX,p.worldY);
+        const fx=fsnap?fsnap.x:Math.round(p.worldX),fy=fsnap?fsnap.y:Math.round(p.worldY);
+        const tooClose=Object.values(bldgSpr).some(g=>g._d.type==='foundation'&&Math.abs(g._d.x-fx)<58&&Math.abs(g._d.y-fy)<58);
+        const fcol=tooClose?0xe74c3c:0xd4a96a;
+        bPrev.fillStyle(fcol,0.35).fillRect(fx-30,fy-30,60,60);bPrev.lineStyle(2,fcol,0.7).strokeRect(fx-30,fy-30,60,60);
+      }
       else if(buildType==='wall'||buildType==='door'){
         const snap=getSnapPos(p.worldX,p.worldY);
         const sx=snap?snap.x:p.worldX,sy=snap?snap.y:p.worldY,rot=snap?snap.rot:0;
