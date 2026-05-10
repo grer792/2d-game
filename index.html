@@ -11,24 +11,22 @@
       position:fixed; top:12px; left:12px;
       background:rgba(20,20,20,0.85); border:1px solid #444;
       padding:10px 16px; color:#ddd; font-size:13px;
-      z-index:20; pointer-events:none; min-width:210px;
-      border-radius:6px; line-height:2;
+      z-index:20; pointer-events:none; min-width:210px; border-radius:6px; line-height:2;
     }
     .stat-row { display:flex; align-items:center; gap:8px; }
     .bar { flex:1; height:7px; background:#333; border-radius:3px; overflow:hidden; }
     .bar-inner { height:100%; border-radius:3px; transition:width .25s; }
     .lbl { width:54px; font-size:11px; color:#aaa; }
     .val { width:28px; text-align:right; font-size:12px; color:#fff; font-weight:600; }
-    #ui-resources { color:#bbb; font-size:12px; }
-    #ui-resources b { color:#fff; }
-    #ui-mode-row { color:#7ec8e3; font-size:11px; margin-top:2px; }
+    #ui-tools { font-size:11px; color:#888; margin-top:2px; }
+    #ui-tools b { color:#f0c040; }
+    #ui-mode-row { color:#7ec8e3; font-size:11px; }
     #ui-time { color:#f0c040; font-size:11px; }
     #scores {
       position:fixed; top:12px; right:12px;
       background:rgba(20,20,20,0.85); border:1px solid #444;
       padding:10px 14px; color:#ddd; font-size:12px;
-      z-index:20; pointer-events:none; min-width:150px;
-      border-radius:6px; line-height:1.9;
+      z-index:20; pointer-events:none; min-width:150px; border-radius:6px; line-height:1.9;
     }
     #scores .title { color:#f0c040; font-size:11px; letter-spacing:1px; margin-bottom:4px; }
     #toolbar {
@@ -36,7 +34,7 @@
       display:flex; gap:6px; z-index:20;
     }
     .slot {
-      width:54px; height:54px; background:rgba(20,20,20,0.85);
+      width:58px; height:58px; background:rgba(20,20,20,0.85);
       border:2px solid #444; border-radius:6px;
       display:flex; flex-direction:column; align-items:center;
       justify-content:center; cursor:pointer; transition:border-color .15s;
@@ -44,15 +42,15 @@
     }
     .slot:hover { border-color:#888; }
     .slot.active { border-color:#f0c040; background:rgba(40,35,10,0.92); }
-    .slot.locked { opacity:0.38; cursor:not-allowed; }
+    .slot-num { position:absolute; top:3px; left:5px; font-size:8px; color:#555; }
     .slot-icon { font-size:22px; line-height:1; }
-    .slot-label { font-size:9px; color:#777; margin-top:2px; letter-spacing:.5px; }
-    .slot.active .slot-label { color:#f0c040; }
+    .slot-count { font-size:10px; color:#ccc; font-weight:600; margin-top:1px; min-height:13px; }
+    .slot.active .slot-count { color:#f0c040; }
     #build-sub {
-      position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+      position:fixed; bottom:84px; left:50%; transform:translateX(-50%);
       background:rgba(20,20,20,0.92); border:1px solid #555;
       padding:8px 16px; border-radius:6px; display:none;
-      gap:10px; z-index:20; white-space:nowrap; flex-wrap:wrap; max-width:600px; justify-content:center;
+      gap:10px; z-index:20; white-space:nowrap; flex-wrap:wrap; max-width:640px; justify-content:center;
     }
     .bopt { display:inline-block; padding:5px 10px; border-radius:4px;
       border:1px solid #555; color:#ccc; font-size:11px; cursor:pointer; }
@@ -63,34 +61,47 @@
       transform:translate(-50%,-50%);
       background:rgba(14,14,14,0.97); border:1px solid #555;
       padding:22px 26px; border-radius:8px; z-index:30;
-      color:#ddd; min-width:300px; max-width:420px;
+      color:#ddd; min-width:320px; max-width:460px;
     }
-    .panel h3 { color:#f0c040; margin-bottom:14px; font-size:15px; }
+    .panel h3 { color:#f0c040; margin-bottom:12px; font-size:15px; }
     .panel input[type=text], .panel input[type=number] {
-      width:100%; padding:7px 10px; background:#222; border:1px solid #555;
-      color:#fff; border-radius:4px; font-size:13px; margin:6px 0; outline:none;
+      padding:6px 10px; background:#1e1e1e; border:1px solid #555;
+      color:#fff; border-radius:4px; font-size:13px; margin:4px 0; outline:none;
     }
-    .panel input[type=number] { width:70px; display:inline-block; }
+    .panel input[type=text] { width:100%; }
+    .panel input[type=number] { width:65px; display:inline-block; }
     .panel button {
-      padding:6px 13px; border-radius:4px; border:1px solid #555;
-      background:#2a2a2a; color:#ccc; cursor:pointer; font-size:12px; margin:3px 2px;
+      padding:6px 12px; border-radius:4px; border:1px solid #555;
+      background:#252525; color:#ccc; cursor:pointer; font-size:12px; margin:2px;
     }
-    .panel button:hover { background:#3a3a3a; color:#fff; }
+    .panel button:hover { background:#333; color:#fff; }
     .panel button:disabled { opacity:0.35; cursor:default; }
     .panel .close-btn { float:right; margin-top:-6px; }
     .recipe-row {
       display:flex; align-items:center; justify-content:space-between;
-      padding:7px 0; border-bottom:1px solid #2a2a2a; gap:8px;
+      padding:7px 0; border-bottom:1px solid #222; gap:8px;
     }
     .recipe-name { font-size:13px; min-width:130px; }
-    .recipe-cost { font-size:11px; color:#777; flex:1; }
-    .recipe-cost.ok { color:#a0c0a0; }
-    .chest-row { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; }
-    .chest-row span { min-width:80px; }
+    .recipe-cost { font-size:11px; color:#666; flex:1; }
+    .recipe-cost.ok { color:#8abf8a; }
+    .chest-cols { display:flex; gap:20px; margin-top:6px; }
+    .chest-col { flex:1; }
+    .chest-col h4 { font-size:12px; color:#888; margin-bottom:8px; border-bottom:1px solid #333; padding-bottom:4px; }
+    .chest-item { display:flex; align-items:center; justify-content:space-between; padding:4px 0; font-size:13px; }
+    .chest-item .ci-left { display:flex; align-items:center; gap:6px; }
+    .chest-item button { padding:3px 8px; font-size:11px; }
+    #inv-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:8px; }
+    .inv-slot {
+      border:1px solid #444; border-radius:4px; background:#1e1e1e;
+      padding:6px; text-align:center; cursor:pointer; font-size:18px; min-height:46px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+    }
+    .inv-slot:hover { border-color:#777; }
+    .inv-slot .inv-count { font-size:10px; color:#aaa; }
     #chat-wrap {
-      display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+      display:none; position:fixed; bottom:84px; left:50%; transform:translateX(-50%);
       z-index:30; background:rgba(18,18,18,0.92); border:1px solid #555;
-      border-radius:6px; padding:8px 12px; align-items:center; gap:8px;
+      border-radius:6px; padding:8px 14px; align-items:center; gap:8px;
     }
     #chat-input {
       background:transparent; border:none; color:#fff; font-size:13px;
@@ -99,18 +110,17 @@
     #victory-screen {
       display:none; position:fixed; inset:0;
       background:rgba(0,0,0,0.88); z-index:60;
-      flex-direction:column; align-items:center; justify-content:center;
-      color:#fff; text-align:center;
+      flex-direction:column; align-items:center; justify-content:center; text-align:center;
     }
     #victory-screen h1 { font-size:72px; color:#f0c040; text-shadow:0 0 50px #f0c040; margin-bottom:16px; }
     #victory-screen p { font-size:18px; color:#ccc; margin-bottom:28px; }
     #victory-screen button { padding:12px 32px; font-size:16px; border-radius:6px;
       border:2px solid #f0c040; background:transparent; color:#f0c040; cursor:pointer; }
     #hint {
-      position:fixed; bottom:80px; right:12px;
+      position:fixed; bottom:84px; right:12px;
       background:rgba(20,20,20,0.72); border:1px solid #444;
       padding:6px 12px; color:#888; font-size:10px;
-      border-radius:5px; z-index:20; pointer-events:none; line-height:1.7;
+      border-radius:5px; z-index:20; pointer-events:none; line-height:1.8;
     }
   </style>
 </head>
@@ -132,9 +142,7 @@
     <span class="bar"><span id="thirst-bar" class="bar-inner" style="background:#3498db;width:100%"></span></span>
     <span class="val" id="ui-th">10</span>
   </div>
-  <div id="ui-resources">
-    Wood <b id="ui-wood">0</b> &nbsp; Stone <b id="ui-stone">0</b> &nbsp; Food <b id="ui-food">0</b>
-  </div>
+  <div id="ui-tools">Tools: <b id="ui-tool-list">none crafted</b></div>
   <div id="ui-mode-row">Score <b id="ui-score" style="color:#f0c040">0</b> &nbsp; <span id="ui-mode">EXPLORE</span></div>
   <div id="ui-time">🌞 DAY</div>
 </div>
@@ -145,21 +153,12 @@
 </div>
 
 <div id="toolbar">
-  <div class="slot active" id="slot-0" onclick="selectSlot(0)">
-    <div class="slot-icon">✊</div><div class="slot-label">FIST</div>
-  </div>
-  <div class="slot locked" id="slot-1" onclick="selectSlot(1)">
-    <div class="slot-icon">🪓</div><div class="slot-label">AXE</div>
-  </div>
-  <div class="slot locked" id="slot-2" onclick="selectSlot(2)">
-    <div class="slot-icon">⛏</div><div class="slot-label">PICK</div>
-  </div>
-  <div class="slot locked" id="slot-3" onclick="selectSlot(3)">
-    <div class="slot-icon">⚔️</div><div class="slot-label">SWORD</div>
-  </div>
-  <div class="slot" id="slot-4" onclick="selectSlot(4)">
-    <div class="slot-icon">📐</div><div class="slot-label">BUILD</div>
-  </div>
+  <div class="slot active" id="slot-0" onclick="selectSlot(0)"><span class="slot-num">1</span><div class="slot-icon" id="si-0"></div><div class="slot-count" id="sc-0"></div></div>
+  <div class="slot"        id="slot-1" onclick="selectSlot(1)"><span class="slot-num">2</span><div class="slot-icon" id="si-1"></div><div class="slot-count" id="sc-1"></div></div>
+  <div class="slot"        id="slot-2" onclick="selectSlot(2)"><span class="slot-num">3</span><div class="slot-icon" id="si-2"></div><div class="slot-count" id="sc-2"></div></div>
+  <div class="slot"        id="slot-3" onclick="selectSlot(3)"><span class="slot-num">4</span><div class="slot-icon" id="si-3"></div><div class="slot-count" id="sc-3"></div></div>
+  <div class="slot"        id="slot-4" onclick="selectSlot(4)"><span class="slot-num">5</span><div class="slot-icon" id="si-4"></div><div class="slot-count" id="sc-4"></div></div>
+  <div class="slot"        id="slot-5" onclick="selectSlot(5)"><span class="slot-num">6</span><div class="slot-icon">📐</div><div class="slot-count">BUILD</div></div>
 </div>
 
 <div id="build-sub">
@@ -171,7 +170,7 @@
 </div>
 
 <div id="team-panel" class="panel">
-  <button class="close-btn" onclick="closeTeamPanel()">✕</button>
+  <button class="close-btn" onclick="document.getElementById('team-panel').style.display='none'">✕</button>
   <h3>TEAM</h3>
   <div style="color:#aaa;font-size:12px">Your team: <b id="tp-current" style="color:#fff">None</b></div>
   <input type="text" id="tp-input" maxlength="8" placeholder="Enter team code (e.g. RED)">
@@ -182,17 +181,23 @@
 <div id="craft-panel" class="panel">
   <button class="close-btn" onclick="document.getElementById('craft-panel').style.display='none'">✕</button>
   <h3>⚒ CRAFTING</h3>
-  <div style="color:#888;font-size:11px;margin-bottom:8px">Gather resources then craft tools</div>
+  <div style="color:#666;font-size:11px;margin-bottom:10px">Crafted tools go into your hotbar</div>
   <div id="craft-list"></div>
 </div>
 
-<div id="chest-panel" class="panel">
+<div id="chest-panel" class="panel" style="min-width:400px">
   <button class="close-btn" onclick="document.getElementById('chest-panel').style.display='none'">✕</button>
   <h3>📦 CHEST</h3>
-  <div id="chest-stored" style="color:#aaa;font-size:12px;margin-bottom:10px"></div>
-  <div class="chest-row"><span>🪵 Wood</span><input type="number" id="cw" min="1" value="1"><button onclick="chestAction('wood','dep')">Deposit</button><button onclick="chestAction('wood','with')">Withdraw</button></div>
-  <div class="chest-row"><span>🪨 Stone</span><input type="number" id="cs" min="1" value="1"><button onclick="chestAction('stone','dep')">Deposit</button><button onclick="chestAction('stone','with')">Withdraw</button></div>
-  <div class="chest-row"><span>🍎 Food</span><input type="number" id="cf" min="1" value="1"><button onclick="chestAction('food','dep')">Deposit</button><button onclick="chestAction('food','with')">Withdraw</button></div>
+  <div class="chest-cols">
+    <div class="chest-col">
+      <h4>YOUR INVENTORY</h4>
+      <div id="inv-grid"></div>
+    </div>
+    <div class="chest-col">
+      <h4>CHEST CONTENTS</h4>
+      <div id="chest-contents"></div>
+    </div>
+  </div>
 </div>
 
 <div id="chat-wrap">
@@ -202,15 +207,16 @@
 
 <div id="victory-screen">
   <h1>👑 VICTORY!</h1>
-  <p id="vic-msg">held the Monument!</p>
+  <p id="vic-msg"></p>
   <button onclick="location.reload()">Play Again</button>
 </div>
 
 <div id="hint">
   WASD: move &nbsp; T: team &nbsp; C: craft<br>
-  Enter: chat &nbsp; 1-5: slots<br>
-  Click tree/rock: gather &nbsp; F: drink water<br>
-  Click player/building: attack &nbsp; ESC: cancel
+  Enter: chat &nbsp; 1-6: slots &nbsp; Q: drop item<br>
+  F: drink water (near ponds)<br>
+  Click tree/rock/bush: gather<br>
+  Click player/building: attack
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
@@ -238,21 +244,25 @@ const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
 const MAP_W=3000, MAP_H=3000, SPEED=210, P_RAD=13;
-const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25;
+const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, BLDG_DMG=15;
 const SYNC_MS=100, RES_N=55, HIT_CD=320;
 const FOOD_TICK=18000, THIRST_TICK=12000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
-const FIRE_RNG=70, WATER_RNG=65, MON_HOLD=180000;
-const DAY_CYCLE=240000; // 4 min full cycle
+const FIRE_RNG=70, WATER_RNG=65, MON_HOLD=180000, DAY_CYCLE=240000;
 
 const BLDG_HP  ={ wall:120, door:80, campfire:50, chest:150, monument:500 };
 const BLDG_COST={ wall:{wood:5}, door:{wood:3}, campfire:{wood:3}, chest:{wood:8}, monument:{wood:50,stone:50,food:20} };
 const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, bush:{maxHp:1,loot:'food',hitR:14} };
+// Random drop amounts per resource hit
+const RES_DROP ={ tree:()=>2+Math.floor(Math.random()*3), rock:()=>1+Math.floor(Math.random()*3), bush:()=>1+Math.floor(Math.random()*2) };
 const RECIPES  =[
-  {id:'axe',  name:'🪓 Stone Axe',  cost:{wood:5,stone:3},  slot:1},
-  {id:'pick', name:'⛏ Stone Pick', cost:{wood:3,stone:5},  slot:2},
-  {id:'sword',name:'⚔️ Stone Sword',cost:{wood:5,stone:5},  slot:3},
+  {id:'axe',  name:'🪓 Stone Axe',  cost:{wood:5,stone:3}},
+  {id:'pick', name:'⛏ Stone Pick', cost:{wood:3,stone:5}},
+  {id:'sword',name:'⚔️ Stone Sword',cost:{wood:5,stone:5}},
 ];
+const ITEM_ICON={ axe:'🪓', pick:'⛏', sword:'⚔️', wood:'🪵', stone:'🪨', food:'🍎' };
+const TOOLS=['axe','pick','sword'];
+const RESOURCES=['wood','stone','food'];
 
 function seededRand(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(1664525,s)+1013904223)>>>0; return s/0x100000000; }; }
 const _wr=seededRand(77777);
@@ -262,94 +272,156 @@ function teamColor(id){ const c=[0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6,0x
 function lerpColor(a,b,t){ const ar=(a>>16)&0xff,ag=(a>>8)&0xff,ab=a&0xff,br=(b>>16)&0xff,bg=(b>>8)&0xff,bb=b&0xff; return ((ar+(br-ar)*t)<<16)|((ag+(bg-ag)*t)<<8)|(ab+(bb-ab)*t); }
 function dist2(ax,ay,bx,by){ const dx=ax-bx,dy=ay-by; return Math.sqrt(dx*dx+dy*dy); }
 
+// ── Inventory ─────────────────────────────────────────────────────────────────
+// inv[0..4]: {type, count} | null  — tools: count always 1, resources: stackable
+const inv = Array(5).fill(null);
+
+function invAdd(type, count){
+  // Stack on existing slot of same type
+  for(let i=0;i<5;i++){ if(inv[i]&&inv[i].type===type){inv[i].count+=count;refreshHotbar();return true;} }
+  // Put in first empty slot
+  for(let i=0;i<5;i++){ if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;} }
+  // Inventory full — drop on ground
+  const id='overflow_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
+  bag[type]=count; set(ref(db,'loot/'+id),bag);
+  return false;
+}
+function invCount(type){ return inv.reduce((s,sl)=>s+(sl?.type===type?sl.count:0),0); }
+function invRemove(type, count){
+  let rem=count;
+  for(let i=0;i<5&&rem>0;i++){
+    if(!inv[i]||inv[i].type!==type)continue;
+    const take=Math.min(inv[i].count,rem); inv[i].count-=take; rem-=take;
+    if(inv[i].count<=0)inv[i]=null;
+  }
+  refreshHotbar();
+}
+function invHasTool(t){ return inv.some(s=>s?.type===t); }
+function invCanAfford(cost){ return Object.entries(cost).every(([k,v])=>invCount(k)>=v); }
+
+function getActiveTool(){
+  if(selectedSlot===5)return 'build';
+  const item=inv[selectedSlot];
+  if(!item)return 'fist';
+  return TOOLS.includes(item.type)?item.type:'fist';
+}
+
+function refreshHotbar(){
+  for(let i=0;i<5;i++){
+    const item=inv[i];
+    document.getElementById('si-'+i).textContent=item?(ITEM_ICON[item.type]||'?'):'';
+    document.getElementById('sc-'+i).textContent=item?(item.count>1?'x'+item.count:item.type.slice(0,4).toUpperCase()):'';
+  }
+  if(window._scene)window._scene.updateHUD();
+}
+
+function dropSelected(){
+  if(selectedSlot>=5)return;
+  const item=inv[selectedSlot]; if(!item)return;
+  const id='drop_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
+  bag[item.type]=item.count;
+  inv[selectedSlot]=null; refreshHotbar();
+  set(ref(db,'loot/'+id),bag);
+  window._scene&&window._scene.pop(state.x,state.y-30,'Dropped '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#aaa');
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const state={
   x:400+Math.random()*(MAP_W-800), y:400+Math.random()*(MAP_H-800),
   hp:MAX_HP, food_meter:MAX_FOOD, thirst:MAX_THIRST,
-  wood:0, food:0, stone:0, score:0,
-  teamId:null, dirX:0, dirY:-1,
-  hasAxe:false, hasPick:false, hasSword:false
+  score:0, teamId:null, dirX:0, dirY:-1
 };
 const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={};
 let activeChestId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
 let selectedSlot=0, buildMode=false, buildType='wall', bPrev;
-let foodTimer=0, thirstTimer=0, fireTimer=0, lastSync=0, dayTimer=60000; // start mid-day
+let foodTimer=0, thirstTimer=0, fireTimer=0, lastSync=0, dayTimer=60000;
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
 // ── Toolbar ───────────────────────────────────────────────────────────────────
 window.selectSlot=function(n){
-  const locks={1:'hasAxe',2:'hasPick',3:'hasSword'};
-  if(locks[n]&&!state[locks[n]]){
-    window._scene&&window._scene.pop(state.x,state.y-34,'Craft it first! (press C)','#e74c3c'); return;
-  }
   selectedSlot=n;
   document.querySelectorAll('.slot').forEach((s,i)=>s.classList.toggle('active',i===n));
-  const showBuild=n===4;
-  buildMode=showBuild;
-  document.getElementById('build-sub').style.display=showBuild?'flex':'none';
-  if(!showBuild&&bPrev)bPrev.setVisible(false);
+  const isBuild=n===5;
+  buildMode=isBuild;
+  document.getElementById('build-sub').style.display=isBuild?'flex':'none';
+  if(!isBuild&&bPrev)bPrev.setVisible(false);
   window._scene&&window._scene.updateHUD();
+  window._scene&&window._scene.redrawMe();
 };
 window.setBuildType=function(t){
   buildType=t;
   document.querySelectorAll('.bopt').forEach(el=>el.classList.remove('bsel'));
   document.getElementById('bopt-'+t).classList.add('bsel');
 };
-window.openTeamPanel=function(){ document.getElementById('tp-current').textContent=state.teamId||'None'; document.getElementById('team-panel').style.display='block'; };
-window.closeTeamPanel=function(){ document.getElementById('team-panel').style.display='none'; };
 window.joinTeam=function(){ const c=document.getElementById('tp-input').value.trim().toUpperCase().substr(0,8); if(!c)return; state.teamId=c; document.getElementById('tp-current').textContent=c; };
 window.leaveTeam=function(){ state.teamId=null; document.getElementById('tp-current').textContent='None'; };
 
 // ── Crafting ──────────────────────────────────────────────────────────────────
 window.openCraftPanel=function(){
-  const el=document.getElementById('craft-list');
-  el.innerHTML=RECIPES.map(r=>{
-    const key='has'+r.id[0].toUpperCase()+r.id.slice(1);
-    const owned=state[key];
-    const canAfford=Object.entries(r.cost).every(([k,v])=>state[k]>=v);
-    const costTxt=Object.entries(r.cost).map(([k,v])=>`${v} ${k}`).join(', ');
+  document.getElementById('craft-list').innerHTML=RECIPES.map(r=>{
+    const owned=invHasTool(r.id);
+    const canAfford=invCanAfford(r.cost);
+    const costTxt=Object.entries(r.cost).map(([k,v])=>`${v} ${ITEM_ICON[k]}`).join(' ');
     return `<div class="recipe-row">
       <span class="recipe-name">${r.name}</span>
       <span class="recipe-cost${canAfford?' ok':''}">${costTxt}</span>
-      <button onclick="craftItem('${r.id}')" ${owned||!canAfford?'disabled':''}>${owned?'✓ Done':'Craft'}</button>
+      <button onclick="craftItem('${r.id}')" ${owned||!canAfford?'disabled':''}>${owned?'✓ Have it':'Craft'}</button>
     </div>`;
   }).join('');
   document.getElementById('craft-panel').style.display='block';
 };
 window.craftItem=function(id){
-  const r=RECIPES.find(x=>x.id===id); if(!r)return;
-  if(!Object.entries(r.cost).every(([k,v])=>state[k]>=v))return;
-  for(const[k,v]of Object.entries(r.cost))state[k]-=v;
-  const key='has'+id[0].toUpperCase()+id.slice(1);
-  state[key]=true;
-  document.getElementById('slot-'+r.slot).classList.remove('locked');
-  window._scene&&(window._scene.updateHUD(),window._scene.pop(state.x,state.y-34,r.name+' crafted!','#2ecc71'));
+  const r=RECIPES.find(x=>x.id===id); if(!r||invHasTool(id))return;
+  if(!invCanAfford(r.cost))return;
+  for(const[k,v]of Object.entries(r.cost))invRemove(k,v);
+  invAdd(id,1);
+  window._scene&&window._scene.pop(state.x,state.y-34,r.name+' crafted!','#2ecc71');
   window.openCraftPanel();
 };
 
 // ── Chest ─────────────────────────────────────────────────────────────────────
-window.chestAction=function(res,action){
+function renderChestPanel(){
+  // Left: inventory
+  document.getElementById('inv-grid').innerHTML=inv.map((item,i)=>{
+    if(!item)return`<div class="inv-slot" onclick="chestDepFromSlot(${i})" title="Empty slot ${i+1}"></div>`;
+    const canDeposit=RESOURCES.includes(item.type);
+    return`<div class="inv-slot" onclick="${canDeposit?`chestDepFromSlot(${i})`:''}" title="${canDeposit?'Click to deposit':'Tools cannot be stored'}">
+      <div>${ITEM_ICON[item.type]||'?'}</div>
+      <div class="inv-count">${item.count>1?item.count:''}</div>
+    </div>`;
+  }).join('');
+  // Right: chest
+  const d=bldgSpr[activeChestId]?._d; const s=d?.storage||{};
+  document.getElementById('chest-contents').innerHTML=RESOURCES.map(res=>{
+    const amt=s[res]||0;
+    return`<div class="chest-item">
+      <span class="ci-left">${ITEM_ICON[res]} <span>${res} x${amt}</span></span>
+      <button onclick="chestWithdraw('${res}')" ${amt<1?'disabled':''}>Take</button>
+    </div>`;
+  }).join('');
+}
+window.chestDepFromSlot=function(i){
   if(!activeChestId)return;
-  const inputId={wood:'cw',stone:'cs',food:'cf'}[res];
-  const amt=Math.max(1,parseInt(document.getElementById(inputId).value)||1);
+  const item=inv[i]; if(!item||!RESOURCES.includes(item.type))return;
   const d=bldgSpr[activeChestId]?._d; if(!d)return;
-  const stored=(d.storage||{})[res]||0;
-  if(action==='dep'){
-    if(state[res]<amt){window._scene&&window._scene.pop(state.x,state.y-34,'Not enough '+res,'#e74c3c');return;}
-    state[res]-=amt;
-    update(ref(db,'buildings/'+activeChestId+'/storage'),{[res]:stored+amt});
-  } else {
-    if(stored<amt){window._scene&&window._scene.pop(state.x,state.y-34,'Chest is empty','#e74c3c');return;}
-    state[res]+=amt;
-    update(ref(db,'buildings/'+activeChestId+'/storage'),{[res]:stored-amt});
+  const cur=(d.storage||{})[item.type]||0;
+  update(ref(db,'buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
+  inv[i]=null; refreshHotbar();
+  setTimeout(renderChestPanel,300);
+  window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+ITEM_ICON[item.type],'#3498db');
+};
+window.chestWithdraw=function(res){
+  if(!activeChestId)return;
+  const d=bldgSpr[activeChestId]?._d; if(!d)return;
+  const stored=(d.storage||{})[res]||0; if(stored<1)return;
+  const take=Math.min(stored,stored); // take all
+  if(invAdd(res,take)){
+    update(ref(db,'buildings/'+activeChestId+'/storage'),{[res]:stored-take});
+    setTimeout(renderChestPanel,300);
+    window._scene&&window._scene.pop(state.x,state.y-34,'Took '+take+'x '+ITEM_ICON[res],'#2ecc71');
   }
-  window._scene&&window._scene.updateHUD();
-  setTimeout(()=>{
-    const nd=bldgSpr[activeChestId]?._d, s=(nd?.storage||{});
-    document.getElementById('chest-stored').textContent=`Stored: 🪵${s.wood||0}  🪨${s.stone||0}  🍎${s.food||0}`;
-  },350);
 };
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
@@ -358,7 +430,7 @@ function closeChat(){ chatOpen=false; document.getElementById('chat-wrap').style
 function sendChat(){
   const msg=document.getElementById('chat-input').value.trim(); closeChat(); if(!msg)return;
   update(ref(db,'players/'+PID),{chat:msg,chatT:Date.now()});
-  window._scene&&window._scene.showChatBubble(state.x,state.y,msg);
+  window._scene&&window._scene.startMyChatBubble(msg);
 }
 document.getElementById('chat-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault();sendChat();}
@@ -371,7 +443,7 @@ class Game extends Phaser.Scene {
 
   create(){
     window._scene=this;
-    const mk=(key,w,h,col=0xffffff)=>{ const g=this.make.graphics({add:false}); g.fillStyle(col,1).fillRect(0,0,w,h); g.generateTexture(key,w,h); g.destroy(); };
+    const mk=(key,w,h)=>{ const g=this.make.graphics({add:false}); g.fillStyle(0xffffff,1).fillRect(0,0,w,h); g.generateTexture(key,w,h); g.destroy(); };
     mk('body',P_RAD*2,P_RAD*2);
     this.physics.world.setBounds(0,0,MAP_W,MAP_H);
     this.cameras.main.setBounds(0,0,MAP_W,MAP_H);
@@ -381,28 +453,29 @@ class Game extends Phaser.Scene {
     this.pbody.setAlpha(0.001).setCollideWorldBounds(true);
     this.pgfx=this.add.graphics();
     this.nameTag=this.add.text(0,0,PNAME,{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(99000);
+    this.myChatBubble=null;
     this.redrawMe();
     this.cameras.main.startFollow(this.pbody,true,0.08,0.08);
     this.cameras.main.setZoom(1.8);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
-
-    // Night overlay + light layer
     this.nightOverlay=this.add.graphics().setDepth(96000);
     this.lightGfx=this.add.graphics().setDepth(96001).setBlendMode(Phaser.BlendModes.ADD);
 
     this.keys=this.input.keyboard.addKeys({
       up:'W',dn:'S',lt:'A',rt:'D',
       up2:'UP',dn2:'DOWN',lt2:'LEFT',rt2:'RIGHT',
-      esc:'ESC',t:'T',c:'C',f:'F',enter:'ENTER',
+      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',enter:'ENTER',
       k1:Phaser.Input.Keyboard.KeyCodes.ONE,
       k2:Phaser.Input.Keyboard.KeyCodes.TWO,
       k3:Phaser.Input.Keyboard.KeyCodes.THREE,
       k4:Phaser.Input.Keyboard.KeyCodes.FOUR,
-      k5:Phaser.Input.Keyboard.KeyCodes.FIVE
+      k5:Phaser.Input.Keyboard.KeyCodes.FIVE,
+      k6:Phaser.Input.Keyboard.KeyCodes.SIX
     });
     this.input.on('pointerdown',ptr=>this.handleClick(ptr));
     this.setupFirebase();
     window.addEventListener('beforeunload',()=>remove(ref(db,'players/'+PID)));
+    refreshHotbar();
     this.updateHUD();
   }
 
@@ -414,7 +487,6 @@ class Game extends Phaser.Scene {
     for(let x=0;x<=MAP_W;x+=80){grid.moveTo(x,0);grid.lineTo(x,MAP_H);}
     for(let y=0;y<=MAP_H;y+=80){grid.moveTo(0,y);grid.lineTo(MAP_W,y);}
     grid.strokePath();
-    // Water sources
     WATER_SRCS.forEach(w=>{
       bg.fillStyle(0x1a6aaa,0.85).fillEllipse(w.x,w.y,72,48);
       bg.fillStyle(0x2d8ad4,0.5).fillEllipse(w.x-9,w.y-7,38,22);
@@ -438,26 +510,24 @@ class Game extends Phaser.Scene {
     g.fillCircle(hx+Math.cos(r1)*3.2,hy+Math.sin(r1)*3.2,1.6);
     g.fillCircle(hx+Math.cos(r2)*3.2,hy+Math.sin(r2)*3.2,1.6);
     const tx=Math.cos(ang)*(P_RAD+10), ty=Math.sin(ang)*(P_RAD+10);
-    if(selectedSlot===1){ // axe
+    const tool=getActiveTool();
+    if(tool==='axe'){
       g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-9,4,16);
       g.fillStyle(0x9ba8b2,1).fillTriangle(tx-7,ty-9,tx+5,ty-9,tx+1,ty-2);
       g.lineStyle(1,0x6a7a80,1).strokeTriangle(tx-7,ty-9,tx+5,ty-9,tx+1,ty-2);
-    } else if(selectedSlot===2){ // pick
+    } else if(tool==='pick'){
       g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-8,4,14);
       g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-10,14,4);
       g.fillTriangle(tx-7,ty-6,tx-1,ty-6,tx-7,ty+2);
-    } else if(selectedSlot===3){ // sword
+    } else if(tool==='sword'){
       g.fillStyle(0x8796a0,1).fillRect(tx-2,ty-14,4,20);
       g.fillStyle(0x9ba8b2,1).fillTriangle(tx-2,ty-14,tx+2,ty-14,tx,ty-26);
       g.fillStyle(0xc8922a,1).fillRect(tx-6,ty-8,12,4);
-    } else if(selectedSlot===4){ // blueprint
+    } else if(tool==='build'){
       g.fillStyle(0x2d7fc9,0.9).fillRect(tx-6,ty-8,12,14);
       g.lineStyle(1,0x87ceeb,0.7);
-      g.moveTo(tx-4,ty-5);g.lineTo(tx+4,ty-5);
-      g.moveTo(tx-4,ty-1);g.lineTo(tx+4,ty-1);
-      g.moveTo(tx-4,ty+3);g.lineTo(tx+4,ty+3);
-      g.strokePath();
-      g.lineStyle(1.5,0x1a5c99,1).strokeRect(tx-6,ty-8,12,14);
+      g.moveTo(tx-4,ty-5);g.lineTo(tx+4,ty-5); g.moveTo(tx-4,ty-1);g.lineTo(tx+4,ty-1); g.moveTo(tx-4,ty+3);g.lineTo(tx+4,ty+3);
+      g.strokePath(); g.lineStyle(1.5,0x1a5c99,1).strokeRect(tx-6,ty-8,12,14);
     }
   }
 
@@ -472,12 +542,7 @@ class Game extends Phaser.Scene {
     if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.85).strokeCircle(x,y,P_RAD+4); }
     gfx.fillStyle(0xf5d5a5,1).fillCircle(x,y-P_RAD+1,6);
     gfx.lineStyle(1,0xc49060,0.7).strokeCircle(x,y-P_RAD+1,6);
-    // HP bar
-    if(d.hp<MAX_HP){
-      const r=Math.max(0,d.hp/MAX_HP);
-      gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-P_RAD-8,32*r,4);
-      gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*r,y-P_RAD-8,32*(1-r),4);
-    }
+    if(d.hp<MAX_HP){ const r=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-P_RAD-8,32*r,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*r,y-P_RAD-8,32*(1-r),4); }
   }
 
   drawRes(gfx,d){
@@ -485,8 +550,7 @@ class Game extends Phaser.Scene {
     gfx.clear();
     if(type==='tree'){
       gfx.fillStyle(0x000000,0.12).fillEllipse(x+4,y+20,40,14);
-      gfx.fillStyle(0x5c3a1a,1).fillRect(x-5,y+4,10,20);
-      gfx.fillStyle(0x7a4e2a,1).fillRect(x-3,y+4,4,18);
+      gfx.fillStyle(0x5c3a1a,1).fillRect(x-5,y+4,10,20); gfx.fillStyle(0x7a4e2a,1).fillRect(x-3,y+4,4,18);
       gfx.lineStyle(1.5,0x3a2008,1).strokeRect(x-5,y+4,10,20);
       const dark=ratio>0.6?0x2a6e2a:0x7a7210, mid=ratio>0.6?0x388e38:0x9a9218, light=ratio>0.6?0x4caf50:0xb8b030;
       gfx.fillStyle(dark,1).fillCircle(x-7,y-2,16); gfx.fillStyle(dark,1).fillCircle(x+7,y,14);
@@ -503,12 +567,7 @@ class Game extends Phaser.Scene {
       gfx.lineStyle(1.5,0x1a5c28,1).strokeCircle(x,y-4,12);
       gfx.fillStyle(0xc0392b,1); gfx.fillCircle(x-4,y-2,2.8); gfx.fillCircle(x+4,y-6,2.8); gfx.fillCircle(x+1,y+2,2.2);
     }
-    if(hp<maxHp){
-      const bw=30;
-      gfx.fillStyle(0x27ae60,1).fillRect(x-bw/2,y-36,bw*ratio,4);
-      gfx.fillStyle(0xc0392b,1).fillRect(x-bw/2+bw*ratio,y-36,bw*(1-ratio),4);
-      gfx.lineStyle(1,0x000000,0.5).strokeRect(x-bw/2,y-36,bw,4);
-    }
+    if(hp<maxHp){ const bw=30; gfx.fillStyle(0x27ae60,1).fillRect(x-bw/2,y-36,bw*ratio,4); gfx.fillStyle(0xc0392b,1).fillRect(x-bw/2+bw*ratio,y-36,bw*(1-ratio),4); gfx.lineStyle(1,0x000000,0.5).strokeRect(x-bw/2,y-36,bw,4); }
   }
 
   drawBldg(gfx,d){
@@ -541,26 +600,16 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(cc,1).fillRect(x-18,y-8,36,20); gfx.fillStyle(lid,1).fillRect(x-18,y-18,36,12);
       gfx.lineStyle(2,0x5a3820,1).strokeRect(x-18,y-18,36,30);
       gfx.fillStyle(0xf0c040,1).fillCircle(x,y-2,4); gfx.lineStyle(1.5,0xc0a000,1).strokeCircle(x,y-2,4);
-      gfx.fillStyle(0xf0c040,0.6).fillRect(x-16,y-9,32,3); // hinge line
+      gfx.fillStyle(0xf0c040,0.6).fillRect(x-16,y-9,32,3);
     } else if(type==='monument'){
-      // Base platform
-      gfx.fillStyle(0x888888,1).fillRect(x-28,y+8,56,16);
-      gfx.fillStyle(0x999999,1).fillRect(x-22,y+4,44,8);
+      gfx.fillStyle(0x888888,1).fillRect(x-28,y+8,56,16); gfx.fillStyle(0x999999,1).fillRect(x-22,y+4,44,8);
       gfx.lineStyle(2,0x444444,1).strokeRect(x-28,y+8,56,16);
-      // Shaft
-      gfx.fillStyle(0xaaaaaa,1).fillRect(x-11,y-34,22,40);
-      gfx.fillStyle(0xcccccc,1).fillRect(x-7,y-34,6,40); // highlight
+      gfx.fillStyle(0xaaaaaa,1).fillRect(x-11,y-34,22,40); gfx.fillStyle(0xcccccc,1).fillRect(x-7,y-34,6,40);
       gfx.lineStyle(2,0x555555,1).strokeRect(x-11,y-34,22,40);
-      // Golden tip
       gfx.fillStyle(0xf0c040,1).fillTriangle(x-11,y-34,x+11,y-34,x,y-60);
       gfx.lineStyle(2,0xc0a000,1).strokeTriangle(x-11,y-34,x+11,y-34,x,y-60);
-      // Glow ring if being contested
-      if(d._holdPct>0){
-        gfx.lineStyle(4,0xf0c040,(d._holdPct||0)).strokeCircle(x,y-20,38);
-        gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44);
-      }
+      if(d._holdPct>0){ gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38); gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44); }
     }
-    // HP bar
     gfx.fillStyle(0x27ae60,1).fillRect(x-20,y-34,40*hpR,4);
     gfx.fillStyle(0xc0392b,1).fillRect(x-20+40*hpR,y-34,40*(1-hpR),4);
     gfx.lineStyle(1,0x000000,0.4).strokeRect(x-20,y-34,40,4);
@@ -572,13 +621,8 @@ class Game extends Phaser.Scene {
     gfx.fillStyle(0x8b5e3c,1).fillEllipse(x,y,22,18);
     gfx.fillStyle(0xa07040,1).fillEllipse(x-2,y-2,14,10);
     gfx.lineStyle(2,0x5a3820,1).strokeEllipse(x,y,22,18);
-    gfx.fillStyle(0xf0c040,1).fillRect(x-2,y-9,4,8); // tie
-    gfx.fillStyle(0xf0c040,1).fillCircle(x,y-9,3);
-    // sparkle
-    gfx.lineStyle(1.5,0xf0c040,0.8);
-    gfx.moveTo(x-10,y-16);gfx.lineTo(x-7,y-12);
-    gfx.moveTo(x+10,y-14);gfx.lineTo(x+7,y-11);
-    gfx.strokePath();
+    gfx.fillStyle(0xf0c040,1).fillRect(x-2,y-9,4,8); gfx.fillStyle(0xf0c040,1).fillCircle(x,y-9,3);
+    gfx.lineStyle(1.5,0xf0c040,0.8); gfx.moveTo(x-10,y-16);gfx.lineTo(x-7,y-12); gfx.moveTo(x+10,y-14);gfx.lineTo(x+7,y-11); gfx.strokePath();
   }
 
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
@@ -586,7 +630,7 @@ class Game extends Phaser.Scene {
   mkOther(id,d){
     const g=this.add.graphics().setDepth(d.y); this.drawOther(g,d);
     const l=this.add.text(d.x,d.y-P_RAD-15,d.name||id.substr(-4).toUpperCase(),{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(d.y+1);
-    const chat=this.add.text(d.x,d.y-P_RAD-28,'',{fontSize:'12px',color:'#ffe',stroke:'#333',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.5)',padding:{x:4,y:2}}).setOrigin(0.5).setDepth(d.y+2);
+    const chat=this.add.text(d.x,d.y-P_RAD-30,'',{fontSize:'12px',color:'#ffe',stroke:'#222',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.55)',padding:{x:4,y:2}}).setOrigin(0.5).setDepth(d.y+2);
     others[id]={g,l,chat}; playerData[id]=d;
   }
   mvOther(id,d){
@@ -594,26 +638,20 @@ class Game extends Phaser.Scene {
     if(!others[id]){this.mkOther(id,d);return;}
     others[id].g.setDepth(d.y); this.drawOther(others[id].g,d);
     others[id].l.setPosition(d.x,d.y-P_RAD-15).setDepth(d.y+1);
-    others[id].chat.setPosition(d.x,d.y-P_RAD-28).setDepth(d.y+2);
-    // Show chat if recent
-    if(d.chat&&d.chatT&&Date.now()-d.chatT<6000){
-      others[id].chat.setText(d.chat);
-    } else {
-      others[id].chat.setText('');
-    }
+    others[id].chat.setPosition(d.x,d.y-P_RAD-30).setDepth(d.y+2);
+    if(d.chat&&d.chatT&&Date.now()-d.chatT<6000) others[id].chat.setText(d.chat);
+    else others[id].chat.setText('');
     this.updateScoreboard();
   }
   mkBldg(id,d){ const g=this.add.graphics().setDepth(d.y+5); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; }
   rxBldg(id,d){ if(!bldgSpr[id])return; d._holdPct=bldgSpr[id]._d._holdPct||0; bldgSpr[id]._d=d; this.drawBldg(bldgSpr[id],d); }
-  mkLoot(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawLoot(g,d); g._d=d; lootSpr[id]=g; }
+  mkLoot(id,d){ const g=this.add.graphics().setDepth(d.y+1); this.drawLoot(g,d); g._d=d; lootSpr[id]=g; }
 
   seedMap(){
     const batch={};
     Object.keys(RES_DEF).forEach(type=>{
       const maxHp=RES_DEF[type].maxHp;
-      for(let i=0;i<RES_N;i++){
-        batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
-      }
+      for(let i=0;i<RES_N;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
     });
     set(ref(db,'resources'),batch);
   }
@@ -622,13 +660,11 @@ class Game extends Phaser.Scene {
     const sc=this;
     get(ref(db,'resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
-      if(keys.length<10||(keys.length&&val[keys[0]].hp===undefined))
-        remove(ref(db,'resources')).then(()=>sc.seedMap());
+      if(keys.length<10||(keys.length&&val[keys[0]].hp===undefined)) remove(ref(db,'resources')).then(()=>sc.seedMap());
     });
     onChildAdded(ref(db,'resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
     onChildChanged(ref(db,'resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
     onChildRemoved(ref(db,'resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}});
-
     onChildAdded(ref(db,'players'),  s=>{if(s.key!==PID&&s.val())sc.mkOther(s.key,s.val());});
     onChildChanged(ref(db,'players'),s=>{if(s.key!==PID&&s.val())sc.mvOther(s.key,s.val());});
     onChildRemoved(ref(db,'players'),s=>{
@@ -638,24 +674,19 @@ class Game extends Phaser.Scene {
     onChildAdded(ref(db,'buildings'),  s=>{if(s.val()&&!bldgSpr[s.key])sc.mkBldg(s.key,s.val());});
     onChildChanged(ref(db,'buildings'),s=>{if(s.val()&&bldgSpr[s.key]) sc.rxBldg(s.key,s.val());});
     onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(activeChestId===s.key)activeChestId=null;});
-
     onChildAdded(ref(db,'loot'),  s=>{if(s.val()&&!lootSpr[s.key])sc.mkLoot(s.key,s.val());});
     onChildRemoved(ref(db,'loot'),s=>{if(lootSpr[s.key]){lootSpr[s.key].destroy();delete lootSpr[s.key];}});
-
     onValue(ref(db,'monument_hold'),snap=>{
       const v=snap.val(); if(!v)return;
       if(v.pid!==PID&&Date.now()-v.startTime>=MON_HOLD){
-        document.getElementById('vic-msg').textContent=v.name+' held the Monument for 3 minutes!';
+        document.getElementById('vic-msg').textContent=v.name+' held the Monument!';
         document.getElementById('victory-screen').style.display='flex';
       }
     });
-
-    // Incoming damage
     onChildAdded(ref(db,'players/'+PID+'/hits'),snap=>{
       if(!snap.val())return;
       const {dmg}=snap.val();
-      state.hp=Math.max(0,state.hp-dmg);
-      sc.updateHUD(); sc.redrawMe();
+      state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe();
       sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
       remove(ref(db,'players/'+PID+'/hits/'+snap.key));
       if(state.hp<=0)sc.handleDeath();
@@ -674,13 +705,18 @@ class Game extends Phaser.Scene {
   tryLootBag(ptr){
     for(const [id,g] of Object.entries(lootSpr)){
       const d=g._d;
-      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>24)continue;
+      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+20)continue;
-      state.wood+=d.wood||0; state.stone+=d.stone||0; state.food+=d.food||0;
+      // Add all items to inventory
+      const picked=[];
+      for(const type of [...RESOURCES,...TOOLS]){
+        const cnt=d[type]||0; if(cnt<1)continue;
+        invAdd(type,cnt);
+        picked.push(cnt+'x'+ITEM_ICON[type]);
+      }
       state.score+=5; this.updateHUD();
-      this.pop(d.x,d.y-30,'Looted! +'+((d.wood||0)+' wood ').trim(),'#f0c040');
-      g.destroy(); delete lootSpr[id];
-      remove(ref(db,'loot/'+id));
+      g.destroy(); delete lootSpr[id]; remove(ref(db,'loot/'+id));
+      if(picked.length)this.pop(d.x,d.y-30,'Looted! '+picked.join(' '),'#f0c040');
       return true;
     }
     return false;
@@ -688,33 +724,31 @@ class Game extends Phaser.Scene {
 
   tryHitRes(ptr){
     const px=this.pbody.x, py=this.pbody.y;
+    const tool=getActiveTool();
+    if(tool==='sword')return false; // sword can't gather
     for(const [id,g] of Object.entries(resSpr)){
       const d=g._d; if(!d||!RES_DEF[d.type])continue;
       if(dist2(d.x,d.y,px,py)>ATK_RNG+30)continue;
       const cy=d.type==='tree'?d.y-6:d.y;
       if(dist2(ptr.worldX,ptr.worldY,d.x,cy)>RES_DEF[d.type].hitR+8)continue;
       const now=Date.now();
-      // Tool check
-      if(selectedSlot===3){this.pop(px,py-30,'Use axe/pick to gather','#e74c3c');return true;}
-      if(d.type==='tree'&&selectedSlot===2){this.pop(px,py-30,'Use Axe for trees','#e74c3c');return true;}
-      if(d.type==='rock'&&selectedSlot===1){this.pop(px,py-30,'Use Pick for rocks','#e74c3c');return true;}
-      // Slow hit if wrong tool
-      const wrongTool=(d.type==='tree'&&selectedSlot!==1)||(d.type==='rock'&&selectedSlot!==2);
+      const wrongTool=(d.type==='tree'&&tool!=='axe'&&tool!=='fist')||(d.type==='rock'&&tool!=='pick'&&tool!=='fist');
       const cd=wrongTool?HIT_CD*2.5:HIT_CD;
       if(resHitTime[id]&&now-resHitTime[id]<cd)continue;
       resHitTime[id]=now;
       const hp=d.hp??1;
       if(hp-1<=0){
         const loot=RES_DEF[d.type].loot;
-        state[loot]++; state.score++;
-        if(loot==='food')state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);
+        const amt=RES_DROP[d.type]();
+        invAdd(loot,amt); state.score++;
+        if(loot==='food') state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);
         this.updateHUD();
         g.destroy(); delete resSpr[id]; delete resHitTime[id];
         remove(ref(db,'resources/'+id));
-        this.pop(d.x,d.y-44,'+1 '+loot,'#a8d8a8');
+        this.pop(d.x,d.y-44,'+'+amt+' '+ITEM_ICON[loot],'#a8d8a8');
       } else {
         update(ref(db,'resources/'+id),{hp:hp-1});
-        this.pop(d.x,d.y-32,'  hit!','#8b5e3c');
+        this.pop(d.x,d.y-32,'hit!','#8b5e3c');
       }
       return true;
     }
@@ -723,11 +757,12 @@ class Game extends Phaser.Scene {
 
   tryAtkPlayer(ptr){
     const px=this.pbody.x, py=this.pbody.y;
+    const tool=getActiveTool();
     for(const [id,od] of Object.entries(playerData)){
       if(state.teamId&&od.teamId===state.teamId)continue;
       if(dist2(od.x,od.y,px,py)>ATK_RNG)continue;
       if(dist2(ptr.worldX,ptr.worldY,od.x,od.y)>P_RAD+10)continue;
-      const dmg=selectedSlot===3&&state.hasSword?SWORD_DMG:(selectedSlot===1&&state.hasAxe?AXE_DMG:FIST_DMG);
+      const dmg=tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       set(ref(db,'players/'+id+'/hits/'+Date.now()),{dmg,from:PID});
       state.score+=5; this.updateHUD();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
@@ -739,13 +774,10 @@ class Game extends Phaser.Scene {
   tryOpenChest(ptr){
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d; if(d.type!=='chest')continue;
-      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>24)continue;
+      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
-      const isMine=d.ownerId===PID, isTeam=state.teamId&&d.teamId===state.teamId;
-      if(!isMine&&!isTeam){this.pop(state.x,state.y-30,'Not your chest!','#e74c3c');return true;}
-      activeChestId=id;
-      const s=(d.storage||{});
-      document.getElementById('chest-stored').textContent=`Stored: 🪵${s.wood||0}  🪨${s.stone||0}  🍎${s.food||0}`;
+      if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){this.pop(state.x,state.y-30,'Not your chest!','#e74c3c');return true;}
+      activeChestId=id; renderChestPanel();
       document.getElementById('chest-panel').style.display='block';
       return true;
     }
@@ -758,15 +790,10 @@ class Game extends Phaser.Scene {
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
       if(dist2(d.x,d.y,px,py)>ATK_RNG)continue;
-      if(Math.abs(ptr.worldX-d.x)>26||Math.abs(ptr.worldY-d.y)>26)continue;
-      const newHp=d.hp-ATK_DMG_BLDG;
-      if(newHp<=0){
-        remove(ref(db,'buildings/'+id)); state.score+=10; this.updateHUD();
-        this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');
-      } else {
-        update(ref(db,'buildings/'+id),{hp:newHp});
-        this.pop(d.x,d.y-24,'-'+ATK_DMG_BLDG,'#e74c3c');
-      }
+      if(Math.abs(ptr.worldX-d.x)>28||Math.abs(ptr.worldY-d.y)>28)continue;
+      const newHp=d.hp-BLDG_DMG;
+      if(newHp<=0){remove(ref(db,'buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');}
+      else{update(ref(db,'buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+BLDG_DMG,'#e74c3c');}
       return;
     }
   }
@@ -774,18 +801,13 @@ class Game extends Phaser.Scene {
   placeBuilding(ptr){
     const cost=BLDG_COST[buildType];
     for(const [res,amt] of Object.entries(cost)){
-      if(state[res]<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+res+'!','#e74c3c');return;}
+      if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}
     }
-    for(const [res,amt] of Object.entries(cost))state[res]-=amt;
+    for(const [res,amt] of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
     const id=buildType[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
-    set(ref(db,'buildings/'+id),{
-      x:Math.round(ptr.worldX),y:Math.round(ptr.worldY),
-      type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType]
-    });
-    if(buildType==='monument'){
-      this.pop(ptr.worldX,ptr.worldY-40,'Monument built! Stand on it 3 min to win!','#f0c040');
-    }
+    set(ref(db,'buildings/'+id),{x:Math.round(ptr.worldX),y:Math.round(ptr.worldY),type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType]});
+    if(buildType==='monument')this.pop(ptr.worldX,ptr.worldY-40,'Monument! Stand on it 3 min to win!','#f0c040');
   }
 
   resolveWalls(){
@@ -797,16 +819,16 @@ class Game extends Phaser.Scene {
       if(d.type==='door'&&state.teamId&&d.teamId===state.teamId)continue;
       const hw=d.type==='wall'?20:17, hh=d.type==='wall'?13:20;
       const nearX=Math.max(d.x-hw,Math.min(px,d.x+hw)), nearY=Math.max(d.y-hh,Math.min(py,d.y+hh));
-      const dx=px-nearX, dy=py-nearY, dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<P_RAD&&dist>0.01){const push=P_RAD-dist; px+=(dx/dist)*push; py+=(dy/dist)*push;}
+      const dx=px-nearX, dy=py-nearY, dst=Math.sqrt(dx*dx+dy*dy);
+      if(dst<P_RAD&&dst>0.01){const push=P_RAD-dst; px+=(dx/dst)*push; py+=(dy/dst)*push;}
     }
     for(const g of Object.values(resSpr)){
       const d=g._d; let cx,cy,colR;
       if(d.type==='tree'){cx=d.x;cy=d.y+12;colR=9;}
       else if(d.type==='rock'){cx=d.x-2;cy=d.y;colR=15;}
       else continue;
-      const dx=px-cx, dy=py-cy, dist=Math.sqrt(dx*dx+dy*dy), minD=P_RAD+colR;
-      if(dist<minD&&dist>0.01){const push=minD-dist; px+=(dx/dist)*push; py+=(dy/dist)*push;}
+      const dx=px-cx,dy=py-cy,dst=Math.sqrt(dx*dx+dy*dy),minD=P_RAD+colR;
+      if(dst<minD&&dst>0.01){const push=minD-dst;px+=(dx/dst)*push;py+=(dy/dst)*push;}
     }
     px=Math.max(P_RAD,Math.min(MAP_W-P_RAD,px));
     py=Math.max(P_RAD,Math.min(MAP_H-P_RAD,py));
@@ -814,35 +836,33 @@ class Game extends Phaser.Scene {
   }
 
   handleDeath(){
-    // Drop loot bag
-    if(state.wood>0||state.stone>0||state.food>0){
-      const bagId='bag_'+PID+'_'+Date.now();
-      set(ref(db,'loot/'+bagId),{x:Math.round(state.x),y:Math.round(state.y),wood:Math.floor(state.wood*0.5),stone:Math.floor(state.stone*0.5),food:Math.floor(state.food*0.5)});
+    // Drop 50% of resources as loot bag
+    const bag={x:Math.round(state.x),y:Math.round(state.y+20)};
+    let hasDrop=false;
+    for(let i=0;i<5;i++){
+      const item=inv[i]; if(!item||!RESOURCES.includes(item.type))continue;
+      const drop=Math.floor(item.count*0.5);
+      if(drop>0){bag[item.type]=(bag[item.type]||0)+drop; item.count-=drop; if(item.count<=0)inv[i]=null; hasDrop=true;}
     }
-    state.wood=Math.floor(state.wood*0.5);
-    state.stone=Math.floor(state.stone*0.5);
-    state.food=Math.floor(state.food*0.5);
+    if(hasDrop) set(ref(db,'loot/bag_'+PID+'_'+Date.now()),bag);
+    refreshHotbar();
     state.hp=MAX_HP;
     // Respawn at own campfire if exists
-    let respawnX=400+Math.random()*(MAP_W-800), respawnY=400+Math.random()*(MAP_H-800);
-    for(const g of Object.values(bldgSpr)){
-      const d=g._d;
-      if(d.type==='campfire'&&d.ownerId===PID){respawnX=d.x+30;respawnY=d.y+30;break;}
-    }
-    state.x=respawnX; state.y=respawnY;
+    let rx=400+Math.random()*(MAP_W-800), ry=400+Math.random()*(MAP_H-800);
+    for(const g of Object.values(bldgSpr)){const d=g._d;if(d.type==='campfire'&&d.ownerId===PID){rx=d.x+30;ry=d.y+30;break;}}
+    state.x=rx; state.y=ry;
     this.pbody.setPosition(state.x,state.y);
     this.cameras.main.centerOn(state.x,state.y);
-    this.updateHUD();
-    this.pop(state.x,state.y,'RESPAWNED','#ffffff');
+    this.updateHUD(); this.pop(state.x,state.y,'RESPAWNED','#fff');
   }
 
-  showChatBubble(x,y,msg){
-    const t=this.add.text(x,y-P_RAD-30,msg,{
-      fontSize:'12px',color:'#ffe',stroke:'#333',strokeThickness:2,
-      fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.6)',
-      padding:{x:5,y:3}
+  startMyChatBubble(msg){
+    if(this.myChatBubble){this.myChatBubble.destroy();this.myChatBubble=null;}
+    this.myChatBubble=this.add.text(state.x,state.y-P_RAD-32,msg,{
+      fontSize:'12px',color:'#ffe',stroke:'#222',strokeThickness:2,
+      fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.55)',padding:{x:4,y:2}
     }).setOrigin(0.5).setDepth(99900);
-    this.tweens.add({targets:t,y:y-P_RAD-60,alpha:0,duration:5000,onComplete:()=>t.destroy()});
+    this.myChatBubble._ttl=5500;
   }
 
   pop(x,y,msg,color){
@@ -857,12 +877,11 @@ class Game extends Phaser.Scene {
     document.getElementById('ui-hp').textContent=Math.max(0,Math.round(state.hp));
     document.getElementById('ui-fm').textContent=state.food_meter;
     document.getElementById('ui-th').textContent=state.thirst;
-    document.getElementById('ui-wood').textContent=state.wood;
-    document.getElementById('ui-stone').textContent=state.stone;
-    document.getElementById('ui-food').textContent=state.food;
     document.getElementById('ui-score').textContent=state.score;
     const teamLabel=state.teamId?` [${state.teamId}]`:'';
     document.getElementById('ui-mode').textContent=buildMode?'BUILD: '+buildType.toUpperCase():('EXPLORE'+teamLabel);
+    const tools=TOOLS.filter(t=>invHasTool(t)).map(t=>ITEM_ICON[t]).join(' ');
+    document.getElementById('ui-tool-list').textContent=tools||'none crafted';
     this.updateScoreboard();
   }
 
@@ -876,9 +895,9 @@ class Game extends Phaser.Scene {
 
   update(time,delta){
     const k=this.keys;
-    if(chatOpen)return; // don't move while chatting
+    if(chatOpen)return;
 
-    let vx=0, vy=0;
+    let vx=0,vy=0;
     if(k.lt.isDown||k.lt2.isDown)vx=-SPEED;
     if(k.rt.isDown||k.rt2.isDown)vx=SPEED;
     if(k.up.isDown||k.up2.isDown)vy=-SPEED;
@@ -893,26 +912,32 @@ class Game extends Phaser.Scene {
     this.pgfx.setPosition(state.x,state.y).setDepth(depth);
     this.nameTag.setPosition(state.x,state.y-P_RAD-15).setDepth(depth+1);
 
-    // Keyboard shortcuts
+    // Chat bubble follows player
+    if(this.myChatBubble){
+      this.myChatBubble.setPosition(state.x,state.y-P_RAD-32).setDepth(depth+3);
+      this.myChatBubble._ttl-=delta;
+      if(this.myChatBubble._ttl<1200)this.myChatBubble.setAlpha(this.myChatBubble._ttl/1200);
+      if(this.myChatBubble._ttl<=0){this.myChatBubble.destroy();this.myChatBubble=null;}
+    }
+
+    // Keys
     if(Phaser.Input.Keyboard.JustDown(k.esc)){if(buildMode)selectSlot(0);}
     if(Phaser.Input.Keyboard.JustDown(k.t)){const tp=document.getElementById('team-panel');tp.style.display=tp.style.display==='none'?'block':'none';if(tp.style.display==='block')document.getElementById('tp-current').textContent=state.teamId||'None';}
-    if(Phaser.Input.Keyboard.JustDown(k.c)){ const cp=document.getElementById('craft-panel'); if(cp.style.display==='none'||cp.style.display===''){openCraftPanel();}else{cp.style.display='none';} }
-    if(Phaser.Input.Keyboard.JustDown(k.enter)&&!chatOpen)openChat();
+    if(Phaser.Input.Keyboard.JustDown(k.c)){const cp=document.getElementById('craft-panel');if(cp.style.display==='block'){cp.style.display='none';}else{window.openCraftPanel();}}
+    if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
+    if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected();
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
     if(Phaser.Input.Keyboard.JustDown(k.k2))selectSlot(1);
     if(Phaser.Input.Keyboard.JustDown(k.k3))selectSlot(2);
     if(Phaser.Input.Keyboard.JustDown(k.k4))selectSlot(3);
     if(Phaser.Input.Keyboard.JustDown(k.k5))selectSlot(4);
+    if(Phaser.Input.Keyboard.JustDown(k.k6))selectSlot(5);
 
     // F = drink water
     if(Phaser.Input.Keyboard.JustDown(k.f)){
-      for(const w of WATER_SRCS){
-        if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){
-          if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'Drank water 💧','#3498db');}
-          else this.pop(state.x,state.y-30,'Not thirsty','#555');
-          break;
-        }
-      }
+      let drank=false;
+      for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
+      if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
     }
 
     // Build preview
@@ -932,10 +957,7 @@ class Game extends Phaser.Scene {
       if(state.hp<MAX_HP){
         for(const g of Object.values(bldgSpr)){
           const d=g._d; if(d.type!=='campfire')continue;
-          if(dist2(d.x,d.y,state.x,state.y)<FIRE_RNG){
-            state.hp=Math.min(MAX_HP,state.hp+2);
-            this.updateHUD();this.redrawMe();this.pop(state.x,state.y-28,'+2 HP','#f8a020');break;
-          }
+          if(dist2(d.x,d.y,state.x,state.y)<FIRE_RNG){state.hp=Math.min(MAX_HP,state.hp+2);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-28,'+2 HP','#f8a020');break;}
         }
       }
     }
@@ -944,41 +966,36 @@ class Game extends Phaser.Scene {
     foodTimer+=delta;
     if(foodTimer>=FOOD_TICK){
       foodTimer=0;
-      if(state.food_meter>0){state.food_meter--;}
+      if(state.food_meter>0) state.food_meter--;
       else{state.hp=Math.max(0,state.hp-5);if(state.hp<=0)this.handleDeath();}
-      this.updateHUD();this.redrawMe();
+      this.updateHUD(); this.redrawMe();
+      if(state.food_meter===2)this.pop(state.x,state.y-38,'Eat something! (collect bushes)','#f39c12');
     }
 
     // Thirst
     thirstTimer+=delta;
     if(thirstTimer>=THIRST_TICK){
       thirstTimer=0;
-      if(state.thirst>0){state.thirst--;}
+      if(state.thirst>0) state.thirst--;
       else{state.hp=Math.max(0,state.hp-4);if(state.hp<=0)this.handleDeath();}
-      this.updateHUD();this.redrawMe();
-      if(state.thirst===2)this.pop(state.x,state.y-38,'Thirsty! Find water (F)','#3498db');
+      this.updateHUD(); this.redrawMe();
+      if(state.thirst===2)this.pop(state.x,state.y-46,'Thirsty! Find a pond (F)','#3498db');
     }
 
-    // Day/Night cycle
+    // Day / night
     dayTimer=(dayTimer+delta)%DAY_CYCLE;
-    const phase=dayTimer/DAY_CYCLE; // 0→1
-    // Day: 0-0.45, dusk: 0.45-0.55, night: 0.55-0.9, dawn: 0.9-1.0
+    const phase=dayTimer/DAY_CYCLE;
     let nightAlpha=0;
     if(phase<0.45)nightAlpha=0;
     else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.82;
     else if(phase<0.9)nightAlpha=0.82;
-    else nightAlpha=((1.0-phase)/0.1)*0.82;
-
+    else nightAlpha=((1-phase)/0.1)*0.82;
     this.nightOverlay.clear();
-    if(nightAlpha>0.01){
-      this.nightOverlay.fillStyle(0x000820,nightAlpha).fillRect(0,0,MAP_W,MAP_H);
-    }
+    if(nightAlpha>0.01)this.nightOverlay.fillStyle(0x000820,nightAlpha).fillRect(0,0,MAP_W,MAP_H);
     this.lightGfx.clear();
     if(nightAlpha>0.05){
-      // Player vision
       this.lightGfx.fillStyle(0x334422,Math.min(0.5,nightAlpha*0.6)).fillCircle(state.x,state.y,170);
       this.lightGfx.fillStyle(0x446633,Math.min(0.3,nightAlpha*0.35)).fillCircle(state.x,state.y,100);
-      // Campfire light
       for(const g of Object.values(bldgSpr)){
         const d=g._d; if(d.type!=='campfire')continue;
         this.lightGfx.fillStyle(0xff6600,Math.min(0.3,nightAlpha*0.36)).fillCircle(d.x,d.y,140);
@@ -986,29 +1003,17 @@ class Game extends Phaser.Scene {
         this.lightGfx.fillStyle(0xffcc44,Math.min(0.15,nightAlpha*0.18)).fillCircle(d.x,d.y,40);
       }
     }
-    // Time HUD
-    let timeStr='🌞 DAY';
-    if(phase>0.45&&phase<0.55)timeStr='🌅 DUSK';
-    else if(phase>=0.55&&phase<0.9)timeStr='🌙 NIGHT';
-    else if(phase>=0.9)timeStr='🌄 DAWN';
+    const timeStr=phase<0.45?'🌞 DAY':phase<0.55?'🌅 DUSK':phase<0.9?'🌙 NIGHT':'🌄 DAWN';
     document.getElementById('ui-time').textContent=timeStr;
 
-    // Monument hold check
+    // Monument hold
     let nearMon=false, nearMonId=null;
-    for(const [id,g] of Object.entries(bldgSpr)){
-      const d=g._d; if(d.type!=='monument')continue;
-      if(dist2(state.x,state.y,d.x,d.y)<50){nearMon=true;nearMonId=id;break;}
-    }
+    for(const [id,g] of Object.entries(bldgSpr)){const d=g._d;if(d.type==='monument'&&dist2(state.x,state.y,d.x,d.y)<50){nearMon=true;nearMonId=id;break;}}
     if(nearMon&&nearMonId){
       if(!monHoldStart){monHoldStart=Date.now();monHoldId=nearMonId;set(ref(db,'monument_hold'),{pid:PID,name:PNAME,startTime:monHoldStart});}
-      const elapsed=Date.now()-monHoldStart;
-      const pct=Math.min(1,elapsed/MON_HOLD);
+      const elapsed=Date.now()-monHoldStart, pct=Math.min(1,elapsed/MON_HOLD);
       if(bldgSpr[nearMonId]){bldgSpr[nearMonId]._d._holdPct=pct;this.drawBldg(bldgSpr[nearMonId],bldgSpr[nearMonId]._d);}
-      if(elapsed>=MON_HOLD){
-        document.getElementById('vic-msg').textContent=PNAME+' held the Monument for 3 minutes!';
-        document.getElementById('victory-screen').style.display='flex';
-        remove(ref(db,'monument_hold'));monHoldStart=null;
-      }
+      if(elapsed>=MON_HOLD){document.getElementById('vic-msg').textContent=PNAME+' held the Monument!';document.getElementById('victory-screen').style.display='flex';remove(ref(db,'monument_hold'));monHoldStart=null;}
     } else if(monHoldId){
       if(bldgSpr[monHoldId]){bldgSpr[monHoldId]._d._holdPct=0;this.drawBldg(bldgSpr[monHoldId],bldgSpr[monHoldId]._d);}
       get(ref(db,'monument_hold')).then(s=>{if(s.val()?.pid===PID)remove(ref(db,'monument_hold'));});
@@ -1023,11 +1028,9 @@ class Game extends Phaser.Scene {
   }
 }
 
-const ATK_DMG_BLDG=15;
-
 new Phaser.Game({
   type:Phaser.AUTO,
-  width:window.innerWidth,height:window.innerHeight,
+  width:window.innerWidth, height:window.innerHeight,
   backgroundColor:'#4a8a3a',
   physics:{default:'arcade',arcade:{debug:false}},
   scene:Game
