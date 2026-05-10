@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BonkerGames - Free Online Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sw0: 0px;
+  --sw1: 56px;
+  --sw2: 220px;
+  --header-h: 56px;
+  --bg: #13131f;
+  --bg2: #1c1c2e;
+  --bg3: #252538;
+  --bg4: #2e2e45;
+  --accent: #7c5cfc;
+  --accent-hover: #6a4de0;
+  --text: #ffffff;
+  --text2: #9898b8;
+  --border: rgba(255,255,255,0.07);
+  --red: #ff4d6d;
+  --yellow: #ffd166;
+  --ease: 0.22s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ── HEADER ── */
+.header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 300;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0 10px 0 4px;
+  border-radius: 8px;
+  height: 40px;
+  transition: background 0.15s;
+  user-select: none;
+}
+.header-logo:hover { background: var(--bg3); }
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-mark svg { width: 18px; height: 18px; fill: white; }
+
+.logo-name {
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.header-search {
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+}
+
+.header-search input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 16px 9px 38px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.header-search input:focus { border-color: var(--accent); }
+.header-search input::placeholder { color: var(--text2); }
+
+.search-ico {
+  position: absolute; left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text2); pointer-events: none;
+  display: flex; align-items: center;
+}
+.search-ico svg { width: 16px; height: 16px; fill: currentColor; }
+
+.header-right {
+  display: flex; align-items: center; gap: 2px; flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2);
+  background: transparent; border: none;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+.icon-btn:hover { background: var(--bg3); color: var(--text); }
+.icon-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 7px; height: 7px;
+  background: var(--red); border-radius: 50%;
+  border: 1.5px solid var(--bg2);
+}
+
+.header-divider {
+  width: 1px; height: 22px;
+  background: var(--border); margin: 0 6px;
+}
+
+.btn-login {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 4px;
+}
+.btn-login:hover { background: var(--accent-hover); }
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  margin-top: var(--header-h);
+  flex: 1;
+}
+
+/* ── SIDEBAR ── */
+/* Three states on body: sidebar-hidden (0), sidebar-icon (56px, default), sidebar-full (220px) */
+body.sidebar-hidden .sidebar { width: 0; border-right: none; }
+body.sidebar-icon   .sidebar { width: var(--sw1); }
+body.sidebar-full   .sidebar { width: var(--sw2); }
+
+body.sidebar-hidden .main { margin-left: 0; }
+body.sidebar-icon   .main { margin-left: var(--sw1); }
+body.sidebar-full   .main { margin-left: var(--sw2); }
+
+.sidebar {
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: var(--header-h); left: 0; bottom: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  transition: width var(--ease), box-shadow var(--ease), border-color var(--ease);
+}
+
+/* Hover expands if in icon mode */
+body.sidebar-icon .sidebar:hover { width: var(--sw2); box-shadow: 4px 0 28px rgba(0,0,0,0.45); }
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 0; }
+
+.sidebar-label {
+  font-size: 0.65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text2);
+  padding: 10px 8px 4px;
+  white-space: nowrap;
+  transition: opacity var(--ease);
+}
+
+.sidebar-divider { height: 1px; background: var(--border); margin: 5px 0; }
+
+.sidebar-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 8px; border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 0.875rem; font-weight: 500;
+  color: var(--text2); white-space: nowrap; overflow: hidden;
+}
+.sidebar-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-item.active { background: var(--bg3); color: var(--text); }
+
+.sidebar-item .ico {
+  width: 22px; height: 22px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-item .ico svg { width: 18px; height: 18px; fill: currentColor; }
+
+.sidebar-item .label {
+  opacity: 0;
+  transition: opacity var(--ease);
+  pointer-events: none;
+}
+
+/* Show labels when sidebar is wide enough */
+body.sidebar-full .sidebar .label { opacity: 1; }
+body.sidebar-icon .sidebar:hover .label { opacity: 1; }
+body.sidebar-full .sidebar .sidebar-label { opacity: 1; }
+body.sidebar-icon .sidebar:hover .sidebar-label { opacity: 1; }
+body.sidebar-icon .sidebar .sidebar-label { opacity: 0; }
+body.sidebar-hidden .sidebar .label { opacity: 0; }
+body.sidebar-full .sidebar .sidebar-label { opacity: 1; }
+
+/* ── SIDEBAR BOTTOM ── */
+.sidebar-bottom {
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-bottom-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 8px; border-radius: 8px;
+  cursor: pointer;
+  color: var(--text2); font-size: 0.875rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-bottom-item:hover { background: var(--bg3); color: var(--text); }
+
+.sidebar-bottom-item .ico {
+  width: 22px; height: 22px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-bottom-item .ico svg { width: 18px; height: 18px; fill: currentColor; }
+
+.sidebar-bottom-item .label {
+  opacity: 0; transition: opacity var(--ease);
+}
+body.sidebar-full .sidebar-bottom-item .label { opacity: 1; }
+body.sidebar-icon .sidebar:hover .sidebar-bottom-item .label { opacity: 1; }
+
+.contact-btn-sidebar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 8px; border-radius: 8px;
+  cursor: pointer;
+  background: var(--accent);
+  color: white; font-size: 0.875rem; font-weight: 600;
+  white-space: nowrap; overflow: hidden;
+  transition: background 0.15s;
+}
+.contact-btn-sidebar:hover { background: var(--accent-hover); }
+.contact-btn-sidebar .ico {
+  width: 22px; height: 22px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.contact-btn-sidebar .ico svg { width: 18px; height: 18px; fill: white; }
+.contact-btn-sidebar .label {
+  opacity: 0; transition: opacity var(--ease);
+}
+body.sidebar-full .contact-btn-sidebar .label { opacity: 1; }
+body.sidebar-icon .sidebar:hover .contact-btn-sidebar .label { opacity: 1; }
+
+/* ── STATE TOGGLE BUTTON (bottom-left corner) ── */
+.state-toggle {
+  position: fixed;
+  bottom: 16px; left: 8px;
+  width: 38px; height: 38px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2);
+  z-index: 400;
+  transition: background 0.15s, color 0.15s, left var(--ease);
+}
+.state-toggle:hover { background: var(--bg4); color: var(--text); }
+.state-toggle svg { width: 18px; height: 18px; fill: currentColor; }
+
+body.sidebar-full .state-toggle { left: calc(var(--sw2) - 46px); }
+body.sidebar-icon .state-toggle { left: 8px; }
+body.sidebar-hidden .state-toggle { left: 8px; }
+
+/* ── MAIN ── */
+.main {
+  flex: 1; padding: 24px; min-width: 0;
+  transition: margin-left var(--ease);
+}
+
+.cat-chips {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.cat-chip {
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 0.8rem; font-weight: 600;
+  padding: 7px 14px; border-radius: 8px;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.cat-chip:hover, .cat-chip.active {
+  background: var(--accent); border-color: var(--accent); color: white;
+}
+
+/* ── HERO ── */
+.hero-card {
+  border-radius: 16px; overflow: hidden;
+  background: var(--bg2); border: 1px solid var(--border);
+  display: grid; grid-template-columns: 1.5fr 1fr;
+  min-height: 340px; margin-bottom: 32px;
+  cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+}
+.hero-card:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+
+.hero-thumb { position: relative; overflow: hidden; }
+.hero-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block; transition: transform 0.4s;
+}
+.hero-card:hover .hero-thumb img { transform: scale(1.04); }
+
+.hero-fade {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 100px;
+  background: linear-gradient(90deg, transparent, var(--bg2));
+}
+
+.hero-info {
+  padding: 28px 28px 28px 16px;
+  display: flex; flex-direction: column;
+  justify-content: center; gap: 12px;
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.3);
+  color: #a78bfa; font-size: 0.72rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 100px;
+  text-transform: uppercase; letter-spacing: 0.6px; width: fit-content;
+}
+
+.hero-title { font-size: 1.9rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.4px; }
+.hero-stars { color: var(--yellow); font-size: 13px; letter-spacing: 2px; }
+.hero-desc { color: var(--text2); font-size: 0.85rem; line-height: 1.6; }
+.hero-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.game-tag {
+  background: var(--bg3); color: var(--text2);
+  font-size: 0.7rem; font-weight: 600;
+  padding: 4px 9px; border-radius: 5px; border: 1px solid var(--border);
+}
+
+.hero-actions { display: flex; align-items: center; gap: 8px; }
+
+.play-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: white;
+  padding: 11px 22px; border-radius: 9px;
+  font-size: 0.875rem; font-weight: 700;
+  border: none; cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.play-btn:hover { background: var(--accent-hover); transform: scale(1.02); }
+.play-btn svg { width: 15px; height: 15px; fill: white; flex-shrink: 0; }
+
+.fav-btn {
+  width: 40px; height: 40px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2);
+  transition: background 0.2s, color 0.2s; user-select: none;
+}
+.fav-btn:hover { background: var(--bg4); color: var(--red); }
+.fav-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* ── SECTION ── */
+.section { margin-bottom: 32px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-title { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+.see-all { font-size: 0.78rem; color: var(--accent); font-weight: 600; cursor: pointer; }
+.see-all:hover { color: #a78bfa; }
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 12px;
+}
+
+.game-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  cursor: pointer; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124,92,252,0.35);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+}
+
+.card-thumb {
+  aspect-ratio: 4/3; background: var(--bg3);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+}
+
+.coming-overlay {
+  position: absolute; inset: 0;
+  background: rgba(13,13,25,0.6);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.coming-pill {
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 0.66rem; font-weight: 700;
+  padding: 4px 9px; border-radius: 5px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+
+.card-info { padding: 8px 10px 10px; }
+.card-name { font-size: 0.83rem; font-weight: 700; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta { font-size: 0.7rem; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+.card-dot { width: 2px; height: 2px; background: var(--text2); border-radius: 50%; flex-shrink: 0; }
+
+/* ── SIDEBAR FOOTER ── */
+.sb-footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 8px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden;
+}
+
+.sb-tagline {
+  font-size: 0.72rem; color: var(--text2); line-height: 1.5;
+  padding: 0 4px; white-space: normal;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--ease);
+}
+body.sidebar-full .sb-tagline { opacity: 1; pointer-events: auto; }
+body.sidebar-icon .sidebar:hover .sb-tagline { opacity: 1; pointer-events: auto; }
+
+.sb-socials {
+  display: flex; gap: 5px; flex-wrap: wrap; padding: 0 2px;
+}
+.sb-soc {
+  width: 28px; height: 28px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2);
+  transition: background 0.2s, color 0.2s; flex-shrink: 0;
+}
+.sb-soc:hover { background: var(--bg4); color: var(--text); }
+.sb-soc svg { width: 13px; height: 13px; fill: currentColor; }
+
+.sb-footer-links {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 2px 4px;
+  max-height: 0; overflow: hidden; opacity: 0;
+  transition: opacity var(--ease), max-height 0.3s ease;
+}
+body.sidebar-full .sb-footer-links { opacity: 1; max-height: 500px; }
+body.sidebar-icon .sidebar:hover .sb-footer-links { opacity: 1; max-height: 500px; }
+
+.sb-footer-label {
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--text); white-space: nowrap; margin-top: 4px;
+}
+.sb-footer-link {
+  color: var(--text2); font-size: 0.75rem;
+  transition: color 0.2s; white-space: nowrap; display: block;
+}
+.sb-footer-link:hover { color: var(--text); }
+
+.sb-copy {
+  font-size: 0.64rem; color: var(--text2);
+  padding: 2px 4px; white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--ease);
+}
+body.sidebar-full .sb-copy { opacity: 1; }
+body.sidebar-icon .sidebar:hover .sb-copy { opacity: 1; }
+</style>
+</head>
+<body class="sidebar-icon">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo" id="sidebarToggle">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M17 12h-4v4h-2v-4H7v-2h4V6h2v4h4v2zm2-9H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+    </div>
+    <span class="logo-name">BonkerGames</span>
+  </div>
+
+  <div class="header-center">
+    <div class="header-search">
+      <span class="search-ico">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </span>
+      <input type="text" placeholder="Search games...">
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button class="icon-btn" title="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <button class="icon-btn" title="Favorites">
+      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </button>
+    <button class="icon-btn" title="My Games">
+      <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 10 18.5 10s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
+    </button>
+    <button class="icon-btn" title="Friends">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+    </button>
+    <div class="header-divider"></div>
+    <button class="btn-login">Log in</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-scroll">
+      <div class="sidebar-item active">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+        <span class="label">Home</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg></span>
+        <span class="label">Hot games</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg></span>
+        <span class="label">New games</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+        <span class="label">Top rated</span>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-label">Categories</div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></span>
+        <span class="label">Survival</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>
+        <span class="label">Multiplayer</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg></span>
+        <span class="label">Action</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>
+        <span class="label">Puzzle</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/></svg></span>
+        <span class="label">Strategy</span>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>
+        <span class="label">Favorites</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg></span>
+        <span class="label">Recent</span>
+      </div>
+    </div>
+
+    <!-- SIDEBAR BOTTOM -->
+    <div class="sidebar-bottom">
+      <a class="contact-btn-sidebar" href="#">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span>
+        <span class="label">Contact us</span>
+      </a>
+      <div class="sidebar-bottom-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></svg></span>
+        <span class="label">English</span>
+      </div>
+    </div>
+
+    <!-- SIDEBAR FOOTER -->
+    <div class="sb-footer">
+      <div class="sb-tagline">Free browser games, no downloads needed. Just jump in and play.</div>
+      <div class="sb-socials">
+        <a class="sb-soc" href="#" title="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.54V6.79a4.85 4.85 0 01-1.02-.1z"/></svg></a>
+        <a class="sb-soc" href="#" title="YouTube"><svg viewBox="0 0 24 24"><path d="M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5.2 3-5.2 3z"/></svg></a>
+        <a class="sb-soc" href="#" title="Discord"><svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg></a>
+        <a class="sb-soc" href="#" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+        <a class="sb-soc" href="#" title="Google Play"><svg viewBox="0 0 24 24"><path d="M3.18 23.76c.3.17.64.22.99.14l12.81-7.4-2.79-2.79-11.01 10.05zM.5 1.26C.19 1.6 0 2.1 0 2.77v18.46c0 .67.19 1.17.5 1.51l.08.08 10.34-10.34v-.24L.58 1.18.5 1.26zM20.27 10.5l-2.73-1.58-3.07 3.07 3.07 3.06 2.75-1.59c.79-.45.79-1.19-.02-1.96zM4.17.24l12.81 7.4-2.79 2.79L3.18.38c.35-.2.7-.21.99-.14z"/></svg></a>
+      </div>
+      <div class="sb-footer-links">
+        <div class="sb-footer-label">Company</div>
+        <a class="sb-footer-link" href="#">About</a>
+        <a class="sb-footer-link" href="#">Developers</a>
+        <a class="sb-footer-link" href="#">Kids site</a>
+        <a class="sb-footer-link" href="#">Jobs</a>
+        <a class="sb-footer-link" href="#">Info for parents</a>
+        <div class="sb-footer-label" style="margin-top:6px">Info</div>
+        <a class="sb-footer-link" href="#">Terms &amp; conditions</a>
+        <a class="sb-footer-link" href="#">Privacy</a>
+        <a class="sb-footer-link" href="#">All games</a>
+        <a class="sb-footer-link" href="#">Preferences</a>
+        <a class="sb-footer-link" href="#">Tags</a>
+      </div>
+      <div class="sb-copy">© 2025 BonkerGames. All rights reserved.</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="cat-chips">
+      <div class="cat-chip active">All games</div>
+      <div class="cat-chip">Survival</div>
+      <div class="cat-chip">Multiplayer</div>
+      <div class="cat-chip">Action</div>
+      <div class="cat-chip">Puzzle</div>
+      <div class="cat-chip">Strategy</div>
+    </div>
+
+    <div class="hero-card" onclick="window.location.href='game.html'">
+      <div class="hero-thumb">
+        <img src="bonker-survival-thumb.png" alt="Bonker Survival">
+        <div class="hero-fade"></div>
+      </div>
+      <div class="hero-info">
+        <div class="hero-tag">🔥 Featured</div>
+        <div class="hero-title">Bonker Survival</div>
+        <div class="hero-stars">★★★★★</div>
+        <div class="hero-desc">Build your base, gather resources, and raid enemies. Survive long enough to reach the top. Free multiplayer — play with friends right now.</div>
+        <div class="hero-tags">
+          <span class="game-tag">Survival</span>
+          <span class="game-tag">Multiplayer</span>
+          <span class="game-tag">Building</span>
+          <span class="game-tag">Raiding</span>
+          <span class="game-tag">Free</span>
+        </div>
+        <div class="hero-actions">
+          <button class="play-btn" onclick="event.stopPropagation();window.location.href='game.html'">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Play now
+          </button>
+          <div class="fav-btn" id="fav" title="Add to favorites">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">🚀 Coming soon</div>
+        <span class="see-all">View all</span>
+      </div>
+      <div class="games-grid">
+        <div class="game-card">
+          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">🏎️
+            <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
+          </div>
+          <div class="card-info"><div class="card-name">Bonker Racer</div><div class="card-meta">Racing <span class="card-dot"></span> Multiplayer</div></div>
+        </div>
+        <div class="game-card">
+          <div class="card-thumb" style="background:linear-gradient(135deg,#0f2a1a,#1a3a2a);">🧩
+            <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
+          </div>
+          <div class="card-info"><div class="card-name">Block Bonker</div><div class="card-meta">Puzzle <span class="card-dot"></span> Solo</div></div>
+        </div>
+        <div class="game-card">
+          <div class="card-thumb" style="background:linear-gradient(135deg,#2a1010,#3a1a1a);">🗡️
+            <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
+          </div>
+          <div class="card-info"><div class="card-name">Bonker Arena</div><div class="card-meta">Fighting <span class="card-dot"></span> Multiplayer</div></div>
+        </div>
+        <div class="game-card">
+          <div class="card-thumb" style="background:linear-gradient(135deg,#0a0a2a,#1a1a3a);">🌌
+            <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
+          </div>
+          <div class="card-info"><div class="card-name">Space Bonker</div><div class="card-meta">Shooting <span class="card-dot"></span> Multiplayer</div></div>
+        </div>
+        <div class="game-card">
+          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1a10,#2a2a18);">⚽
+            <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
+          </div>
+          <div class="card-info"><div class="card-name">Bonker Ball</div><div class="card-meta">Sports <span class="card-dot"></span> Multiplayer</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- STATE TOGGLE (bottom-left corner) -->
+<div class="state-toggle" id="stateToggle" title="Toggle sidebar">
+  <svg id="toggleIcon" viewBox="0 0 24 24"><path d="M3 18h13v-2H3v2zm0-5h10v-2H3v2zm0-7v2h13V6H3zm18 9.59L17.42 12 21 8.41 19.59 7l-5 5 5 5L21 15.59z"/></svg>
+</div>
+
+<script>
+  // 3-state sidebar: icon -> full -> hidden -> icon
+  const states = ['sidebar-icon', 'sidebar-full', 'sidebar-hidden'];
+  const icons = {
+    'sidebar-icon': '<path d="M3 18h13v-2H3v2zm0-5h10v-2H3v2zm0-7v2h13V6H3zm18 9.59L17.42 12 21 8.41 19.59 7l-5 5 5 5L21 15.59z"/>',
+    'sidebar-full': '<path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>',
+    'sidebar-hidden': '<path d="M3 18h13v-2H3v2zm0-5h10v-2H3v2zm0-7v2h13V6H3zm18 9.59L17.42 12 21 8.41 19.59 7l-5 5 5 5L21 15.59z"/>'
+  };
+
+  let currentState = 0;
+  const toggleBtn = document.getElementById('stateToggle');
+  const toggleIcon = document.getElementById('toggleIcon');
+
+  toggleBtn.addEventListener('click', () => {
+    document.body.classList.remove(states[currentState]);
+    currentState = (currentState + 1) % states.length;
+    document.body.classList.add(states[currentState]);
+    toggleIcon.innerHTML = icons[states[currentState]];
+  });
+
+  // Logo also cycles
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.body.classList.remove(states[currentState]);
+    currentState = (currentState + 1) % states.length;
+    document.body.classList.add(states[currentState]);
+    toggleIcon.innerHTML = icons[states[currentState]];
+  });
+
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  let favved = false;
+  document.getElementById('fav').addEventListener('click', function(e) {
+    e.stopPropagation();
+    favved = !favved;
+    this.style.color = favved ? '#ff4d6d' : '';
+    this.style.background = favved ? 'rgba(255,77,109,0.1)' : '';
+    this.style.borderColor = favved ? 'rgba(255,77,109,0.3)' : '';
+  });
+</script>
+</body>
+</html>
