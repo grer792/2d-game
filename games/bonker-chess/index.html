@@ -977,7 +977,10 @@ function cleanJoinCode(value) {
     const room = url.searchParams.get('room');
     if (room) return cleanJoinCode(room);
   } catch {}
-  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+  const withoutLabel = raw.replace(/^code\s*:/i, '').trim();
+  const compact = withoutLabel.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const sixCharCode = compact.match(/[A-Z0-9]{6}$/);
+  return sixCharCode ? sixCharCode[0] : compact.slice(0, 6);
 }
 
 function showRoomControls(roomId) {
@@ -1267,7 +1270,7 @@ async function createRoom(kind = 'friend') {
   await set(ref(db, `chessRooms/${id}/whiteOnline`), true);
   setUrlRoom(id);
   listenToRoom(id);
-  showModeRoom(id, `Code: ${id}`);
+  showModeRoom(id, id);
   setModeBusy(true);
   setModeNote(`Waiting for your friend. Send them code ${id} or copy the invite link.`);
   render();
