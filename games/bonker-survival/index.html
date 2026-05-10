@@ -321,7 +321,7 @@ const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
 const MAP_W=3000, MAP_H=3000, SPEED=210, P_RAD=13;
 const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45, BLDG_DMG=15;
-const SYNC_MS=100, RES_N=55, HIT_CD=320;
+const SYNC_MS=50, RES_N=55, HIT_CD=320;
 const FOOD_TICK=18000, THIRST_TICK=12000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
 const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
@@ -910,14 +910,11 @@ class Game extends Phaser.Scene {
     const g=this.add.graphics().setDepth(d.y); this.drawOther(g,d);
     const l=this.add.text(d.x,d.y-P_RAD-15,d.name||id.substr(-4).toUpperCase(),{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(d.y+1);
     const chat=this.add.text(d.x,d.y-P_RAD-30,'',{fontSize:'12px',color:'#ffe',stroke:'#222',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.55)',padding:{x:4,y:2}}).setOrigin(0.5).setDepth(d.y+2).setVisible(false);
-    others[id]={g,l,chat}; playerData[id]=d;
+    others[id]={g,l,chat,rx:d.x,ry:d.y}; playerData[id]=d;
   }
   mvOther(id,d){
     playerData[id]=d;
     if(!others[id]){this.mkOther(id,d);return;}
-    others[id].g.setDepth(d.y); this.drawOther(others[id].g,d);
-    others[id].l.setPosition(d.x,d.y-P_RAD-15).setDepth(d.y+1);
-    others[id].chat.setPosition(d.x,d.y-P_RAD-30).setDepth(d.y+2);
     if(d.chat&&d.chatT&&Date.now()-d.chatT<6000){others[id].chat.setText(d.chat).setVisible(true);}
     else{others[id].chat.setText('').setVisible(false);}
     this.updateScoreboard();
@@ -1102,8 +1099,10 @@ class Game extends Phaser.Scene {
     const tool=getActiveTool();
     for(const [id,od] of Object.entries(playerData)){
       if(state.teamId&&od.teamId===state.teamId)continue;
-      if(dist2(od.x,od.y,px,py)>ATK_RNG)continue;
-      if(dist2(ptr.worldX,ptr.worldY,od.x,od.y)>P_RAD+10)continue;
+      const o=others[id]; if(!o)continue;
+      const rx=o.rx??od.x, ry=o.ry??od.y;
+      if(dist2(rx,ry,px,py)>ATK_RNG+20)continue;
+      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD+16)continue;
       const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       set(sref('players/'+id+'/hits/'+Date.now()),{dmg,from:PID});
       state.score+=5; this.updateHUD();
@@ -1529,6 +1528,16 @@ class Game extends Phaser.Scene {
       if(bldgSpr[monHoldId]){bldgSpr[monHoldId]._d._holdPct=0;this.drawBldg(bldgSpr[monHoldId],bldgSpr[monHoldId]._d);}
       get(sref('monument_hold')).then(s=>{if(s.val()?.pid===PID)remove(sref('monument_hold'));});
       monHoldStart=null;monHoldId=null;
+    }
+
+    // Interpolate other players toward their target positions
+    const lf=Math.min(1,delta*0.018);
+    for(const [id,o] of Object.entries(others)){
+      const d=playerData[id]; if(!d)continue;
+      o.rx+=(d.x-o.rx)*lf; o.ry+=(d.y-o.ry)*lf;
+      o.g.setDepth(o.ry); this.drawOther(o.g,{...d,x:o.rx,y:o.ry});
+      o.l.setPosition(o.rx,o.ry-P_RAD-15).setDepth(o.ry+1);
+      o.chat.setPosition(o.rx,o.ry-P_RAD-30).setDepth(o.ry+2);
     }
 
     // Firebase sync
