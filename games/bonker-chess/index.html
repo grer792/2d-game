@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bonker Chess</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #101219;
+  --panel: #171b25;
+  --panel2: #202635;
+  --text: #f6f7fb;
+  --muted: #9ca7bd;
+  --accent: #3fbf8f;
+  --danger: #ff5c7a;
+  --gold: #f4c95d;
+  --light: #d9c39a;
+  --dark: #5b7354;
+  --select: rgba(63,191,143,0.55);
+  --move: rgba(255,255,255,0.38);
+  --capture: rgba(255,92,122,0.38);
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 20% 0%, #1f2836 0, transparent 34%), var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  font: inherit;
+}
+
+.game {
+  min-height: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(250px, 330px);
+  gap: 18px;
+  padding: 18px;
+}
+
+.board-zone {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-shell {
+  width: min(calc(100vh - 36px), calc(100vw - 400px), 760px);
+  min-width: 280px;
+  aspect-ratio: 1;
+  position: relative;
+  border: 10px solid #2b2130;
+  border-radius: 8px;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.board {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+}
+
+.square {
+  position: relative;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.square.light { background: var(--light); }
+.square.dark { background: var(--dark); }
+.square.selected { box-shadow: inset 0 0 0 5px var(--select); }
+.square.last { box-shadow: inset 0 0 0 5px rgba(244,201,93,0.45); }
+.square.check { box-shadow: inset 0 0 0 5px rgba(255,92,122,0.75); }
+
+.piece {
+  font-size: clamp(30px, 7.5vmin, 72px);
+  line-height: 1;
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,0.26));
+  transform: translateY(-1px);
+}
+
+.square[data-color="b"] .piece {
+  color: #171923;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.22);
+}
+
+.square[data-color="w"] .piece {
+  color: #faf8ef;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.28);
+}
+
+.hint {
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: var(--move);
+  position: absolute;
+}
+
+.hint.capture {
+  width: 74%;
+  height: 74%;
+  background: transparent;
+  border: 5px solid var(--capture);
+}
+
+.coord {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.coord.file { right: 5px; bottom: 3px; }
+.coord.rank { left: 5px; top: 3px; }
+
+.side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel {
+  background: rgba(23,27,37,0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+}
+
+.status {
+  padding: 16px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 4px 0 10px;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  line-height: 1.05;
+}
+
+.status-line {
+  color: var(--muted);
+  font-size: 0.92rem;
+  min-height: 40px;
+  line-height: 1.45;
+}
+
+.turn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.turn-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 8px;
+  background: var(--panel2);
+  color: var(--muted);
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.07);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.turn-chip.active {
+  color: var(--text);
+  border-color: rgba(63,191,143,0.42);
+  background: rgba(63,191,143,0.14);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+}
+
+.control-btn {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--panel2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 10px 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.control-btn:hover {
+  border-color: rgba(63,191,143,0.45);
+  background: #273044;
+}
+
+.capture-box {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.capture-row {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.capture-label {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.captured {
+  flex: 1;
+  min-height: 28px;
+  text-align: right;
+  font-size: 1.35rem;
+  letter-spacing: 1px;
+}
+
+.moves {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.moves-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.move-list {
+  overflow: auto;
+  padding: 8px 12px 14px;
+  display: grid;
+  grid-template-columns: 42px 1fr 1fr;
+  gap: 5px 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.move-list span {
+  min-height: 24px;
+  padding: 4px 6px;
+  border-radius: 5px;
+}
+
+.move-list .num {
+  color: #647087;
+  text-align: right;
+}
+
+.move-list .move {
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+}
+
+@media (max-width: 840px) {
+  html, body { overflow: auto; }
+  .game {
+    height: auto;
+    min-height: 100%;
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  .board-shell {
+    width: min(94vw, 620px);
+  }
+  .moves {
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 520px) {
+  .game { padding: 8px; gap: 10px; }
+  .board-shell { width: 100%; border-width: 6px; }
+  .controls { grid-template-columns: 1fr; }
+  .side { gap: 10px; }
+  .piece { font-size: clamp(28px, 10vw, 54px); }
+}
+</style>
+</head>
+<body>
+<main class="game">
+  <section class="board-zone">
+    <div class="board-shell">
+      <div class="board" id="board" aria-label="Chess board"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel status">
+      <div class="eyebrow">Strategy</div>
+      <h1>Bonker Chess</h1>
+      <div class="status-line" id="statusText">White to move. Pick a piece.</div>
+      <div class="turn-row">
+        <div class="turn-chip active" id="whiteTurn">White</div>
+        <div class="turn-chip" id="blackTurn">Black</div>
+      </div>
+    </section>
+
+    <section class="panel controls">
+      <button class="control-btn" id="newGameBtn">New</button>
+      <button class="control-btn" id="undoBtn">Undo</button>
+      <button class="control-btn" id="flipBtn">Flip</button>
+    </section>
+
+    <section class="panel capture-box">
+      <div class="capture-row">
+        <span class="capture-label">White took</span>
+        <span class="captured" id="whiteCaptured"></span>
+      </div>
+      <div class="capture-row">
+        <span class="capture-label">Black took</span>
+        <span class="captured" id="blackCaptured"></span>
+      </div>
+    </section>
+
+    <section class="panel moves">
+      <div class="moves-head">Move history</div>
+      <div class="move-list" id="moveList"></div>
+    </section>
+  </aside>
+</main>
+
+<script type="module">
+import { Chess } from 'https://esm.run/chess.js@1.4.0';
+
+const boardEl = document.getElementById('board');
+const statusText = document.getElementById('statusText');
+const whiteTurn = document.getElementById('whiteTurn');
+const blackTurn = document.getElementById('blackTurn');
+const moveList = document.getElementById('moveList');
+const whiteCaptured = document.getElementById('whiteCaptured');
+const blackCaptured = document.getElementById('blackCaptured');
+
+const pieceMap = {
+  wp: '♙', wn: '♘', wb: '♗', wr: '♖', wq: '♕', wk: '♔',
+  bp: '♟', bn: '♞', bb: '♝', br: '♜', bq: '♛', bk: '♚'
+};
+
+const pieceValue = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+const captureGlyph = {
+  wp: '♙', wn: '♘', wb: '♗', wr: '♖', wq: '♕',
+  bp: '♟', bn: '♞', bb: '♝', br: '♜', bq: '♛'
+};
+
+let chess = new Chess();
+let selected = null;
+let legalTargets = [];
+let flipped = false;
+let lastMove = null;
+
+function files() {
+  return flipped ? ['h','g','f','e','d','c','b','a'] : ['a','b','c','d','e','f','g','h'];
+}
+
+function ranks() {
+  return flipped ? ['1','2','3','4','5','6','7','8'] : ['8','7','6','5','4','3','2','1'];
+}
+
+function renderBoard() {
+  boardEl.innerHTML = '';
+  const currentFiles = files();
+  const currentRanks = ranks();
+  const checkSquare = findCheckedKing();
+
+  for (const rank of currentRanks) {
+    for (const file of currentFiles) {
+      const square = file + rank;
+      const piece = chess.get(square);
+      const button = document.createElement('button');
+      const fileIndex = file.charCodeAt(0) - 97;
+      const rankIndex = Number(rank) - 1;
+      const isLight = (fileIndex + rankIndex) % 2 === 1;
+
+      button.className = `square ${isLight ? 'light' : 'dark'}`;
+      button.dataset.square = square;
+
+      if (selected === square) button.classList.add('selected');
+      if (lastMove && (lastMove.from === square || lastMove.to === square)) button.classList.add('last');
+      if (checkSquare === square) button.classList.add('check');
+
+      if (piece) {
+        button.dataset.color = piece.color;
+        const span = document.createElement('span');
+        span.className = 'piece';
+        span.textContent = pieceMap[piece.color + piece.type];
+        button.appendChild(span);
+      }
+
+      const target = legalTargets.find(move => move.to === square);
+      if (target) {
+        const hint = document.createElement('span');
+        hint.className = `hint ${target.captured ? 'capture' : ''}`;
+        button.appendChild(hint);
+      }
+
+      if (file === currentFiles[7]) {
+        const coord = document.createElement('span');
+        coord.className = 'coord rank';
+        coord.textContent = rank;
+        button.appendChild(coord);
+      }
+      if (rank === currentRanks[7]) {
+        const coord = document.createElement('span');
+        coord.className = 'coord file';
+        coord.textContent = file;
+        button.appendChild(coord);
+      }
+
+      button.addEventListener('click', () => handleSquare(square));
+      boardEl.appendChild(button);
+    }
+  }
+}
+
+function handleSquare(square) {
+  const piece = chess.get(square);
+
+  if (selected) {
+    const legalMove = legalTargets.find(move => move.to === square);
+    if (legalMove) {
+      const move = chess.move({
+        from: selected,
+        to: square,
+        promotion: legalMove.promotion || 'q'
+      });
+      lastMove = move ? { from: move.from, to: move.to } : null;
+      selected = null;
+      legalTargets = [];
+      render();
+      return;
+    }
+  }
+
+  if (piece && piece.color === chess.turn()) {
+    selected = square;
+    legalTargets = chess.moves({ square, verbose: true });
+  } else {
+    selected = null;
+    legalTargets = [];
+  }
+
+  render();
+}
+
+function findCheckedKing() {
+  if (!chess.inCheck()) return null;
+  const board = chess.board();
+  const turn = chess.turn();
+  for (let r = 0; r < 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      const piece = board[r][f];
+      if (piece && piece.type === 'k' && piece.color === turn) {
+        return 'abcdefgh'[f] + (8 - r);
+      }
+    }
+  }
+  return null;
+}
+
+function renderStatus() {
+  const turnName = chess.turn() === 'w' ? 'White' : 'Black';
+  whiteTurn.classList.toggle('active', chess.turn() === 'w');
+  blackTurn.classList.toggle('active', chess.turn() === 'b');
+
+  if (chess.isCheckmate()) {
+    statusText.textContent = `Checkmate. ${turnName === 'White' ? 'Black' : 'White'} wins.`;
+  } else if (chess.isDraw()) {
+    statusText.textContent = 'Draw. No legal winning path left.';
+  } else if (chess.inCheck()) {
+    statusText.textContent = `${turnName} is in check. Find a safe move.`;
+  } else if (selected) {
+    statusText.textContent = `${turnName} to move. Choose where to move from ${selected}.`;
+  } else {
+    statusText.textContent = `${turnName} to move. Pick a piece.`;
+  }
+}
+
+function renderMoves() {
+  const history = chess.history();
+  moveList.innerHTML = '';
+  for (let i = 0; i < history.length; i += 2) {
+    appendMove(`${Math.floor(i / 2) + 1}.`, 'num');
+    appendMove(history[i] || '', 'move');
+    appendMove(history[i + 1] || '', 'move');
+  }
+  moveList.scrollTop = moveList.scrollHeight;
+}
+
+function appendMove(text, className) {
+  const span = document.createElement('span');
+  span.className = className;
+  span.textContent = text;
+  moveList.appendChild(span);
+}
+
+function renderCaptures() {
+  const board = chess.board().flat().filter(Boolean);
+  const remaining = {
+    wp: 0, wn: 0, wb: 0, wr: 0, wq: 0,
+    bp: 0, bn: 0, bb: 0, br: 0, bq: 0
+  };
+
+  board.forEach(piece => {
+    const key = piece.color + piece.type;
+    if (key in remaining) remaining[key]++;
+  });
+
+  const starting = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+  const whiteLost = [];
+  const blackLost = [];
+
+  Object.entries(starting).forEach(([type, amount]) => {
+    const whiteMissing = amount - remaining['w' + type];
+    const blackMissing = amount - remaining['b' + type];
+    for (let i = 0; i < whiteMissing; i++) blackLost.push({ key: 'w' + type, value: pieceValue[type] });
+    for (let i = 0; i < blackMissing; i++) whiteLost.push({ key: 'b' + type, value: pieceValue[type] });
+  });
+
+  whiteCaptured.textContent = whiteLost.sort((a, b) => b.value - a.value).map(piece => captureGlyph[piece.key]).join('');
+  blackCaptured.textContent = blackLost.sort((a, b) => b.value - a.value).map(piece => captureGlyph[piece.key]).join('');
+}
+
+function render() {
+  renderBoard();
+  renderStatus();
+  renderMoves();
+  renderCaptures();
+}
+
+document.getElementById('newGameBtn').addEventListener('click', () => {
+  chess = new Chess();
+  selected = null;
+  legalTargets = [];
+  lastMove = null;
+  render();
+});
+
+document.getElementById('undoBtn').addEventListener('click', () => {
+  chess.undo();
+  selected = null;
+  legalTargets = [];
+  const verbose = chess.history({ verbose: true });
+  const previous = verbose[verbose.length - 1];
+  lastMove = previous ? { from: previous.from, to: previous.to } : null;
+  render();
+});
+
+document.getElementById('flipBtn').addEventListener('click', () => {
+  flipped = !flipped;
+  selected = null;
+  legalTargets = [];
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
