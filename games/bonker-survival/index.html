@@ -212,11 +212,11 @@
 </div>
 
 <div id="hint">
-  WASD: move &nbsp; T: team &nbsp; C: craft<br>
-  Enter: chat &nbsp; 1-6: slots &nbsp; Q: drop item<br>
-  F: drink water (near ponds) &nbsp; E: eat food<br>
-  Click tree/rock/bush: gather &nbsp; Click wolf: attack<br>
-  🌙 Night: cold damage unless near fire, 🐺 wolves spawn!
+  WASD: move &nbsp; T: team &nbsp; C: craft &nbsp; E: eat food<br>
+  F: drink water &nbsp; Q: drop &nbsp; 1-6: slots<br>
+  Mine 🔩 ore with ⛏ → craft 🗡️ Metal Sword (45 dmg)<br>
+  Doors block enemies. Build base, store loot in chests.<br>
+  💀 Death = lose everything. Raid chests for enemy loot!
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
@@ -244,7 +244,7 @@ const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
 const MAP_W=3000, MAP_H=3000, SPEED=210, P_RAD=13;
-const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, BLDG_DMG=15;
+const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45, BLDG_DMG=15;
 const SYNC_MS=100, RES_N=55, HIT_CD=320;
 const FOOD_TICK=18000, THIRST_TICK=12000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
@@ -254,17 +254,17 @@ const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF
 
 const BLDG_HP  ={ wall:120, door:80, campfire:50, chest:150, monument:500 };
 const BLDG_COST={ wall:{wood:3}, door:{wood:2}, campfire:{wood:2}, chest:{wood:5}, monument:{wood:20,stone:20,food:10} };
-const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, bush:{maxHp:1,loot:'food',hitR:14} };
-// Random drop amounts per resource hit
-const RES_DROP ={ tree:()=>2+Math.floor(Math.random()*3), rock:()=>1+Math.floor(Math.random()*3), bush:()=>1+Math.floor(Math.random()*2) };
+const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, ore:{maxHp:4,loot:'metal',hitR:16}, bush:{maxHp:1,loot:'food',hitR:14} };
+const RES_DROP ={ tree:()=>2+Math.floor(Math.random()*3), rock:()=>1+Math.floor(Math.random()*3), ore:()=>2+Math.floor(Math.random()*2), bush:()=>1+Math.floor(Math.random()*2) };
 const RECIPES  =[
   {id:'axe',  name:'🪓 Stone Axe',  cost:{wood:5,stone:3}},
   {id:'pick', name:'⛏ Stone Pick', cost:{wood:3,stone:5}},
   {id:'sword',name:'⚔️ Stone Sword',cost:{wood:5,stone:5}},
+  {id:'msword',name:'🗡️ Metal Sword',cost:{metal:8,stone:2}},
 ];
-const ITEM_ICON={ axe:'🪓', pick:'⛏', sword:'⚔️', wood:'🪵', stone:'🪨', food:'🍎' };
-const TOOLS=['axe','pick','sword'];
-const RESOURCES=['wood','stone','food'];
+const ITEM_ICON={ axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', wood:'🪵', stone:'🪨', metal:'🔩', food:'🍎' };
+const TOOLS=['axe','pick','sword','msword'];
+const RESOURCES=['wood','stone','metal','food'];
 
 function seededRand(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(1664525,s)+1013904223)>>>0; return s/0x100000000; }; }
 const _wr=seededRand(77777);
@@ -527,6 +527,11 @@ class Game extends Phaser.Scene {
       g.fillStyle(0x8796a0,1).fillRect(tx-2,ty-14,4,20);
       g.fillStyle(0x9ba8b2,1).fillTriangle(tx-2,ty-14,tx+2,ty-14,tx,ty-26);
       g.fillStyle(0xc8922a,1).fillRect(tx-6,ty-8,12,4);
+    } else if(tool==='msword'){
+      g.fillStyle(0xd4a830,1).fillRect(tx-2,ty-16,4,22);
+      g.fillStyle(0xf0c040,1).fillTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
+      g.lineStyle(1,0xb88820,1).strokeTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
+      g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-9,14,4);
     } else if(tool==='build'){
       g.fillStyle(0x2d7fc9,0.9).fillRect(tx-6,ty-8,12,14);
       g.lineStyle(1,0x87ceeb,0.7);
@@ -565,6 +570,12 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0x9aacb8,1).fillCircle(x-2,y,15); gfx.fillStyle(0xaebecb,1).fillCircle(x+9,y-1,11); gfx.fillStyle(0x8898a4,1).fillCircle(x-1,y+6,10);
       gfx.fillStyle(0xcad8e0,1).fillCircle(x-7,y-6,5); gfx.lineStyle(2,0x5a6a76,1).strokeCircle(x-2,y,15);
       if(ratio<0.8){ gfx.lineStyle(1.5,0x546070,1); gfx.beginPath(); gfx.moveTo(x-5,y-8);gfx.lineTo(x+2,y+5); gfx.moveTo(x+3,y-3);gfx.lineTo(x+9,y+3); gfx.strokePath(); }
+    } else if(type==='ore'){
+      gfx.fillStyle(0x000000,0.18).fillEllipse(x+4,y+16,36,12);
+      gfx.fillStyle(0x3a4450,1).fillCircle(x-2,y,14); gfx.fillStyle(0x4a5460,1).fillCircle(x+8,y-1,10); gfx.fillStyle(0x2a3440,1).fillCircle(x-1,y+5,9);
+      gfx.fillStyle(0xd4a830,0.95).fillRect(x-5,y-5,2,9); gfx.fillStyle(0xd4a830,0.8).fillRect(x+3,y-2,2,7); gfx.fillStyle(0xf0c040,0.6).fillRect(x-1,y+1,2,4);
+      gfx.lineStyle(2,0x1a2530,1).strokeCircle(x-2,y,14);
+      if(ratio<0.8){ gfx.lineStyle(1.5,0x546070,1); gfx.beginPath(); gfx.moveTo(x-5,y-8);gfx.lineTo(x+2,y+5); gfx.strokePath(); }
     } else {
       gfx.fillStyle(0x000000,0.12).fillEllipse(x+2,y+15,30,10);
       gfx.fillStyle(0x27863a,1).fillCircle(x-7,y+1,10); gfx.fillStyle(0x2fa347,1).fillCircle(x+6,y+1,10); gfx.fillStyle(0x38c057,1).fillCircle(x,y-4,12);
@@ -652,9 +663,10 @@ class Game extends Phaser.Scene {
 
   seedMap(){
     const batch={};
+    const counts={tree:RES_N,rock:RES_N,bush:RES_N,ore:22};
     Object.keys(RES_DEF).forEach(type=>{
-      const maxHp=RES_DEF[type].maxHp;
-      for(let i=0;i<RES_N;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
+      const maxHp=RES_DEF[type].maxHp, n=counts[type]||RES_N;
+      for(let i=0;i<n;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
     });
     set(ref(db,'resources'),batch);
   }
@@ -663,7 +675,8 @@ class Game extends Phaser.Scene {
     const sc=this;
     get(ref(db,'resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
-      if(keys.length<(RES_N*Object.keys(RES_DEF).length*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(ref(db,'resources')).then(()=>sc.seedMap());
+      const hasOre=keys.some(k=>k.startsWith('ore_'));
+      if(!hasOre||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(ref(db,'resources')).then(()=>sc.seedMap());
     });
     onChildAdded(ref(db,'resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
     onChildChanged(ref(db,'resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
@@ -736,6 +749,7 @@ class Game extends Phaser.Scene {
       const cy=d.type==='tree'?d.y-6:d.y;
       if(dist2(ptr.worldX,ptr.worldY,d.x,cy)>RES_DEF[d.type].hitR+8)continue;
       const now=Date.now();
+      if(d.type==='ore'&&tool!=='pick'){this.pop(d.x,d.y-30,'Need ⛏ for ore!','#d4a830');resHitTime[id]=now;return true;}
       const wrongTool=(d.type==='tree'&&tool!=='axe'&&tool!=='fist')||(d.type==='rock'&&tool!=='pick'&&tool!=='fist');
       const cd=wrongTool?HIT_CD*2.5:HIT_CD;
       if(resHitTime[id]&&now-resHitTime[id]<cd)continue;
@@ -769,7 +783,7 @@ class Game extends Phaser.Scene {
       if(state.teamId&&od.teamId===state.teamId)continue;
       if(dist2(od.x,od.y,px,py)>ATK_RNG)continue;
       if(dist2(ptr.worldX,ptr.worldY,od.x,od.y)>P_RAD+10)continue;
-      const dmg=tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
+      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       set(ref(db,'players/'+id+'/hits/'+Date.now()),{dmg,from:PID});
       state.score+=5; this.updateHUD();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
@@ -783,7 +797,6 @@ class Game extends Phaser.Scene {
       const d=g._d; if(d.type!=='chest')continue;
       if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
-      if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){this.pop(state.x,state.y-30,'Not your chest!','#e74c3c');return true;}
       activeChestId=id; renderChestPanel();
       document.getElementById('chest-panel').style.display='block';
       return true;
@@ -793,14 +806,22 @@ class Game extends Phaser.Scene {
 
   tryAtkBldg(ptr){
     const px=this.pbody.x, py=this.pbody.y;
+    const tool=getActiveTool();
+    const dmg={msword:30,axe:22,sword:15}[tool]||10;
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
       if(dist2(d.x,d.y,px,py)>ATK_RNG)continue;
       if(Math.abs(ptr.worldX-d.x)>28||Math.abs(ptr.worldY-d.y)>28)continue;
-      const newHp=d.hp-BLDG_DMG;
-      if(newHp<=0){remove(ref(db,'buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');}
-      else{update(ref(db,'buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+BLDG_DMG,'#e74c3c');}
+      const newHp=d.hp-dmg;
+      if(newHp<=0){
+        if(d.type==='chest'){
+          const storage=d.storage||{}; const bag={x:d.x,y:d.y+10}; let hasDrop=false;
+          for(const [res,amt] of Object.entries(storage)){if((amt||0)>0){bag[res]=amt;hasDrop=true;}}
+          if(hasDrop) set(ref(db,'loot/cr_'+id),bag);
+        }
+        remove(ref(db,'buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');
+      } else {update(ref(db,'buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,'#e74c3c');}
       return;
     }
   }
@@ -843,24 +864,23 @@ class Game extends Phaser.Scene {
   }
 
   handleDeath(){
-    // Drop 50% of resources as loot bag
     const bag={x:Math.round(state.x),y:Math.round(state.y+20)};
     let hasDrop=false;
     for(let i=0;i<5;i++){
-      const item=inv[i]; if(!item||!RESOURCES.includes(item.type))continue;
-      const drop=Math.floor(item.count*0.5);
-      if(drop>0){bag[item.type]=(bag[item.type]||0)+drop; item.count-=drop; if(item.count<=0)inv[i]=null; hasDrop=true;}
+      const item=inv[i]; if(!item)continue;
+      bag[item.type]=(bag[item.type]||0)+item.count;
+      inv[i]=null; hasDrop=true;
     }
     if(hasDrop) set(ref(db,'loot/bag_'+PID+'_'+Date.now()),bag);
     refreshHotbar();
-    state.hp=MAX_HP;
-    // Respawn at own campfire if exists
+    state.hp=MAX_HP; state.food_meter=MAX_FOOD; state.thirst=MAX_THIRST;
     let rx=400+Math.random()*(MAP_W-800), ry=400+Math.random()*(MAP_H-800);
     for(const g of Object.values(bldgSpr)){const d=g._d;if(d.type==='campfire'&&d.ownerId===PID){rx=d.x+30;ry=d.y+30;break;}}
     state.x=rx; state.y=ry;
     this.pbody.setPosition(state.x,state.y);
     this.cameras.main.centerOn(state.x,state.y);
-    this.updateHUD(); this.pop(state.x,state.y,'RESPAWNED','#fff');
+    this.pop(state.x,state.y,'💀 YOU DIED — LOST EVERYTHING','#e74c3c');
+    this.updateHUD();
   }
 
   spawnWolves(){
@@ -927,7 +947,7 @@ class Game extends Phaser.Scene {
       if(dist2(ptr.worldX,ptr.worldY,w.x,w.y)>22)continue;
       if(dist2(state.x,state.y,w.x,w.y)>ATK_RNG+10)continue;
       const tool=getActiveTool();
-      const dmg=tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
+      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       w.hp-=dmg; this.pop(w.x,w.y-22,'-'+dmg,'#f0c040');
       if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
       return true;
