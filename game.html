@@ -615,22 +615,12 @@ class Game extends Phaser.Scene {
     gfx.lineStyle(1,0x000000,0.4).strokeRect(x-20,y-34,40,4);
   }
 
-  drawLoot(gfx,d){
-    const {x,y}=d; gfx.clear();
-    gfx.fillStyle(0x000000,0.15).fillEllipse(x+2,y+14,28,10);
-    gfx.fillStyle(0x8b5e3c,1).fillEllipse(x,y,22,18);
-    gfx.fillStyle(0xa07040,1).fillEllipse(x-2,y-2,14,10);
-    gfx.lineStyle(2,0x5a3820,1).strokeEllipse(x,y,22,18);
-    gfx.fillStyle(0xf0c040,1).fillRect(x-2,y-9,4,8); gfx.fillStyle(0xf0c040,1).fillCircle(x,y-9,3);
-    gfx.lineStyle(1.5,0xf0c040,0.8); gfx.moveTo(x-10,y-16);gfx.lineTo(x-7,y-12); gfx.moveTo(x+10,y-14);gfx.lineTo(x+7,y-11); gfx.strokePath();
-  }
-
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
   rxRes(id,d){ if(!resSpr[id])return; resSpr[id]._d=d; this.drawRes(resSpr[id],d); }
   mkOther(id,d){
     const g=this.add.graphics().setDepth(d.y); this.drawOther(g,d);
     const l=this.add.text(d.x,d.y-P_RAD-15,d.name||id.substr(-4).toUpperCase(),{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(d.y+1);
-    const chat=this.add.text(d.x,d.y-P_RAD-30,'',{fontSize:'12px',color:'#ffe',stroke:'#222',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.55)',padding:{x:4,y:2}}).setOrigin(0.5).setDepth(d.y+2);
+    const chat=this.add.text(d.x,d.y-P_RAD-30,'',{fontSize:'12px',color:'#ffe',stroke:'#222',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.55)',padding:{x:4,y:2}}).setOrigin(0.5).setDepth(d.y+2).setVisible(false);
     others[id]={g,l,chat}; playerData[id]=d;
   }
   mvOther(id,d){
@@ -639,13 +629,22 @@ class Game extends Phaser.Scene {
     others[id].g.setDepth(d.y); this.drawOther(others[id].g,d);
     others[id].l.setPosition(d.x,d.y-P_RAD-15).setDepth(d.y+1);
     others[id].chat.setPosition(d.x,d.y-P_RAD-30).setDepth(d.y+2);
-    if(d.chat&&d.chatT&&Date.now()-d.chatT<6000) others[id].chat.setText(d.chat);
-    else others[id].chat.setText('');
+    if(d.chat&&d.chatT&&Date.now()-d.chatT<6000){others[id].chat.setText(d.chat).setVisible(true);}
+    else{others[id].chat.setText('').setVisible(false);}
     this.updateScoreboard();
   }
   mkBldg(id,d){ const g=this.add.graphics().setDepth(d.y+5); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; }
   rxBldg(id,d){ if(!bldgSpr[id])return; d._holdPct=bldgSpr[id]._d._holdPct||0; bldgSpr[id]._d=d; this.drawBldg(bldgSpr[id],d); }
-  mkLoot(id,d){ const g=this.add.graphics().setDepth(d.y+1); this.drawLoot(g,d); g._d=d; lootSpr[id]=g; }
+  mkLoot(id,d){
+    const items=[...RESOURCES,...TOOLS].filter(t=>(d[t]||0)>0);
+    const icon=items.map(t=>ITEM_ICON[t]||'?').join('') || '📦';
+    const g=this.add.graphics().setDepth(d.y+1);
+    g.fillStyle(0x000000,0.22).fillEllipse(d.x+2,d.y+12,30,10);
+    g.fillStyle(0x1a1208,0.65).fillCircle(d.x,d.y,15);
+    g.lineStyle(2,0xf0c040,0.75).strokeCircle(d.x,d.y,15);
+    const txt=this.add.text(d.x,d.y,icon,{fontSize:items.length>1?'11px':'16px',fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(d.y+2);
+    g._d=d; lootSpr[id]={g,txt,_d:d};
+  }
 
   seedMap(){
     const batch={};
@@ -675,7 +674,7 @@ class Game extends Phaser.Scene {
     onChildChanged(ref(db,'buildings'),s=>{if(s.val()&&bldgSpr[s.key]) sc.rxBldg(s.key,s.val());});
     onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(activeChestId===s.key)activeChestId=null;});
     onChildAdded(ref(db,'loot'),  s=>{if(s.val()&&!lootSpr[s.key])sc.mkLoot(s.key,s.val());});
-    onChildRemoved(ref(db,'loot'),s=>{if(lootSpr[s.key]){lootSpr[s.key].destroy();delete lootSpr[s.key];}});
+    onChildRemoved(ref(db,'loot'),s=>{const spr=lootSpr[s.key];if(spr){spr.g.destroy();if(spr.txt)spr.txt.destroy();delete lootSpr[s.key];}});
     onValue(ref(db,'monument_hold'),snap=>{
       const v=snap.val(); if(!v)return;
       if(v.pid!==PID&&Date.now()-v.startTime>=MON_HOLD){
@@ -703,11 +702,10 @@ class Game extends Phaser.Scene {
   }
 
   tryLootBag(ptr){
-    for(const [id,g] of Object.entries(lootSpr)){
-      const d=g._d;
+    for(const [id,spr] of Object.entries(lootSpr)){
+      const d=spr._d;
       if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+20)continue;
-      // Add all items to inventory
       const picked=[];
       for(const type of [...RESOURCES,...TOOLS]){
         const cnt=d[type]||0; if(cnt<1)continue;
@@ -715,7 +713,8 @@ class Game extends Phaser.Scene {
         picked.push(cnt+'x'+ITEM_ICON[type]);
       }
       state.score+=5; this.updateHUD();
-      g.destroy(); delete lootSpr[id]; remove(ref(db,'loot/'+id));
+      spr.g.destroy(); if(spr.txt)spr.txt.destroy();
+      delete lootSpr[id]; remove(ref(db,'loot/'+id));
       if(picked.length)this.pop(d.x,d.y-30,'Looted! '+picked.join(' '),'#f0c040');
       return true;
     }
@@ -746,6 +745,9 @@ class Game extends Phaser.Scene {
         g.destroy(); delete resSpr[id]; delete resHitTime[id];
         remove(ref(db,'resources/'+id));
         this.pop(d.x,d.y-44,'+'+amt+' '+ITEM_ICON[loot],'#a8d8a8');
+        // Respawn after 30-60s
+        const _rx=d.x,_ry=d.y,_rt=d.type,_def=RES_DEF[_rt];
+        setTimeout(()=>set(ref(db,'resources/'+id),{x:_rx,y:_ry,type:_rt,hp:_def.maxHp,maxHp:_def.maxHp}),30000+Math.random()*30000);
       } else {
         update(ref(db,'resources/'+id),{hp:hp-1});
         this.pop(d.x,d.y-32,'hit!','#8b5e3c');
