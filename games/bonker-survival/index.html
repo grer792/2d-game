@@ -365,7 +365,7 @@ const state={
   hp:MAX_HP, food_meter:MAX_FOOD, thirst:MAX_THIRST,
   score:0, teamId:null, dirX:0, dirY:-1
 };
-const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={};
+const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}, roofSpr={};
 let activeChestId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
 let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
@@ -493,6 +493,8 @@ class Game extends Phaser.Scene {
     this.cameras.main.startFollow(this.pbody,true,0.08,0.08);
     this.cameras.main.setZoom(1.8);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
+    this.hammerGfx=this.add.graphics().setDepth(98001);
+    this.hammerHintTxt=this.add.text(0,0,'🔨 Click: green=upgrade (costs met)  orange=can\'t afford  red=demolish',{fontSize:'8px',color:'#ffe',stroke:'#111',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.65)',padding:{x:5,y:3}}).setOrigin(0.5).setDepth(99002).setVisible(false);
     this.wolfGfx=this.add.graphics().setDepth(50000);
     this.nightOverlay=this.add.graphics().setDepth(96000);
     this.lightGfx=this.add.graphics().setDepth(96001).setBlendMode(Phaser.BlendModes.ADD);
@@ -607,12 +609,12 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xcad8e0,1).fillCircle(x-7,y-6,5); gfx.lineStyle(2,0x5a6a76,1).strokeCircle(x-2,y,15);
       if(ratio<0.8){ gfx.lineStyle(1.5,0x546070,1); gfx.beginPath(); gfx.moveTo(x-5,y-8);gfx.lineTo(x+2,y+5); gfx.moveTo(x+3,y-3);gfx.lineTo(x+9,y+3); gfx.strokePath(); }
     } else if(type==='ore'){
-      gfx.fillStyle(0x000000,0.18).fillEllipse(x+4,y+16,36,12);
-      gfx.fillStyle(0x1e2830,1).fillCircle(x-2,y,15); gfx.fillStyle(0x2e3a45,1).fillCircle(x+8,y-1,10); gfx.fillStyle(0x1a2430,1).fillCircle(x-1,y+5,9);
-      gfx.fillStyle(0x3e5060,1).fillCircle(x-5,y-5,6);
-      gfx.fillStyle(0xd4a830,1).fillRect(x-6,y-6,3,12); gfx.fillStyle(0xc49020,1).fillRect(x+2,y-3,3,8); gfx.fillStyle(0xf0c040,0.9).fillRect(x-2,y+2,2,5); gfx.fillStyle(0xe8b820,0.7).fillRect(x-3,y-2,2,4);
-      gfx.lineStyle(2,0x0f1820,1).strokeCircle(x-2,y,15);
-      if(ratio<0.8){ gfx.lineStyle(2,0x6a7a8a,1); gfx.beginPath(); gfx.moveTo(x-6,y-9);gfx.lineTo(x+3,y+6); gfx.moveTo(x+4,y-4);gfx.lineTo(x-2,y+8); gfx.strokePath(); }
+      gfx.fillStyle(0x000000,0.2).fillEllipse(x+4,y+16,36,12);
+      gfx.fillStyle(0x1a2430,1).fillCircle(x-2,y,15); gfx.fillStyle(0x243040,1).fillCircle(x+8,y-2,11); gfx.fillStyle(0x162030,1).fillCircle(x-1,y+5,9);
+      gfx.fillStyle(0x304050,1).fillCircle(x-7,y-6,7);
+      gfx.fillStyle(0xd4a820,1).fillRect(x-7,y-7,4,14); gfx.fillStyle(0xc49020,1).fillRect(x+1,y-4,4,10); gfx.fillStyle(0xf0c030,1).fillRect(x-2,y+1,3,7); gfx.fillStyle(0xe8c040,1).fillRect(x-5,y-1,3,5); gfx.fillStyle(0xffd040,0.8).fillRect(x-6,y-6,2,6);
+      gfx.lineStyle(2,0x0f1a28,1).strokeCircle(x-2,y,15);
+      if(ratio<0.8){ gfx.lineStyle(2,0x8090a0,1); gfx.beginPath(); gfx.moveTo(x-6,y-10);gfx.lineTo(x+4,y+7); gfx.moveTo(x+5,y-5);gfx.lineTo(x-2,y+9); gfx.strokePath(); }
     } else {
       gfx.fillStyle(0x000000,0.12).fillEllipse(x+2,y+15,30,10);
       gfx.fillStyle(0x27863a,1).fillCircle(x-7,y+1,10); gfx.fillStyle(0x2fa347,1).fillCircle(x+6,y+1,10); gfx.fillStyle(0x38c057,1).fillCircle(x,y-4,12);
@@ -628,46 +630,75 @@ class Game extends Phaser.Scene {
     const maxHp=(tData?tData.hp:BLDG_HP[type])||100;
     const hpR=Math.max(0,hp/maxHp);
     gfx.clear();
-    const TC=[{p:0xb5834a,r:0xd4a96a,d:0x7a5228},{p:0x8898a4,r:0xa8bcc8,d:0x5a6a76},{p:0x5a6870,r:0x7a8c98,d:0x3a4850}];
+    const PAL=[[0xb07040,0xd4a870,0x6a3e18],[0x8898a8,0xb4ccda,0x485868],[0x4a6070,0x7aa0b8,0x283848]];
+    const [bp,bh,bd]=PAL[tier]||PAL[0];
+    const pCol=mine?bp:0x606060, hi=mine?bh:0x888888, dk=mine?bd:0x383838;
     if(type==='foundation'){
-      const col=mine?0xb5834a:0x8b6042, brd=mine?0xd4a96a:0xa07852;
-      gfx.fillStyle(col,0.52).fillRect(x-30,y-30,60,60);
-      gfx.lineStyle(2,brd,0.65).strokeRect(x-30,y-30,60,60);
-      gfx.lineStyle(1,mine?0x7a5228:0x5a3820,0.3);
-      gfx.moveTo(x-30,y-10);gfx.lineTo(x+30,y-10);gfx.moveTo(x-30,y+10);gfx.lineTo(x+30,y+10);
-      gfx.moveTo(x-10,y-30);gfx.lineTo(x-10,y+30);gfx.moveTo(x+10,y-30);gfx.lineTo(x+10,y+30);
-      gfx.strokePath(); return;
+      const fc=mine?0xa07040:0x7a5030, fh=mine?0xc09060:0x9a7050, fd=mine?0x6a3e18:0x503020;
+      gfx.fillStyle(fc,0.7).fillRect(x-30,y-30,60,60);
+      gfx.lineStyle(1,fd,0.4);
+      for(let r=y-18;r<y+30;r+=12){gfx.moveTo(x-30,r);gfx.lineTo(x+30,r);}
+      gfx.strokePath();
+      gfx.lineStyle(0.5,fh,0.2);
+      gfx.beginPath();gfx.moveTo(x-20,y-30);gfx.lineTo(x-20,y+30);gfx.moveTo(x,y-30);gfx.lineTo(x,y+30);gfx.moveTo(x+20,y-30);gfx.lineTo(x+20,y+30);
+      gfx.strokePath();
+      gfx.lineStyle(2,mine?0xd4a870:0xa07848,0.8).strokeRect(x-30,y-30,60,60);
+      return;
     } else if(type==='wall'){
-      const c=TC[tier]||TC[0], pCol=mine?c.p:0x666666, rCol=mine?c.r:0x888888, dark=mine?c.d:0x444444, rot=d.rot||0;
+      const rot=d.rot||0;
       if(rot===0){
-        gfx.fillStyle(pCol,1); gfx.fillRect(x-30,y-4,60,8);
-        gfx.fillStyle(rCol,0.5); gfx.fillRect(x-28,y-2,56,3);
-        gfx.lineStyle(1.5,dark,1); gfx.strokeRect(x-30,y-4,60,8);
+        if(tier===1){
+          gfx.fillStyle(dk,1).fillRect(x-30,y-4,60,8);
+          for(let i=0;i<3;i++){const bx=x-28+i*19;gfx.fillStyle(i%2?pCol:0x7a8898,1).fillRect(bx,y-3,17,6);gfx.fillStyle(hi,0.3).fillRect(bx,y-3,17,2);}
+        } else if(tier===2){
+          gfx.fillStyle(pCol,1).fillRect(x-30,y-4,60,8);
+          gfx.fillStyle(hi,0.45).fillRect(x-28,y-4,56,3);
+          gfx.fillStyle(hi,1);gfx.fillCircle(x-22,y,1.8);gfx.fillCircle(x,y,1.8);gfx.fillCircle(x+22,y,1.8);
+        } else {
+          gfx.fillStyle(pCol,1).fillRect(x-30,y-4,60,8);
+          gfx.fillStyle(hi,0.4).fillRect(x-30,y-4,60,3);
+          gfx.lineStyle(1,dk,0.5);gfx.beginPath();gfx.moveTo(x-10,y-4);gfx.lineTo(x-10,y+4);gfx.moveTo(x+10,y-4);gfx.lineTo(x+10,y+4);gfx.strokePath();
+        }
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-30,y-4,60,8);
       } else {
-        gfx.fillStyle(pCol,1); gfx.fillRect(x-4,y-30,8,60);
-        gfx.fillStyle(rCol,0.5); gfx.fillRect(x-2,y-28,3,56);
-        gfx.lineStyle(1.5,dark,1); gfx.strokeRect(x-4,y-30,8,60);
+        if(tier===1){
+          gfx.fillStyle(dk,1).fillRect(x-4,y-30,8,60);
+          for(let i=0;i<4;i++){const by=y-27+i*14;gfx.fillStyle(i%2?pCol:0x7a8898,1).fillRect(x-3,by,6,12);gfx.fillStyle(hi,0.3).fillRect(x-3,by,2,12);}
+        } else if(tier===2){
+          gfx.fillStyle(pCol,1).fillRect(x-4,y-30,8,60);
+          gfx.fillStyle(hi,0.45).fillRect(x-4,y-28,3,56);
+          gfx.fillStyle(hi,1);gfx.fillCircle(x,y-22,1.8);gfx.fillCircle(x,y,1.8);gfx.fillCircle(x,y+22,1.8);
+        } else {
+          gfx.fillStyle(pCol,1).fillRect(x-4,y-30,8,60);
+          gfx.fillStyle(hi,0.4).fillRect(x-4,y-30,3,60);
+          gfx.lineStyle(1,dk,0.5);gfx.beginPath();gfx.moveTo(x-4,y-10);gfx.lineTo(x+4,y-10);gfx.moveTo(x-4,y+10);gfx.lineTo(x+4,y+10);gfx.strokePath();
+        }
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-4,y-30,8,60);
       }
     } else if(type==='door'){
-      const c=TC[tier]||TC[0], frame=mine?c.d:0x444444, panel=mine?c.p:0x666666, dark=mine?c.d:0x222222, rot=d.rot||0;
+      const rot=d.rot||0;
       if(rot===0){
-        gfx.fillStyle(frame,1).fillRect(x-30,y-20,60,40);
-        gfx.fillStyle(panel,1).fillRect(x-24,y-15,48,30);
-        gfx.lineStyle(1,dark,0.4);
-        for(let row=y-8;row<y+12;row+=8){gfx.moveTo(x-22,row);gfx.lineTo(x+22,row);}
-        gfx.strokePath();
-        gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+16:x-16,y,3);
-        gfx.lineStyle(2,dark,1).strokeRect(x-30,y-20,60,40);
-        if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x,y-25,4);
+        gfx.fillStyle(dk,1);gfx.fillRect(x-30,y-18,8,36);gfx.fillRect(x+22,y-18,8,36);gfx.fillRect(x-30,y-18,60,6);
+        gfx.fillStyle(pCol,1).fillRect(x-22,y-12,44,30);
+        gfx.fillStyle(hi,0.3).fillRect(x-22,y-12,44,8);
+        if(tier===0){gfx.lineStyle(1,dk,0.3);gfx.beginPath();for(let r=y-4;r<y+16;r+=8){gfx.moveTo(x-20,r);gfx.lineTo(x+20,r);}gfx.strokePath();}
+        else if(tier===1){gfx.fillStyle(hi,0.2).fillRect(x-20,y-4,20,16);gfx.fillStyle(hi,0.15).fillRect(x+2,y-4,20,16);}
+        else{gfx.fillStyle(hi,0.35).fillRect(x-20,y-12,44,10);gfx.fillStyle(hi,1);gfx.fillCircle(x-14,y+12,2);gfx.fillCircle(x+14,y+12,2);}
+        gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+14:x-14,y+6,3);
+        gfx.lineStyle(2,dk,1).strokeRect(x-22,y-12,44,30);
+        gfx.lineStyle(1,dk,0.8).strokeRect(x-30,y-18,60,36);
+        if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x,y-24,4);
       } else {
-        gfx.fillStyle(frame,1).fillRect(x-20,y-30,40,60);
-        gfx.fillStyle(panel,1).fillRect(x-15,y-24,30,48);
-        gfx.lineStyle(1,dark,0.4);
-        for(let col=x-8;col<x+12;col+=8){gfx.moveTo(col,y-22);gfx.lineTo(col,y+22);}
-        gfx.strokePath();
-        gfx.fillStyle(0xf0c040,1).fillCircle(x,mine?y+16:y-16,3);
-        gfx.lineStyle(2,dark,1).strokeRect(x-20,y-30,40,60);
-        if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x+25,y,4);
+        gfx.fillStyle(dk,1);gfx.fillRect(x-18,y-30,36,8);gfx.fillRect(x-18,y+22,36,8);gfx.fillRect(x-18,y-30,6,60);
+        gfx.fillStyle(pCol,1).fillRect(x-12,y-22,30,44);
+        gfx.fillStyle(hi,0.3).fillRect(x-12,y-22,8,44);
+        if(tier===0){gfx.lineStyle(1,dk,0.3);gfx.beginPath();for(let c2=x-4;c2<x+16;c2+=8){gfx.moveTo(c2,y-20);gfx.lineTo(c2,y+20);}gfx.strokePath();}
+        else if(tier===1){gfx.fillStyle(hi,0.2).fillRect(x-10,y-20,26,20);gfx.fillStyle(hi,0.15).fillRect(x-10,y+2,26,20);}
+        else{gfx.fillStyle(hi,0.35).fillRect(x-12,y-20,10,44);gfx.fillStyle(hi,1);gfx.fillCircle(x+10,y-16,2);gfx.fillCircle(x+10,y+16,2);}
+        gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+6:x-6,y+14,3);
+        gfx.lineStyle(2,dk,1).strokeRect(x-12,y-22,30,44);
+        gfx.lineStyle(1,dk,0.8).strokeRect(x-18,y-30,36,60);
+        if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x+24,y,4);
       }
     } else if(type==='tc'){
       const cc=mine?0x6a4a2a:0x3a2808;
@@ -685,11 +716,15 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xd44000,1).fillTriangle(x-8,y+2,x+8,y+2,x-2,y-14);gfx.fillStyle(0xf06020,1).fillTriangle(x-6,y+2,x+6,y+2,x+2,y-18);
       gfx.fillStyle(0xf8a020,1).fillTriangle(x-4,y+1,x+4,y+1,x,y-14);gfx.fillStyle(0xffd040,1).fillTriangle(x-2,y,x+2,y,x,y-8);
     } else if(type==='chest'){
-      const cc=mine?0xb5834a:0x8b6042, lid=mine?0xd4a96a:0xa07852;
-      gfx.fillStyle(cc,1).fillRect(x-18,y-8,36,20); gfx.fillStyle(lid,1).fillRect(x-18,y-18,36,12);
-      gfx.lineStyle(2,0x5a3820,1).strokeRect(x-18,y-18,36,30);
-      gfx.fillStyle(0xf0c040,1).fillCircle(x,y-2,4); gfx.lineStyle(1.5,0xc0a000,1).strokeCircle(x,y-2,4);
-      gfx.fillStyle(0xf0c040,0.6).fillRect(x-16,y-9,32,3);
+      const cc=mine?0xb07040:0x8b6042, lid=mine?0xd4a870:0xa07852, dk2=mine?0x6a3e18:0x3a2010;
+      gfx.fillStyle(cc,1).fillRect(x-18,y-6,36,22);
+      gfx.lineStyle(1,dk2,0.5);gfx.beginPath();gfx.moveTo(x-18,y+5);gfx.lineTo(x+18,y+5);gfx.strokePath();
+      gfx.fillStyle(lid,1).fillRect(x-18,y-18,36,14);
+      gfx.fillStyle(0xd4be90,0.3).fillRect(x-16,y-16,32,10);
+      gfx.fillStyle(0xc0a820,1);gfx.fillRect(x-14,y-19,5,4);gfx.fillRect(x+9,y-19,5,4);
+      gfx.fillStyle(0xf0c040,1).fillCircle(x,y-2,5);gfx.lineStyle(1.5,0xa08000,1).strokeCircle(x,y-2,5);
+      gfx.fillStyle(0xa08000,1).fillRect(x-2,y+2,4,5);
+      gfx.lineStyle(2,dk2,1).strokeRect(x-18,y-18,36,36);
     } else if(type==='monument'){
       gfx.fillStyle(0x888888,1).fillRect(x-28,y+8,56,16); gfx.fillStyle(0x999999,1).fillRect(x-22,y+4,44,8);
       gfx.lineStyle(2,0x444444,1).strokeRect(x-28,y+8,56,16);
@@ -700,12 +735,26 @@ class Game extends Phaser.Scene {
       if(d._holdPct>0){gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38);gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44);}
     }
     if(tier>0&&(type==='wall'||type==='door')){
-      gfx.fillStyle(tier===2?0x5a6870:0x8898a4,1).fillCircle(x+16,y-22,5);
-      if(tier===2)gfx.fillStyle(0xd4a830,0.85).fillCircle(x+16,y-22,3);
+      gfx.fillStyle(0x000000,0.4).fillCircle(x+16,y-22,7);
+      gfx.fillStyle(tier===2?0x4a6070:0x8898a8,1).fillCircle(x+16,y-22,6);
+      gfx.fillStyle(tier===2?0xd4a830:0xd0e0e8,1).fillCircle(x+16,y-22,3);
     }
     gfx.fillStyle(0x27ae60,1).fillRect(x-20,y-34,40*hpR,4);
     gfx.fillStyle(0xc0392b,1).fillRect(x-20+40*hpR,y-34,40*(1-hpR),4);
     gfx.lineStyle(1,0x000000,0.4).strokeRect(x-20,y-34,40,4);
+  }
+
+  drawRoof(gfx,d){
+    const {x,y,ownerId}=d, mine=ownerId===PID;
+    const col=mine?0x8a5c30:0x6a4420, edge=mine?0x5a3810:0x3a2008;
+    gfx.clear();
+    gfx.fillStyle(col,1).fillRect(x-31,y-31,62,62);
+    gfx.fillStyle(0x000000,0.2).fillRect(x-31,y-31,62,62);
+    gfx.lineStyle(1,edge,0.4);
+    gfx.beginPath();
+    for(let r=y-19;r<y+31;r+=12){gfx.moveTo(x-31,r);gfx.lineTo(x+31,r);}
+    gfx.strokePath();
+    gfx.lineStyle(2,edge,0.8).strokeRect(x-31,y-31,62,62);
   }
 
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
@@ -726,7 +775,7 @@ class Game extends Phaser.Scene {
     else{others[id].chat.setText('').setVisible(false);}
     this.updateScoreboard();
   }
-  mkBldg(id,d){ const depth=d.type==='foundation'?d.y-10:d.y+5; const g=this.add.graphics().setDepth(depth); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; }
+  mkBldg(id,d){ const depth=d.type==='foundation'?d.y-10:d.y+5; const g=this.add.graphics().setDepth(depth); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; if(d.type==='foundation'){const rg=this.add.graphics().setDepth(100000);this.drawRoof(rg,d);roofSpr[id]=rg;} }
   rxBldg(id,d){ if(!bldgSpr[id])return; d._holdPct=bldgSpr[id]._d._holdPct||0; bldgSpr[id]._d=d; this.drawBldg(bldgSpr[id],d); }
   mkLoot(id,d){
     const items=[...RESOURCES,...TOOLS].filter(t=>(d[t]||0)>0);
@@ -767,7 +816,7 @@ class Game extends Phaser.Scene {
     });
     onChildAdded(ref(db,'buildings'),  s=>{if(s.val()&&!bldgSpr[s.key])sc.mkBldg(s.key,s.val());});
     onChildChanged(ref(db,'buildings'),s=>{if(s.val()&&bldgSpr[s.key]) sc.rxBldg(s.key,s.val());});
-    onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(activeChestId===s.key)activeChestId=null;});
+    onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(roofSpr[s.key]){roofSpr[s.key].destroy();delete roofSpr[s.key];}if(activeChestId===s.key)activeChestId=null;});
     onChildAdded(ref(db,'loot'),  s=>{if(s.val()&&!lootSpr[s.key])sc.mkLoot(s.key,s.val());});
     onChildRemoved(ref(db,'loot'),s=>{const spr=lootSpr[s.key];if(spr){spr.g.destroy();if(spr.txt)spr.txt.destroy();delete lootSpr[s.key];}});
     onValue(ref(db,'monument_hold'),snap=>{
@@ -1149,6 +1198,7 @@ class Game extends Phaser.Scene {
 
     this.resolveWalls();
     state.x=this.pbody.x; state.y=this.pbody.y;
+    for(const[id,rg] of Object.entries(roofSpr)){const d=bldgSpr[id]?._d;if(d){const inside=Math.abs(state.x-d.x)<29&&Math.abs(state.y-d.y)<29;rg.setAlpha(inside?0:0.93);}}
     const depth=state.y;
     this.pgfx.setPosition(state.x,state.y).setDepth(depth);
     this.nameTag.setPosition(state.x,state.y-P_RAD-15).setDepth(depth+1);
@@ -1200,16 +1250,37 @@ class Game extends Phaser.Scene {
       else if(buildType==='wall'||buildType==='door'){
         const snap=getSnapPos(p.worldX,p.worldY);
         const sx=snap?snap.x:p.worldX,sy=snap?snap.y:p.worldY,rot=snap?snap.rot:0;
-        const hw=buildType==='wall'?(rot?13:20):(rot?20:17),hh=buildType==='wall'?(rot?20:13):(rot?17:20);
+        const hw=buildType==='wall'?(rot?4:30):(rot?20:30),hh=buildType==='wall'?(rot?30:4):(rot?30:20);
         const col=snap?0xd4a96a:0xe74c3c;
-        bPrev.fillStyle(col,0.35).fillRoundedRect(sx-hw,sy-hh,hw*2,hh*2,3);
-        bPrev.lineStyle(2,col,0.7).strokeRoundedRect(sx-hw,sy-hh,hw*2,hh*2,3);
+        bPrev.fillStyle(col,0.35).fillRect(sx-hw,sy-hh,hw*2,hh*2);
+        bPrev.lineStyle(2,col,0.7).strokeRect(sx-hw,sy-hh,hw*2,hh*2);
       }
       else if(buildType==='tc'){bPrev.fillStyle(0x6a4a2a,0.4).fillRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(2,0x27ae60,0.7).strokeRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);}
       else if(buildType==='monument'){bPrev.fillStyle(0xf0c040,0.3).fillRect(p.worldX-15,p.worldY-50,30,65);bPrev.lineStyle(2,0xf0c040,0.8).strokeRect(p.worldX-15,p.worldY-50,30,65);}
       else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,30);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,30);}
       else{bPrev.fillStyle(0xd4a96a,0.35).fillRoundedRect(p.worldX-20,p.worldY-13,40,26,3);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRoundedRect(p.worldX-20,p.worldY-13,40,26,3);}
     } else if(bPrev)bPrev.setVisible(false);
+
+    // Hammer preview: colour-code nearby own buildings
+    this.hammerGfx.clear();
+    const hammerActive=!buildMode&&getActiveTool()==='hammer';
+    this.hammerHintTxt.setVisible(hammerActive);
+    if(hammerActive){
+      this.hammerHintTxt.setPosition(state.x,state.y-56);
+      for(const[,g] of Object.entries(bldgSpr)){
+        const d=g._d;
+        if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
+        if(dist2(d.x,d.y,state.x,state.y)>ATK_RNG+30)continue;
+        const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:null;
+        const tier=d.tier||0;
+        if(tiers&&tier<2){
+          const col=invCanAfford(tiers[tier+1].upg)?0x2ecc71:0xf39c12;
+          this.hammerGfx.lineStyle(2.5,col,0.85).strokeCircle(d.x,d.y,28);
+        } else {
+          this.hammerGfx.lineStyle(2.5,0xe74c3c,0.75).strokeCircle(d.x,d.y,28);
+        }
+      }
+    }
 
     // Hunger
     foodTimer+=delta;
