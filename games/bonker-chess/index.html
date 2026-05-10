@@ -695,16 +695,11 @@ h1 {
   <section class="mode-screen" id="modeScreen">
     <div class="mode-card">
       <h1 class="mode-title">Play Chess</h1>
-      <p class="mode-subtitle">Choose how you want to play. Friend codes are right here on this page.</p>
+      <p class="mode-subtitle">Play on one computer or invite a friend with a code.</p>
       <div class="mode-options">
-        <button class="mode-btn primary" id="randomModeBtn">
-          <span class="mode-icon">VS</span>
-          <strong>Play Online</strong>
-          <span>Find another waiting player online.</span>
-        </button>
         <button class="mode-btn" id="friendModeBtn">
           <span class="mode-icon">FR</span>
-          <strong>Play a Friend</strong>
+          <strong>Play with code</strong>
           <span>Create a code below or join with your friend&apos;s code.</span>
         </button>
         <button class="mode-btn primary" id="sameDeviceBtn">
@@ -769,7 +764,6 @@ h1 {
       <div class="online-title">Online match</div>
       <div class="online-actions">
         <button class="online-btn primary" id="friendBtn">Create friend code</button>
-        <button class="online-btn" id="randomBtn">Play random</button>
       </div>
       <div class="join-line">
         <input class="code-input" id="sideJoinCodeInput" maxlength="12" placeholder="Enter code">
@@ -780,7 +774,7 @@ h1 {
         <button class="small-btn" id="copyBtn">Copy</button>
         <button class="small-btn" id="leaveBtn">Leave</button>
       </div>
-      <div class="online-note" id="onlineNote">Local 2 player is ready. Start online to invite a friend or find a random player.</div>
+      <div class="online-note" id="onlineNote">Same device is ready. Create a code to invite a friend.</div>
     </section>
 
     <section class="panel capture-box">
@@ -832,7 +826,6 @@ const ranksRight = document.getElementById('ranksRight');
 const modeScreen = document.getElementById('modeScreen');
 const sameDeviceBtn = document.getElementById('sameDeviceBtn');
 const friendModeBtn = document.getElementById('friendModeBtn');
-const randomModeBtn = document.getElementById('randomModeBtn');
 const friendSetup = document.getElementById('friendSetup');
 const createFriendBtn = document.getElementById('createFriendBtn');
 const joinCodeInput = document.getElementById('joinCodeInput');
@@ -843,7 +836,6 @@ const modeRoomCode = document.getElementById('modeRoomCode');
 const modeCopyBtn = document.getElementById('modeCopyBtn');
 const modeCancelBtn = document.getElementById('modeCancelBtn');
 const friendBtn = document.getElementById('friendBtn');
-const randomBtn = document.getElementById('randomBtn');
 const roomLine = document.getElementById('roomLine');
 const roomCode = document.getElementById('roomCode');
 const copyBtn = document.getElementById('copyBtn');
@@ -884,9 +876,7 @@ let currentRoomId = null;
 let playerColor = null;
 let roomState = null;
 let roomUnsubscribe = null;
-let queueUnsubscribe = null;
 let syncingRemote = false;
-let waitingRandom = false;
 
 const playerId = getPlayerId();
 const urlRoom = new URLSearchParams(location.search).get('room');
@@ -915,10 +905,6 @@ function roomRef(roomId) {
   return ref(db, `chessRooms/${roomId}`);
 }
 
-function queueRef(id = playerId) {
-  return ref(db, `chessQueue/${id}`);
-}
-
 function roomUrl(roomId) {
   const url = new URL('play.html', location.href);
   url.searchParams.set('room', roomId);
@@ -941,7 +927,6 @@ function setModeNote(text) {
 }
 
 function setModeBusy(isBusy) {
-  randomModeBtn.disabled = isBusy;
   createFriendBtn.disabled = isBusy;
   joinCodeBtn.disabled = isBusy;
   joinCodeInput.disabled = isBusy;
@@ -1018,7 +1003,6 @@ function applyRemoteGame(state) {
 
 function onlineStatusSuffix() {
   if (!onlineMode) return '';
-  if (waitingRandom) return ' Waiting for a random opponent.';
   const color = playerColor === 'w' ? 'White' : playerColor === 'b' ? 'Black' : 'Spectator';
   const waiting = roomState && (!roomState.white || !roomState.black);
   if (waiting) return ` You are ${color}. Waiting for opponent.`;
@@ -1215,16 +1199,10 @@ function render() {
 function renderOnlinePanel() {
   showRoomControls(currentRoomId);
   friendBtn.disabled = onlineMode;
-  randomBtn.disabled = onlineMode;
   sideJoinCodeInput.disabled = onlineMode;
   sideJoinCodeBtn.disabled = onlineMode;
   leaveBtn.disabled = !onlineMode;
   document.getElementById('undoBtn').disabled = onlineMode;
-  if (waitingRandom) {
-    showRoomControls(null);
-    setOnlineNote('Waiting for a random opponent. Leave to cancel.');
-    return;
-  }
   if (onlineMode) {
     const color = playerColor === 'w' ? 'White' : playerColor === 'b' ? 'Black' : 'Spectator';
     const status = roomState && roomState.white && roomState.black ? 'playing' : 'waiting';
@@ -1253,7 +1231,6 @@ async function createRoom(kind = 'friend') {
   await leaveOnline(false);
   showModeScreen();
   setModeNote('');
-  waitingRandom = false;
   const id = makeRoomId();
   currentRoomId = id;
   playerColor = 'w';
@@ -1308,7 +1285,6 @@ async function joinRoom(id) {
   setModeNote(`Joining ${cleanedId}...`);
   setModeBusy(true);
   await leaveOnline(false);
-  waitingRandom = false;
   const target = roomRef(cleanedId);
   const result = await runTransaction(target, current => {
     if (!current) return;
@@ -1380,92 +1356,16 @@ function listenToRoom(id) {
   });
 }
 
-async function playRandom() {
-  await leaveOnline(false);
-  showModeScreen();
-  showModeRoom('RANDOM', 'Searching...');
-  setModeBusy(true);
-  waitingRandom = false;
-  setOnlineNote('Looking for a random opponent...');
-  setModeNote('Looking for a random opponent. You can cancel while waiting.');
-  const queueSnap = await get(ref(db, 'chessQueue'));
-  const queue = queueSnap.val() || {};
-  const candidateId = Object.keys(queue).find(id => id !== playerId);
-
-  if (candidateId) {
-    await remove(queueRef());
-    const id = makeRoomId();
-    currentRoomId = id;
-    playerColor = 'b';
-    onlineMode = true;
-    chess = new Chess();
-    flipped = true;
-    await set(roomRef(id), {
-      kind: 'random',
-      white: candidateId,
-      black: playerId,
-      fen: chess.fen(),
-      pgn: '',
-      turn: 'w',
-      status: 'playing',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-    await set(queueRef(candidateId), {
-      playerId: candidateId,
-      roomId: id,
-      matchedAt: serverTimestamp()
-    });
-    onDisconnect(ref(db, `chessRooms/${id}/blackOnline`)).remove();
-    await set(ref(db, `chessRooms/${id}/blackOnline`), true);
-    setUrlRoom(id);
-    listenToRoom(id);
-    hideModeScreen();
-    showModeRoom(null);
-    setModeBusy(false);
-    render();
-    return;
-  }
-
-  await set(queueRef(), {
-    playerId,
-    createdAt: serverTimestamp()
-  });
-  onDisconnect(queueRef()).remove();
-  onlineMode = true;
-  waitingRandom = true;
-  playerColor = 'w';
-  roomState = { white: playerId, black: null, status: 'waiting' };
-  setOnlineNote('Waiting for a random opponent...');
-  setModeNote('Waiting for a random opponent. You can cancel while waiting.');
-  render();
-
-  if (queueUnsubscribe) queueUnsubscribe();
-  queueUnsubscribe = onValue(queueRef(), snapshot => {
-    const entry = snapshot.val();
-    if (!entry || !entry.roomId) return;
-    if (queueUnsubscribe) queueUnsubscribe();
-    queueUnsubscribe = null;
-    joinRoom(entry.roomId);
-  });
-}
-
 async function leaveOnline(updateUrl = true) {
-  if (queueUnsubscribe) {
-    queueUnsubscribe();
-    queueUnsubscribe = null;
-  }
   if (roomUnsubscribe) {
     roomUnsubscribe();
     roomUnsubscribe = null;
   }
-  await remove(queueRef()).catch(() => {});
   if (currentRoomId && playerColor) {
     const onlineKey = playerColor === 'w' ? 'whiteOnline' : 'blackOnline';
     await remove(ref(db, `chessRooms/${currentRoomId}/${onlineKey}`)).catch(() => {});
   }
   onlineMode = false;
-  waitingRandom = false;
   currentRoomId = null;
   playerColor = null;
   roomState = null;
@@ -1523,17 +1423,6 @@ friendModeBtn.addEventListener('click', () => {
   joinCodeInput.focus();
 });
 
-randomModeBtn.addEventListener('click', () => {
-  playRandom().catch(error => {
-    console.error(error);
-    showModeScreen();
-    showModeRoom(null);
-    setModeBusy(false);
-    setModeNote('Could not start random matchmaking. Try again.');
-    setOnlineNote('Could not start random matchmaking. Try again.');
-  });
-});
-
 createFriendBtn.addEventListener('click', () => {
   createRoom('friend').catch(error => {
     console.error(error);
@@ -1565,16 +1454,6 @@ friendBtn.addEventListener('click', () => {
   createRoom('friend').catch(error => {
     console.error(error);
     setOnlineNote('Could not create friend room. Try again.');
-  });
-});
-
-randomBtn.addEventListener('click', () => {
-  playRandom().catch(error => {
-    console.error(error);
-    showModeScreen();
-    showModeRoom(null);
-    setModeBusy(false);
-    setOnlineNote('Could not start random matchmaking. Try again.');
   });
 });
 
@@ -1631,7 +1510,10 @@ leaveBtn.addEventListener('click', async () => {
 });
 
 window.addEventListener('beforeunload', () => {
-  remove(queueRef()).catch(() => {});
+  if (currentRoomId && playerColor) {
+    const onlineKey = playerColor === 'w' ? 'whiteOnline' : 'blackOnline';
+    remove(ref(db, `chessRooms/${currentRoomId}/${onlineKey}`)).catch(() => {});
+  }
 });
 
 if (urlRoom) {
