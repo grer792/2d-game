@@ -137,8 +137,16 @@ button {
   justify-content: center;
   width: 58px;
   height: 58px;
-  font-size: 2.1rem;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Arial Unicode MS", sans-serif;
+  font-size: 2.35rem;
+  font-weight: 900;
   line-height: 1;
+  color: #f6f6f1;
+  text-shadow: 0 3px 3px rgba(0,0,0,0.34);
+}
+
+.mode-btn.primary .mode-icon {
+  color: #fff;
 }
 
 .mode-btn:hover {
@@ -151,15 +159,32 @@ button {
 }
 
 .friend-setup {
-  display: none;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  display: grid;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.035);
+  border-radius: 8px;
   gap: 10px;
 }
 
 .friend-setup.active {
   display: grid;
+}
+
+.friend-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f7f7f2;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.friend-title span {
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", sans-serif;
+  color: #74b84d;
+  font-size: 1.35rem;
 }
 
 .code-row,
@@ -246,30 +271,28 @@ body.mode-active .side { display: none; }
 .square.check { box-shadow: inset 0 0 0 5px rgba(255,92,122,0.75); }
 
 .piece {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(36px, 8.2vmin, 76px);
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Arial Unicode MS", sans-serif;
+  font-size: clamp(38px, 8.4vmin, 78px);
   font-weight: 900;
   line-height: 1;
-  filter: drop-shadow(0 4px 2px rgba(0,0,0,0.25));
+  filter: drop-shadow(0 3px 1px rgba(0,0,0,0.28));
   transform: translateY(-2px);
 }
 
 .square[data-color="b"] .piece {
-  color: #050607;
+  color: #5a5854;
+  -webkit-text-stroke: 1.4px #24231f;
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.18),
-    0 -1px 0 #000;
+    0 1px 0 rgba(255,255,255,0.2),
+    0 -1px 0 #1d1c19;
 }
 
 .square[data-color="w"] .piece {
-  color: #fffdf4;
+  color: #fbfbf5;
+  -webkit-text-stroke: 1.4px #55534f;
   text-shadow:
-    0 0 0 #000,
-    1px 1px 0 #111,
-    -1px 1px 0 #111,
-    1px -1px 0 #111,
-    -1px -1px 0 #111,
-    0 3px 2px rgba(0,0,0,0.3);
+    0 1px 0 rgba(255,255,255,0.8),
+    0 3px 2px rgba(0,0,0,0.28);
 }
 
 .hint {
@@ -323,6 +346,7 @@ body.mode-active .side { display: none; }
   align-items: center;
   justify-content: center;
   color: #cfcfc8;
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", sans-serif;
   font-size: 1.35rem;
 }
 
@@ -631,25 +655,26 @@ h1 {
   <section class="mode-screen" id="modeScreen">
     <div class="mode-card">
       <h1 class="mode-title">Play Chess</h1>
-      <p class="mode-subtitle">Choose how you want to play.</p>
+      <p class="mode-subtitle">Choose how you want to play. Friend codes are right here on this page.</p>
       <div class="mode-options">
-        <button class="mode-btn primary" id="sameDeviceBtn">
-          <span class="mode-icon">♟</span>
-          <strong>Play same device</strong>
-          <span>Two players share this screen.</span>
-        </button>
-        <button class="mode-btn" id="friendModeBtn">
-          <span class="mode-icon">🤝</span>
-          <strong>Play a Friend</strong>
-          <span>Create a code or join with your friend&apos;s code.</span>
-        </button>
-        <button class="mode-btn" id="randomModeBtn">
-          <span class="mode-icon">⚡</span>
+        <button class="mode-btn primary" id="randomModeBtn">
+          <span class="mode-icon">&#9889;</span>
           <strong>Play Online</strong>
           <span>Find another waiting player online.</span>
         </button>
+        <button class="mode-btn" id="friendModeBtn">
+          <span class="mode-icon">&#9816;</span>
+          <strong>Play a Friend</strong>
+          <span>Create a code below or join with your friend&apos;s code.</span>
+        </button>
+        <button class="mode-btn primary" id="sameDeviceBtn">
+          <span class="mode-icon">&#8644;</span>
+          <strong>Play same device</strong>
+          <span>Two players share this screen.</span>
+        </button>
       </div>
       <div class="friend-setup" id="friendSetup">
+        <div class="friend-title"><span>&#9816;</span> Friend game</div>
         <button class="online-btn primary" id="createFriendBtn">Create game code</button>
         <div class="code-row">
           <input class="code-input" id="joinCodeInput" maxlength="12" placeholder="Enter code">
@@ -662,7 +687,7 @@ h1 {
 
   <section class="board-zone">
     <div class="player-strip">
-      <div class="avatar">♟</div>
+      <div class="avatar">&#9823;</div>
       <span>Opponent</span>
     </div>
     <div class="board-shell">
@@ -673,7 +698,7 @@ h1 {
       <div class="coord-labels coord-files bottom" id="filesBottom"></div>
     </div>
     <div class="player-strip">
-      <div class="avatar">♙</div>
+      <div class="avatar">&#9817;</div>
       <span>Player</span>
     </div>
   </section>
@@ -1385,7 +1410,6 @@ sameDeviceBtn.addEventListener('click', () => {
 });
 
 friendModeBtn.addEventListener('click', () => {
-  friendSetup.classList.toggle('active');
   setModeNote('');
   joinCodeInput.focus();
 });
