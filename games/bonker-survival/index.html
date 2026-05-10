@@ -305,6 +305,37 @@ function getSnapPos(wx,wy){
   }
   return best;
 }
+function foundationsAdjacent(ax,ay,bx,by){
+  const dx=Math.abs(ax-bx),dy=Math.abs(ay-by);
+  return (dx<2&&dy>58&&dy<62)||(dy<2&&dx>58&&dx<62);
+}
+function getFoundationSnap(wx,wy){
+  const founds=Object.values(bldgSpr).filter(g=>g._d.type==='foundation');
+  if(!founds.length)return{x:Math.round(wx),y:Math.round(wy),free:true};
+  const offsets=[{dx:60,dy:0},{dx:-60,dy:0},{dx:0,dy:60},{dx:0,dy:-60}];
+  let best=null,bestDist=46;
+  for(const g of founds){
+    const d=g._d;
+    for(const o of offsets){
+      const nx=d.x+o.dx,ny=d.y+o.dy;
+      if(founds.some(f=>Math.abs(f._d.x-nx)<2&&Math.abs(f._d.y-ny)<2))continue;
+      const dst=dist2(wx,wy,nx,ny);
+      if(dst<bestDist){bestDist=dst;best={x:nx,y:ny};}
+    }
+  }
+  return best;
+}
+function getConnectedFoundations(startId){
+  const idMap={};
+  for(const[id,g] of Object.entries(bldgSpr)){if(g._d.type==='foundation')idMap[id]=g._d;}
+  if(!idMap[startId])return new Set();
+  const visited=new Set([startId]), queue=[startId];
+  while(queue.length){
+    const cd=idMap[queue.shift()];
+    for(const[id,d] of Object.entries(idMap)){if(!visited.has(id)&&foundationsAdjacent(cd.x,cd.y,d.x,d.y)){visited.add(id);queue.push(id);}}
+  }
+  return visited;
+}
 
 // ── Inventory ─────────────────────────────────────────────────────────────────
 // inv[0..4]: {type, count} | null  — tools: count always 1, resources: stackable
@@ -993,7 +1024,11 @@ class Game extends Phaser.Scene {
   placeBuilding(ptr){
     const cost=BLDG_COST[buildType]; if(!cost)return;
     let placeX=Math.round(ptr.worldX), placeY=Math.round(ptr.worldY), extra={};
-    if(buildType==='wall'||buildType==='door'){
+    if(buildType==='foundation'){
+      const snap=getFoundationSnap(ptr.worldX,ptr.worldY);
+      if(!snap){this.pop(this.pbody.x,this.pbody.y-30,'Must connect to existing floor!','#e74c3c');return;}
+      placeX=snap.x; placeY=snap.y;
+    } else if(buildType==='wall'||buildType==='door'){
       const snap=getSnapPos(ptr.worldX,ptr.worldY);
       if(!snap){this.pop(this.pbody.x,this.pbody.y-30,'Snap to a floor tile first!','#e74c3c');return;}
       for(const[,g] of Object.entries(bldgSpr)){
@@ -1198,7 +1233,9 @@ class Game extends Phaser.Scene {
 
     this.resolveWalls();
     state.x=this.pbody.x; state.y=this.pbody.y;
-    for(const[id,rg] of Object.entries(roofSpr)){const d=bldgSpr[id]?._d;if(d){const inside=Math.abs(state.x-d.x)<29&&Math.abs(state.y-d.y)<29;rg.setAlpha(inside?0:0.93);}}
+    let _insideId=null;for(const[id,g] of Object.entries(bldgSpr)){const d=g._d;if(d.type==='foundation'&&Math.abs(state.x-d.x)<29&&Math.abs(state.y-d.y)<29){_insideId=id;break;}}
+    const _vis=_insideId?getConnectedFoundations(_insideId):new Set();
+    for(const[id,rg] of Object.entries(roofSpr))rg.setAlpha(_vis.has(id)?0:0.93);
     const depth=state.y;
     this.pgfx.setPosition(state.x,state.y).setDepth(depth);
     this.nameTag.setPosition(state.x,state.y-P_RAD-15).setDepth(depth+1);
@@ -1246,7 +1283,7 @@ class Game extends Phaser.Scene {
     // Build preview
     if(buildMode){
       const p=this.input.activePointer; bPrev.clear().setVisible(true);
-      if(buildType==='foundation'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-30,p.worldY-30,60,60);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-30,p.worldY-30,60,60);}
+      if(buildType==='foundation'){const fsnap=getFoundationSnap(p.worldX,p.worldY);const fx=fsnap?fsnap.x:p.worldX,fy=fsnap?fsnap.y:p.worldY,fcol=fsnap?0xd4a96a:0xe74c3c;bPrev.fillStyle(fcol,0.35).fillRect(fx-30,fy-30,60,60);bPrev.lineStyle(2,fcol,0.7).strokeRect(fx-30,fy-30,60,60);}
       else if(buildType==='wall'||buildType==='door'){
         const snap=getSnapPos(p.worldX,p.worldY);
         const sx=snap?snap.x:p.worldX,sy=snap?snap.y:p.worldY,rot=snap?snap.rot:0;
