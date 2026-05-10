@@ -370,7 +370,6 @@
     <span class="map-close" onclick="toggleMap(false)">✕ close</span>
     <div class="map-legend">
       <span style="color:#6dc96d">■</span> Your base &nbsp;
-      <span style="color:#c96d6d">■</span> Enemy &nbsp;
       <span style="color:#6d9dc9">■</span> Bed &nbsp;
       <span style="color:#fff">●</span> You &nbsp;
       <span style="color:#c96d6d">✕</span> Death
@@ -605,6 +604,7 @@ let wolfSyncLast=0; const remoteWolves={};
 let regenTimer=0;
 let isDead=false, deathCause='', deathX=0, deathY=0;
 let bagCooldowns={}, respawnAllowedAt=0, _deathInterval=null;
+let lastBldgAtkTime=0;
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
@@ -1276,14 +1276,18 @@ class Game extends Phaser.Scene {
   }
 
   tryAtkBldg(ptr){
+    const now=Date.now();
+    if(now-lastBldgAtkTime<400)return;
     const px=this.pbody.x, py=this.pbody.y;
     const tool=getActiveTool();
     const dmg={msword:30,axe:22,sword:15,pick:12}[tool]||FIST_BLDG_DMG;
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
-      if(dist2(d.x,d.y,px,py)>ATK_RNG)continue;
+      const maxRange=d.type==='chest'?32:ATK_RNG; // chest requires close contact
+      if(dist2(d.x,d.y,px,py)>maxRange)continue;
       if(Math.abs(ptr.worldX-d.x)>28||Math.abs(ptr.worldY-d.y)>28)continue;
+      lastBldgAtkTime=now;
       const newHp=d.hp-dmg;
       if(newHp<=0){
         if(d.type==='chest'){
@@ -1825,10 +1829,12 @@ function drawWorldMap(){
   for(let y=0;y<MAP_H;y+=200){ctx.beginPath();ctx.moveTo(0,y*sy);ctx.lineTo(W,y*sy);ctx.stroke();}
   // water
   for(const w of WATER_SRCS){ctx.fillStyle='rgba(40,110,200,0.55)';ctx.beginPath();ctx.arc(w.x*sx,w.y*sy,4,0,Math.PI*2);ctx.fill();}
-  // buildings
+  // buildings — only yours/team shown (enemy positions stay secret)
   for(const[,g]of Object.entries(bldgSpr)){
-    const d=g._d, mine=d.ownerId===PID||(state.teamId&&d.teamId===state.teamId);
-    ctx.fillStyle=d.type==='sleeping_bag'?'rgba(80,120,200,0.9)':d.type==='tc'?(mine?'rgba(140,210,140,0.9)':'rgba(200,140,60,0.8)'):(mine?'rgba(90,175,90,0.7)':'rgba(170,70,70,0.6)');
+    const d=g._d;
+    const mine=d.ownerId===PID||(state.teamId&&d.teamId===state.teamId);
+    if(!mine)continue;
+    ctx.fillStyle=d.type==='sleeping_bag'?'rgba(80,130,210,0.9)':d.type==='tc'?'rgba(140,210,140,0.9)':'rgba(90,175,90,0.7)';
     ctx.fillRect(d.x*sx-2,d.y*sy-2,4,4);
   }
   // other players
