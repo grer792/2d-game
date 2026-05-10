@@ -1590,7 +1590,7 @@ class Game extends Phaser.Scene {
       }
     }
     const timeStr=phase<0.45?'🌞 DAY':phase<0.55?'🌅 DUSK':phase<0.9?'🌙 NIGHT':'🌄 DAWN';
-    document.getElementById('ui-time').textContent=timeStr;
+    const _te=document.getElementById('ui-time');if(_te)_te.textContent=timeStr;
 
     // Wolves (spawn at night, despawn at dawn)
     if(phase>0.55&&phase<0.95&&!wolvesSpawned)this.spawnWolves();
