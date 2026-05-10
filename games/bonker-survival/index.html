@@ -703,13 +703,15 @@ class Game extends Phaser.Scene {
     gfx.clear();
     const {x,y,color,teamId:tid}=d, c=color||0x888888;
     const friendly=state.teamId&&tid===state.teamId, enemy=tid&&tid!==state.teamId;
+    const ang=Math.atan2(d.dirY??-1,d.dirX??0);
+    const hx=x+Math.cos(ang)*(P_RAD-1), hy=y+Math.sin(ang)*(P_RAD-1);
     gfx.fillStyle(0x000000,0.15).fillEllipse(x+2,y+P_RAD+5,P_RAD*2.4,8);
     gfx.fillStyle(c,1).fillCircle(x,y,P_RAD);
     gfx.fillStyle(lerpColor(c,0xffffff,0.35),0.5).fillCircle(x-3,y-3,P_RAD*0.55);
     gfx.lineStyle(2.5,0x000000,0.85).strokeCircle(x,y,P_RAD);
     if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.85).strokeCircle(x,y,P_RAD+4); }
-    gfx.fillStyle(0xf5d5a5,1).fillCircle(x,y-P_RAD+1,6);
-    gfx.lineStyle(1,0xc49060,0.7).strokeCircle(x,y-P_RAD+1,6);
+    gfx.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,6);
+    gfx.lineStyle(1,0xc49060,0.7).strokeCircle(hx,hy,6);
     if(d.hp<MAX_HP){ const r=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-P_RAD-8,32*r,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*r,y-P_RAD-8,32*(1-r),4); }
   }
 
@@ -1004,8 +1006,8 @@ class Game extends Phaser.Scene {
     if(this.tryLootBag(ptr))return;
     if(this.tryAtkWolf(ptr))return;
     if(this.tryHammerBldg(ptr))return;
-    if(this.tryHitRes(ptr))return;
     if(this.tryAtkPlayer(ptr))return;
+    if(this.tryHitRes(ptr))return;
     if(this.tryOpenChest(ptr))return;
     this.tryAtkBldg(ptr);
   }
@@ -1069,7 +1071,7 @@ class Game extends Phaser.Scene {
   tryHitRes(ptr){
     const px=this.pbody.x, py=this.pbody.y;
     const tool=getActiveTool();
-    if(tool==='sword')return false; // sword can't gather
+    if(tool==='sword'||tool==='msword')return false;
     for(const [id,g] of Object.entries(resSpr)){
       const d=g._d; if(!d||!RES_DEF[d.type])continue;
       if(dist2(d.x,d.y,px,py)>ATK_RNG+30)continue;
@@ -1113,7 +1115,7 @@ class Game extends Phaser.Scene {
       const o=others[id]; if(!o)continue;
       const rx=o.rx??od.x, ry=o.ry??od.y;
       if(dist2(rx,ry,px,py)>ATK_RNG+20)continue;
-      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD+16)continue;
+      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD*3+10)continue;
       const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       lastAtkTime=now;
       set(sref('players/'+id+'/hits/'+now),{dmg,from:PID});
@@ -1556,7 +1558,7 @@ class Game extends Phaser.Scene {
     // Firebase sync
     if(time-lastSync>SYNC_MS){
       lastSync=time;
-      set(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null});
+      set(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100});
     }
   }
 }
