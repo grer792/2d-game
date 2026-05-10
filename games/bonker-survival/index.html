@@ -9,19 +9,33 @@
     body { background:#4a8a3a; overflow:hidden; font-family:'Segoe UI',sans-serif; }
     #hud {
       position:fixed; top:12px; left:12px;
-      background:rgba(20,20,20,0.85); border:1px solid #444;
-      padding:10px 16px; color:#ddd; font-size:13px;
-      z-index:20; pointer-events:none; min-width:210px; border-radius:6px; line-height:2;
+      background:rgba(12,12,14,0.92); border:1px solid rgba(255,255,255,0.09);
+      padding:10px 12px 8px; color:#fff;
+      z-index:20; pointer-events:none; min-width:190px; border-radius:10px;
+      font-family:'Segoe UI',sans-serif;
     }
-    .stat-row { display:flex; align-items:center; gap:8px; }
-    .bar { flex:1; height:7px; background:#333; border-radius:3px; overflow:hidden; }
-    .bar-inner { height:100%; border-radius:3px; transition:width .25s; }
-    .lbl { width:54px; font-size:11px; color:#aaa; }
-    .val { width:28px; text-align:right; font-size:12px; color:#fff; font-weight:600; }
-    #ui-tools { font-size:11px; color:#888; margin-top:2px; }
+    #hud-comfort {
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+      color:#e67e22; margin-bottom:7px;
+    }
+    #hud-comfort-pct { color:#f0c040; font-size:11px; }
+    .sbar { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+    .sbar-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
+    .sbar-bg {
+      flex:1; height:20px; background:rgba(255,255,255,0.07);
+      border-radius:5px; overflow:hidden; position:relative;
+    }
+    .sbar-fill { height:100%; border-radius:5px; transition:width .2s; }
+    .sbar-val {
+      position:absolute; right:7px; top:50%; transform:translateY(-50%);
+      font-size:11px; font-weight:700; color:rgba(255,255,255,0.92);
+      text-shadow:0 1px 3px rgba(0,0,0,0.9); pointer-events:none;
+    }
+    #ui-tools { font-size:11px; color:#888; margin-top:4px; }
     #ui-tools b { color:#f0c040; }
-    #ui-mode-row { color:#7ec8e3; font-size:11px; }
-    #ui-time { color:#f0c040; font-size:11px; }
+    #ui-mode-row { color:#7ec8e3; font-size:10px; margin-top:1px; }
+    #ui-time { color:#f0c040; font-size:10px; }
     #scores {
       position:fixed; top:12px; right:12px;
       background:rgba(20,20,20,0.85); border:1px solid #444;
@@ -183,22 +197,32 @@
 </div>
 
 <div id="hud">
-  <div class="stat-row">
-    <span class="lbl">Health</span>
-    <span class="bar"><span id="hp-bar" class="bar-inner" style="background:#e74c3c;width:100%"></span></span>
-    <span class="val" id="ui-hp">100</span>
+  <div id="hud-comfort">
+    <span>🔥 COMFORT</span>
+    <span id="hud-comfort-pct">100%</span>
   </div>
-  <div class="stat-row">
-    <span class="lbl">Hunger</span>
-    <span class="bar"><span id="hunger-bar" class="bar-inner" style="background:#f39c12;width:100%"></span></span>
-    <span class="val" id="ui-fm">10</span>
+  <div class="sbar">
+    <span class="sbar-icon">❤️</span>
+    <div class="sbar-bg">
+      <div id="hp-bar" class="sbar-fill" style="background:#2ecc71;width:100%"></div>
+      <span class="sbar-val" id="ui-hp">100</span>
+    </div>
   </div>
-  <div class="stat-row">
-    <span class="lbl">Thirst</span>
-    <span class="bar"><span id="thirst-bar" class="bar-inner" style="background:#3498db;width:100%"></span></span>
-    <span class="val" id="ui-th">10</span>
+  <div class="sbar">
+    <span class="sbar-icon">💧</span>
+    <div class="sbar-bg">
+      <div id="thirst-bar" class="sbar-fill" style="background:#3498db;width:100%"></div>
+      <span class="sbar-val" id="ui-th">10</span>
+    </div>
   </div>
-  <div id="ui-tools">Tools: <b id="ui-tool-list">none crafted</b></div>
+  <div class="sbar">
+    <span class="sbar-icon">🍎</span>
+    <div class="sbar-bg">
+      <div id="hunger-bar" class="sbar-fill" style="background:#e67e22;width:100%"></div>
+      <span class="sbar-val" id="ui-fm">10</span>
+    </div>
+  </div>
+  <div id="ui-tools">🔧 <b id="ui-tool-list">none crafted</b></div>
   <div id="ui-mode-row">Score <b id="ui-score" style="color:#f0c040">0</b> &nbsp; <span id="ui-mode">EXPLORE</span></div>
   <div id="ui-time">🌞 DAY</div>
 </div>
@@ -749,108 +773,96 @@ class Game extends Phaser.Scene {
   }
 
   drawBldg(gfx,d){
-    const {x,y,type,hp,ownerId}=d, tier=d.tier||0, mine=ownerId===PID;
+    const {x,y,type,hp}=d, tier=d.tier||0;
     const tData=type==='wall'?WALL_TIERS[tier]:type==='door'?DOOR_TIERS[tier]:null;
     const maxHp=(tData?tData.hp:BLDG_HP[type])||100;
     const hpR=Math.max(0,hp/maxHp);
     gfx.clear();
-    const PAL=[[0xb07040,0xd4a870,0x6a3e18],[0x8898a8,0xb4ccda,0x485868],[0x4a6070,0x7aa0b8,0x283848]];
-    const [bp,bh,bd]=PAL[tier]||PAL[0];
-    const pCol=mine?bp:0x606060, hi=mine?bh:0x888888, dk=mine?bd:0x383838;
+    // Unified palette — same for all owners
+    const TIERS=[
+      {base:0xc8945a,hi:0xeab882,dk:0x7a4e28},
+      {base:0x9babb8,hi:0xc8d8e4,dk:0x4e6070},
+      {base:0x6889a0,hi:0x9ac0d8,dk:0x304858},
+    ];
+    const {base,hi,dk}=TIERS[tier]||TIERS[0];
     if(type==='foundation'){
-      const fc=mine?0xa07040:0x7a5030, fh=mine?0xc09060:0x9a7050, fd=mine?0x6a3e18:0x503020;
-      gfx.fillStyle(fc,0.7).fillRect(x-30,y-30,60,60);
-      gfx.lineStyle(1,fd,0.4);
-      for(let r=y-18;r<y+30;r+=12){gfx.moveTo(x-30,r);gfx.lineTo(x+30,r);}
-      gfx.strokePath();
-      gfx.lineStyle(0.5,fh,0.2);
-      gfx.beginPath();gfx.moveTo(x-20,y-30);gfx.lineTo(x-20,y+30);gfx.moveTo(x,y-30);gfx.lineTo(x,y+30);gfx.moveTo(x+20,y-30);gfx.lineTo(x+20,y+30);
-      gfx.strokePath();
-      gfx.lineStyle(2,mine?0xd4a870:0xa07848,0.8).strokeRect(x-30,y-30,60,60);
+      // Wooden floorboards
+      gfx.fillStyle(0xc4a060,1).fillRect(x-30,y-30,60,60);
+      gfx.fillStyle(0xdbb878,0.5).fillRect(x-30,y-30,60,14);
+      gfx.lineStyle(1,0x8a5e28,0.55);
+      for(let r=y-16;r<y+30;r+=14){gfx.beginPath();gfx.moveTo(x-30,r);gfx.lineTo(x+30,r);gfx.strokePath();}
+      gfx.lineStyle(1,0x8a5e28,0.3);
+      for(const cx of[x-10,x+10]){gfx.beginPath();gfx.moveTo(cx,y-30);gfx.lineTo(cx,y+30);gfx.strokePath();}
+      gfx.fillStyle(0x5a3010,0.9);
+      [[-26,-26],[26,-26],[-26,26],[26,26]].forEach(([dx,dy])=>gfx.fillCircle(x+dx,y+dy,2.5));
+      gfx.lineStyle(2,0x7a4e20,1).strokeRect(x-30,y-30,60,60);
       return;
     } else if(type==='wall'){
       const rot=d.rot||0;
       if(rot===0){
-        if(tier===1){
-          gfx.fillStyle(dk,1).fillRect(x-30,y-4,60,8);
-          for(let i=0;i<3;i++){const bx=x-28+i*19;gfx.fillStyle(i%2?pCol:0x7a8898,1).fillRect(bx,y-3,17,6);gfx.fillStyle(hi,0.3).fillRect(bx,y-3,17,2);}
-        } else if(tier===2){
-          gfx.fillStyle(pCol,1).fillRect(x-30,y-4,60,8);
-          gfx.fillStyle(hi,0.45).fillRect(x-28,y-4,56,3);
-          gfx.fillStyle(hi,1);gfx.fillCircle(x-22,y,1.8);gfx.fillCircle(x,y,1.8);gfx.fillCircle(x+22,y,1.8);
+        gfx.fillStyle(dk,1).fillRect(x-30,y-5,60,10);
+        gfx.fillStyle(base,1).fillRect(x-29,y-4,58,8);
+        if(tier===0){
+          gfx.lineStyle(1,dk,0.45);
+          for(const cx of[x-10,x+10]){gfx.beginPath();gfx.moveTo(cx,y-4);gfx.lineTo(cx,y+4);gfx.strokePath();}
+        } else if(tier===1){
+          for(let i=0;i<3;i++){const bx=x-26+i*18;gfx.fillStyle(i%2?base:0x7a8898,1).fillRect(bx,y-3,16,6);}
+          gfx.lineStyle(1,dk,0.35);
+          for(let i=0;i<3;i++){gfx.beginPath();gfx.moveTo(x-26+i*18,y-3);gfx.lineTo(x-26+i*18,y+3);gfx.strokePath();}
         } else {
-          gfx.fillStyle(pCol,1).fillRect(x-30,y-4,60,8);
-          gfx.fillStyle(hi,0.4).fillRect(x-30,y-4,60,3);
-          gfx.lineStyle(1,dk,0.5);gfx.beginPath();gfx.moveTo(x-10,y-4);gfx.lineTo(x-10,y+4);gfx.moveTo(x+10,y-4);gfx.lineTo(x+10,y+4);gfx.strokePath();
+          gfx.fillStyle(hi,0.18).fillRect(x-29,y-4,58,3);
+          [-20,0,20].forEach(ox=>{gfx.fillStyle(dk,1).fillCircle(x+ox,y,2.5);gfx.fillStyle(hi,1).fillCircle(x+ox,y,1.5);});
         }
-        gfx.lineStyle(1.5,dk,1).strokeRect(x-30,y-4,60,8);
+        gfx.fillStyle(hi,0.22).fillRect(x-29,y-4,58,2);
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-30,y-5,60,10);
       } else {
-        if(tier===1){
-          gfx.fillStyle(dk,1).fillRect(x-4,y-30,8,60);
-          for(let i=0;i<4;i++){const by=y-27+i*14;gfx.fillStyle(i%2?pCol:0x7a8898,1).fillRect(x-3,by,6,12);gfx.fillStyle(hi,0.3).fillRect(x-3,by,2,12);}
-        } else if(tier===2){
-          gfx.fillStyle(pCol,1).fillRect(x-4,y-30,8,60);
-          gfx.fillStyle(hi,0.45).fillRect(x-4,y-28,3,56);
-          gfx.fillStyle(hi,1);gfx.fillCircle(x,y-22,1.8);gfx.fillCircle(x,y,1.8);gfx.fillCircle(x,y+22,1.8);
+        gfx.fillStyle(dk,1).fillRect(x-5,y-30,10,60);
+        gfx.fillStyle(base,1).fillRect(x-4,y-29,8,58);
+        if(tier===0){
+          gfx.lineStyle(1,dk,0.45);
+          for(const cy of[y-10,y+10]){gfx.beginPath();gfx.moveTo(x-4,cy);gfx.lineTo(x+4,cy);gfx.strokePath();}
+        } else if(tier===1){
+          for(let i=0;i<4;i++){const by=y-26+i*13;gfx.fillStyle(i%2?base:0x7a8898,1).fillRect(x-3,by,6,12);}
         } else {
-          gfx.fillStyle(pCol,1).fillRect(x-4,y-30,8,60);
-          gfx.fillStyle(hi,0.4).fillRect(x-4,y-30,3,60);
-          gfx.lineStyle(1,dk,0.5);gfx.beginPath();gfx.moveTo(x-4,y-10);gfx.lineTo(x+4,y-10);gfx.moveTo(x-4,y+10);gfx.lineTo(x+4,y+10);gfx.strokePath();
+          gfx.fillStyle(hi,0.18).fillRect(x-4,y-29,3,58);
+          [-20,0,20].forEach(oy=>{gfx.fillStyle(dk,1).fillCircle(x,y+oy,2.5);gfx.fillStyle(hi,1).fillCircle(x,y+oy,1.5);});
         }
-        gfx.lineStyle(1.5,dk,1).strokeRect(x-4,y-30,8,60);
+        gfx.fillStyle(hi,0.22).fillRect(x-4,y-29,2,58);
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-5,y-30,10,60);
       }
     } else if(type==='door'){
       const rot=d.rot||0, open=d.open||false;
       if(rot===0){
-        // Frame: posts + top + bottom beam
+        // Horizontal double door — 60×36
         gfx.fillStyle(dk,1);
-        gfx.fillRect(x-30,y-18,6,36); // left post
-        gfx.fillRect(x+24,y-18,6,36); // right post
-        gfx.fillRect(x-30,y-18,60,5); // top beam
-        gfx.fillRect(x-30,y+13,60,5); // bottom beam
+        gfx.fillRect(x-30,y-18,6,36);gfx.fillRect(x+24,y-18,6,36);
+        gfx.fillRect(x-30,y-18,60,5);gfx.fillRect(x-30,y+13,60,5);
         if(!open){
-          // Left panel
-          gfx.fillStyle(pCol,1).fillRect(x-24,y-13,23,26);
-          gfx.fillStyle(hi,0.25).fillRect(x-24,y-13,23,7);
-          // Right panel
-          gfx.fillStyle(pCol,1).fillRect(x+1,y-13,23,26);
-          gfx.fillStyle(hi,0.25).fillRect(x+1,y-13,23,7);
-          // X-brace left
-          gfx.lineStyle(1.5,dk,0.65);
+          gfx.fillStyle(base,1).fillRect(x-24,y-13,23,26);
+          gfx.fillStyle(hi,0.28).fillRect(x-24,y-13,23,7);
+          gfx.fillStyle(base,1).fillRect(x+1,y-13,23,26);
+          gfx.fillStyle(hi,0.28).fillRect(x+1,y-13,23,7);
+          gfx.lineStyle(1.5,dk,0.5);
           gfx.beginPath();gfx.moveTo(x-24,y-13);gfx.lineTo(x-1,y+13);gfx.moveTo(x-1,y-13);gfx.lineTo(x-24,y+13);gfx.strokePath();
-          // X-brace right
           gfx.beginPath();gfx.moveTo(x+1,y-13);gfx.lineTo(x+24,y+13);gfx.moveTo(x+24,y-13);gfx.lineTo(x+1,y+13);gfx.strokePath();
-          // Handles at center meet
-          gfx.fillStyle(0xf0c040,1).fillCircle(x-3,y+2,3);gfx.fillCircle(x+3,y+2,3);
+          gfx.fillStyle(0xf0c040,1).fillCircle(x-3,y+2,2.5);gfx.fillCircle(x+3,y+2,2.5);
+        } else {
+          gfx.fillStyle(0xf0c040,0.18).fillRect(x-24,y-13,48,26);
         }
         gfx.lineStyle(1.5,dk,1).strokeRect(x-30,y-18,60,36);
-        if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x,y-24,4);
-        if(open)gfx.fillStyle(0xf0c040,0.7).fillCircle(x,y,4);
       } else {
-        // Frame: posts + left + right beam
-        gfx.fillStyle(dk,1);
-        gfx.fillRect(x-18,y-30,36,5); // top beam
-        gfx.fillRect(x-18,y+25,36,5); // bottom beam
-        gfx.fillRect(x-18,y-30,5,60); // left post
-        gfx.fillRect(x+13,y-30,5,60); // right post
+        // Vertical door — narrow like the wall (14px wide)
+        gfx.fillStyle(dk,1).fillRect(x-7,y-30,14,60);
         if(!open){
-          // Top panel
-          gfx.fillStyle(pCol,1).fillRect(x-13,y-25,26,24);
-          gfx.fillStyle(hi,0.25).fillRect(x-13,y-25,7,24);
-          // Bottom panel
-          gfx.fillStyle(pCol,1).fillRect(x-13,y+1,26,24);
-          gfx.fillStyle(hi,0.25).fillRect(x-13,y+1,7,24);
-          // X-brace top
-          gfx.lineStyle(1.5,dk,0.65);
-          gfx.beginPath();gfx.moveTo(x-13,y-25);gfx.lineTo(x+13,y-1);gfx.moveTo(x+13,y-25);gfx.lineTo(x-13,y-1);gfx.strokePath();
-          // X-brace bottom
-          gfx.beginPath();gfx.moveTo(x-13,y+1);gfx.lineTo(x+13,y+25);gfx.moveTo(x+13,y+1);gfx.lineTo(x-13,y+25);gfx.strokePath();
-          // Handles
-          gfx.fillStyle(0xf0c040,1).fillCircle(x+2,y-2,3);gfx.fillCircle(x+2,y+2,3);
+          gfx.fillStyle(base,1).fillRect(x-5,y-28,10,56);
+          gfx.fillStyle(hi,0.25).fillRect(x-5,y-28,3,56);
+          gfx.lineStyle(1.2,dk,0.6);
+          gfx.beginPath();gfx.moveTo(x-5,y);gfx.lineTo(x+5,y);gfx.strokePath();
+          gfx.fillStyle(0xf0c040,1).fillCircle(x+3,y-4,2);gfx.fillCircle(x+3,y+4,2);
+        } else {
+          gfx.fillStyle(0xf0c040,0.18).fillRect(x-5,y-28,10,56);
         }
-        gfx.lineStyle(1.5,dk,1).strokeRect(x-18,y-30,36,60);
-        if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x+24,y,4);
-        if(open)gfx.fillStyle(0xf0c040,0.7).fillCircle(x,y,4);
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-7,y-30,14,60);
       }
     } else if(type==='tc'){
       const cc=mine?0x6a4a2a:0x3a2808;
@@ -899,13 +911,24 @@ class Game extends Phaser.Scene {
   drawRoof(gfx,d){
     const {x,y}=d;
     gfx.clear();
-    gfx.fillStyle(0x252530,1).fillRect(x-31,y-31,62,62);
-    gfx.fillStyle(0x000000,0.25).fillRect(x-31,y-31,62,62);
-    gfx.lineStyle(1,0x1a1a22,0.5);
-    gfx.beginPath();
-    for(let r=y-19;r<y+31;r+=12){gfx.moveTo(x-31,r);gfx.lineTo(x+31,r);}
-    gfx.strokePath();
-    gfx.lineStyle(2,0x1a1a22,0.9).strokeRect(x-31,y-31,62,62);
+    // Base tile colour — warm dark slate
+    gfx.fillStyle(0x4a3840,1).fillRect(x-31,y-31,62,62);
+    // Tile rows
+    for(let row=0;row<8;row++){
+      const ry=y-31+row*8;
+      const off=(row%2)*10;
+      gfx.fillStyle(0x3a2c34,1);
+      for(let c=x-31+off;c<x+32;c+=20){gfx.fillRect(c,ry,1,8);}
+      gfx.fillStyle(0x000000,0.18).fillRect(x-31,ry+6,62,2);
+    }
+    // Left & bottom shadow for depth
+    gfx.fillStyle(0x000000,0.3).fillRect(x-31,y-31,5,62);
+    gfx.fillStyle(0x000000,0.3).fillRect(x-31,y+26,62,5);
+    // Top-right highlight
+    gfx.fillStyle(0xffffff,0.05).fillRect(x+20,y-31,11,62);
+    gfx.fillStyle(0xffffff,0.05).fillRect(x-31,y-31,62,5);
+    // Border
+    gfx.lineStyle(2,0x1a1020,1).strokeRect(x-31,y-31,62,62);
   }
 
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
@@ -929,7 +952,7 @@ class Game extends Phaser.Scene {
       d._holdPct=0; this.drawRoof(rg,d); rg._d=d;
       bldgSpr[id]=rg; roofSpr[id]=rg;
     } else {
-      const depth=d.type==='foundation'?d.y-10:d.y+5;
+      const depth=d.type==='foundation'?2:d.y+5;
       const g=this.add.graphics().setDepth(depth);
       d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g;
     }
@@ -1380,6 +1403,8 @@ class Game extends Phaser.Scene {
     document.getElementById('ui-hp').textContent=Math.max(0,Math.round(state.hp));
     document.getElementById('ui-fm').textContent=state.food_meter;
     document.getElementById('ui-th').textContent=state.thirst;
+    const comfort=Math.round((state.hp/MAX_HP+state.food_meter/MAX_FOOD+state.thirst/MAX_THIRST)/3*100);
+    document.getElementById('hud-comfort-pct').textContent=comfort+'%';
     document.getElementById('ui-score').textContent=state.score;
     const teamLabel=state.teamId?` [${state.teamId}]`:'';
     document.getElementById('ui-mode').textContent=buildMode?'BUILD: '+buildType.toUpperCase():('EXPLORE'+teamLabel);
