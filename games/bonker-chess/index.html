@@ -799,7 +799,7 @@ h1 {
 import { Chess } from 'https://esm.run/chess.js@1.4.0';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
-  getDatabase, ref, set, get, remove, update, onValue, onDisconnect, runTransaction, serverTimestamp
+  getDatabase, ref, set, get, remove, update, onValue, onDisconnect, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
 
 const firebaseApp = initializeApp({
@@ -1289,29 +1289,9 @@ async function joinRoom(id) {
   setModeBusy(true);
   await leaveOnline(false);
   const target = roomRef(cleanedId);
-  const result = await runTransaction(target, current => {
-    if (!current) return;
-    if (current.black === playerId) return current;
-    if (current.white === playerId && !current.black) {
-      current.black = playerId;
-      current.status = 'playing';
-      return current;
-    }
-    if (current.white === playerId) return current;
-    if (!current.white) {
-      current.white = playerId;
-      current.status = current.black ? 'playing' : 'waiting';
-      return current;
-    }
-    if (!current.black) {
-      current.black = playerId;
-      current.status = 'playing';
-      return current;
-    }
-    return;
-  });
+  const snap = await get(target);
 
-  if (!result.committed || !result.snapshot.exists()) {
+  if (!snap.exists()) {
     showModeScreen();
     friendSetup.classList.add('active');
     showModeRoom(null);
@@ -1322,7 +1302,35 @@ async function joinRoom(id) {
     return;
   }
 
-  const state = result.snapshot.val();
+  const existing = snap.val();
+  if (existing.black && existing.black !== playerId) {
+    showModeScreen();
+    friendSetup.classList.add('active');
+    showModeRoom(null);
+    setModeBusy(false);
+    setModeNote('That code is already full.');
+    setOnlineNote('That room is already full.');
+    render();
+    return;
+  }
+
+  const updates = {};
+  if (!existing.white) {
+    updates.white = playerId;
+    updates.status = existing.black ? 'playing' : 'waiting';
+  } else if (existing.white === playerId && !existing.black) {
+    updates.black = playerId;
+    updates.status = 'playing';
+  } else if (!existing.black) {
+    updates.black = playerId;
+    updates.status = 'playing';
+  }
+  if (Object.keys(updates).length) {
+    updates.updatedAt = serverTimestamp();
+    await update(target, updates);
+  }
+
+  const state = { ...existing, ...updates };
   currentRoomId = cleanedId;
   playerColor = state.black === playerId ? 'b' : state.white === playerId ? 'w' : null;
   onlineMode = true;
