@@ -162,11 +162,12 @@
 </div>
 
 <div id="build-sub">
-  <span class="bopt bsel" id="bopt-wall"     onclick="setBuildType('wall')">[1] Fence 3🪵</span>
-  <span class="bopt"      id="bopt-door"     onclick="setBuildType('door')">[2] Door 2🪵</span>
-  <span class="bopt"      id="bopt-campfire" onclick="setBuildType('campfire')">[3] Fire 2🪵</span>
-  <span class="bopt"      id="bopt-chest"    onclick="setBuildType('chest')">[4] Chest 5🪵</span>
-  <span class="bopt"      id="bopt-monument" onclick="setBuildType('monument')">[5] Monument 20🪵20🪨10🍎</span>
+  <span class="bopt bsel" id="bopt-foundation" onclick="setBuildType('foundation')">[1] Floor 3🪵</span>
+  <span class="bopt"      id="bopt-wall"       onclick="setBuildType('wall')">[2] Wall 4🪵</span>
+  <span class="bopt"      id="bopt-door"       onclick="setBuildType('door')">[3] Door 2🪵</span>
+  <span class="bopt"      id="bopt-tc"         onclick="setBuildType('tc')">[4] Cabinet 10🪵5🪨</span>
+  <span class="bopt"      id="bopt-chest"      onclick="setBuildType('chest')">[5] Chest 5🪵</span>
+  <span class="bopt"      id="bopt-monument"   onclick="setBuildType('monument')">[6] Monument 20🪵20🪨10🍎</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -212,11 +213,11 @@
 </div>
 
 <div id="hint">
-  WASD: move &nbsp; T: team &nbsp; C: craft &nbsp; E: eat food<br>
-  F: drink water &nbsp; Q: drop &nbsp; 1-6: slots<br>
-  Mine 🔩 ore with ⛏ → craft 🗡️ Metal Sword (45 dmg)<br>
-  Doors block enemies. Build base, store loot in chests.<br>
-  💀 Death = lose everything. Raid chests for enemy loot!
+  WASD: move &nbsp; T: team &nbsp; C: craft &nbsp; E: eat &nbsp; F: drink<br>
+  Build: Floor → Walls → Door → Cabinet (respawn + zone)<br>
+  🔨 Hammer: click own wall/door to upgrade (wood→stone→metal)<br>
+  Mine 🔩 ore with ⛏ → craft 🗡️ Metal Sword<br>
+  🐺 Wolves at night — stay in your base!
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
@@ -248,22 +249,24 @@ const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45, BLDG
 const SYNC_MS=100, RES_N=55, HIT_CD=320;
 const FOOD_TICK=18000, THIRST_TICK=12000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
-const FIRE_RNG=70, WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000;
-const COLD_TICK=3000, COLD_DMG=4, COLD_RNG=FIRE_RNG*1.4;
+const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
-const BLDG_HP  ={ wall:120, door:80, campfire:50, chest:150, monument:500 };
-const BLDG_COST={ wall:{wood:3}, door:{wood:2}, campfire:{wood:2}, chest:{wood:5}, monument:{wood:20,stone:20,food:10} };
+const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500 };
+const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10} };
+const WALL_TIERS=[{hp:120},{hp:400,upg:{stone:5}},{hp:800,upg:{metal:5}}];
+const DOOR_TIERS=[{hp:80},{hp:250,upg:{stone:3}},{hp:600,upg:{metal:3}}];
 const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, ore:{maxHp:4,loot:'metal',hitR:16}, bush:{maxHp:1,loot:'food',hitR:14} };
 const RES_DROP ={ tree:()=>2+Math.floor(Math.random()*3), rock:()=>1+Math.floor(Math.random()*3), ore:()=>2+Math.floor(Math.random()*2), bush:()=>1+Math.floor(Math.random()*2) };
 const RECIPES  =[
-  {id:'axe',  name:'🪓 Stone Axe',  cost:{wood:5,stone:3}},
-  {id:'pick', name:'⛏ Stone Pick', cost:{wood:3,stone:5}},
-  {id:'sword',name:'⚔️ Stone Sword',cost:{wood:5,stone:5}},
-  {id:'msword',name:'🗡️ Metal Sword',cost:{metal:8,stone:2}},
+  {id:'axe',   name:'🪓 Stone Axe',   cost:{wood:5,stone:3}},
+  {id:'pick',  name:'⛏ Stone Pick',  cost:{wood:3,stone:5}},
+  {id:'sword', name:'⚔️ Stone Sword', cost:{wood:5,stone:5}},
+  {id:'msword',name:'🗡️ Metal Sword', cost:{metal:8,stone:2}},
+  {id:'hammer',name:'🔨 Hammer',      cost:{wood:2}},
 ];
-const ITEM_ICON={ axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', wood:'🪵', stone:'🪨', metal:'🔩', food:'🍎' };
-const TOOLS=['axe','pick','sword','msword'];
+const ITEM_ICON={ axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', hammer:'🔨', wood:'🪵', stone:'🪨', metal:'🔩', food:'🍎' };
+const TOOLS=['axe','pick','sword','msword','hammer'];
 const RESOURCES=['wood','stone','metal','food'];
 
 function seededRand(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(1664525,s)+1013904223)>>>0; return s/0x100000000; }; }
@@ -336,8 +339,8 @@ const state={
 const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={};
 let activeChestId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
-let selectedSlot=0, buildMode=false, buildType='wall', bPrev;
-let foodTimer=0, thirstTimer=0, fireTimer=0, coldTimer=0, lastSync=0, dayTimer=60000;
+let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
+let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
@@ -532,6 +535,10 @@ class Game extends Phaser.Scene {
       g.fillStyle(0xf0c040,1).fillTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
       g.lineStyle(1,0xb88820,1).strokeTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
       g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-9,14,4);
+    } else if(tool==='hammer'){
+      g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-6,4,14);
+      g.fillStyle(0x9ba8b2,1).fillRect(tx-7,ty-14,14,10);
+      g.lineStyle(1,0x6a7a80,1).strokeRect(tx-7,ty-14,14,10);
     } else if(tool==='build'){
       g.fillStyle(0x2d7fc9,0.9).fillRect(tx-6,ty-8,12,14);
       g.lineStyle(1,0x87ceeb,0.7);
@@ -586,16 +593,28 @@ class Game extends Phaser.Scene {
   }
 
   drawBldg(gfx,d){
-    const {x,y,type,hp,ownerId}=d, maxHp=BLDG_HP[type]||100, hpR=Math.max(0,hp/maxHp), mine=ownerId===PID;
+    const {x,y,type,hp,ownerId}=d, tier=d.tier||0, mine=ownerId===PID;
+    const tData=type==='wall'?WALL_TIERS[tier]:type==='door'?DOOR_TIERS[tier]:null;
+    const maxHp=(tData?tData.hp:BLDG_HP[type])||100;
+    const hpR=Math.max(0,hp/maxHp);
     gfx.clear();
-    if(type==='wall'){
-      const pCol=mine?0xb5834a:0x8b6042, rCol=mine?0xd4a96a:0xa07852, dark=mine?0x7a5228:0x5a3820;
+    const TC=[{p:0xb5834a,r:0xd4a96a,d:0x7a5228},{p:0x8898a4,r:0xa8bcc8,d:0x5a6a76},{p:0x5a6870,r:0x7a8c98,d:0x3a4850}];
+    if(type==='foundation'){
+      const col=mine?0xb5834a:0x8b6042, brd=mine?0xd4a96a:0xa07852;
+      gfx.fillStyle(col,0.52).fillRect(x-30,y-30,60,60);
+      gfx.lineStyle(2,brd,0.65).strokeRect(x-30,y-30,60,60);
+      gfx.lineStyle(1,mine?0x7a5228:0x5a3820,0.3);
+      gfx.moveTo(x-30,y-10);gfx.lineTo(x+30,y-10);gfx.moveTo(x-30,y+10);gfx.lineTo(x+30,y+10);
+      gfx.moveTo(x-10,y-30);gfx.lineTo(x-10,y+30);gfx.moveTo(x+10,y-30);gfx.lineTo(x+10,y+30);
+      gfx.strokePath(); return;
+    } else if(type==='wall'){
+      const c=TC[tier]||TC[0], pCol=mine?c.p:0x666666, rCol=mine?c.r:0x888888, dark=mine?c.d:0x444444;
       gfx.fillStyle(pCol,1); gfx.fillRoundedRect(x-20,y-13,7,26,3); gfx.fillRoundedRect(x+13,y-13,7,26,3);
       gfx.lineStyle(1.5,dark,1); gfx.strokeRoundedRect(x-20,y-13,7,26,3); gfx.strokeRoundedRect(x+13,y-13,7,26,3);
       gfx.fillStyle(rCol,1); gfx.fillRoundedRect(x-15,y-9,30,5,2); gfx.fillRoundedRect(x-15,y+4,30,5,2);
       gfx.lineStyle(1,dark,0.7); gfx.strokeRoundedRect(x-15,y-9,30,5,2); gfx.strokeRoundedRect(x-15,y+4,30,5,2);
     } else if(type==='door'){
-      const frame=mine?0x8b6042:0x5d3820, panel=mine?0xd4a96a:0xa07852, dark=mine?0x5a3820:0x3d2010;
+      const c=TC[tier]||TC[0], frame=mine?c.d:0x444444, panel=mine?c.p:0x666666, dark=mine?c.d:0x222222;
       gfx.fillStyle(frame,1).fillRect(x-17,y-20,34,40); gfx.fillStyle(panel,1).fillRect(x-12,y-17,24,34);
       gfx.lineStyle(1,dark,0.5);
       for(let row=y-13;row<y+14;row+=8){gfx.moveTo(x-10,row);gfx.lineTo(x+10,row);}
@@ -603,13 +622,21 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+8:x-8,y,3);
       gfx.lineStyle(2,dark,1).strokeRect(x-17,y-20,34,40);
       if(mine)gfx.fillStyle(0x27ae60,0.8).fillCircle(x,y-25,4);
+    } else if(type==='tc'){
+      const cc=mine?0x6a4a2a:0x3a2808;
+      gfx.fillStyle(cc,1).fillRect(x-16,y-20,32,34);
+      gfx.fillStyle(mine?0xd4a96a:0x8b6042,1).fillRect(x-13,y-17,11,18);
+      gfx.fillStyle(mine?0xd4a96a:0x8b6042,1).fillRect(x+2,y-17,11,18);
+      gfx.lineStyle(1,mine?0x5a3820:0x1a0a00,1).strokeRect(x-13,y-17,11,18);
+      gfx.lineStyle(1,mine?0x5a3820:0x1a0a00,1).strokeRect(x+2,y-17,11,18);
+      gfx.lineStyle(2,mine?0x5a3820:0x1a0a00,1).strokeRect(x-16,y-20,32,34);
+      gfx.fillStyle(mine?0x27ae60:0xe74c3c,0.9).fillCircle(x,y+9,5);
+      if(mine)gfx.lineStyle(1,0x27ae60,0.22).strokeCircle(x,y,TC_ZONE);
     } else if(type==='campfire'){
-      for(let i=0;i<6;i++){ const a=(i/6)*Math.PI*2; gfx.fillStyle(0x8796a0,1).fillCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5); gfx.lineStyle(1,0x4a5560,1).strokeCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5); }
-      gfx.fillStyle(0x3d1a08,1).fillEllipse(x,y,20,12); gfx.fillStyle(0xb03010,0.8).fillEllipse(x-2,y,12,7);
-      gfx.fillStyle(0xd44000,1).fillTriangle(x-8,y+2,x+8,y+2,x-2,y-14);
-      gfx.fillStyle(0xf06020,1).fillTriangle(x-6,y+2,x+6,y+2,x+2,y-18);
-      gfx.fillStyle(0xf8a020,1).fillTriangle(x-4,y+1,x+4,y+1,x,y-14);
-      gfx.fillStyle(0xffd040,1).fillTriangle(x-2,y,x+2,y,x,y-8);
+      for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2;gfx.fillStyle(0x8796a0,1).fillCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5);gfx.lineStyle(1,0x4a5560,1).strokeCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5);}
+      gfx.fillStyle(0x3d1a08,1).fillEllipse(x,y,20,12);gfx.fillStyle(0xb03010,0.8).fillEllipse(x-2,y,12,7);
+      gfx.fillStyle(0xd44000,1).fillTriangle(x-8,y+2,x+8,y+2,x-2,y-14);gfx.fillStyle(0xf06020,1).fillTriangle(x-6,y+2,x+6,y+2,x+2,y-18);
+      gfx.fillStyle(0xf8a020,1).fillTriangle(x-4,y+1,x+4,y+1,x,y-14);gfx.fillStyle(0xffd040,1).fillTriangle(x-2,y,x+2,y,x,y-8);
     } else if(type==='chest'){
       const cc=mine?0xb5834a:0x8b6042, lid=mine?0xd4a96a:0xa07852;
       gfx.fillStyle(cc,1).fillRect(x-18,y-8,36,20); gfx.fillStyle(lid,1).fillRect(x-18,y-18,36,12);
@@ -623,7 +650,11 @@ class Game extends Phaser.Scene {
       gfx.lineStyle(2,0x555555,1).strokeRect(x-11,y-34,22,40);
       gfx.fillStyle(0xf0c040,1).fillTriangle(x-11,y-34,x+11,y-34,x,y-60);
       gfx.lineStyle(2,0xc0a000,1).strokeTriangle(x-11,y-34,x+11,y-34,x,y-60);
-      if(d._holdPct>0){ gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38); gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44); }
+      if(d._holdPct>0){gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38);gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44);}
+    }
+    if(tier>0&&(type==='wall'||type==='door')){
+      gfx.fillStyle(tier===2?0x5a6870:0x8898a4,1).fillCircle(x+16,y-22,5);
+      if(tier===2)gfx.fillStyle(0xd4a830,0.85).fillCircle(x+16,y-22,3);
     }
     gfx.fillStyle(0x27ae60,1).fillRect(x-20,y-34,40*hpR,4);
     gfx.fillStyle(0xc0392b,1).fillRect(x-20+40*hpR,y-34,40*(1-hpR),4);
@@ -648,7 +679,7 @@ class Game extends Phaser.Scene {
     else{others[id].chat.setText('').setVisible(false);}
     this.updateScoreboard();
   }
-  mkBldg(id,d){ const g=this.add.graphics().setDepth(d.y+5); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; }
+  mkBldg(id,d){ const depth=d.type==='foundation'?d.y-10:d.y+5; const g=this.add.graphics().setDepth(depth); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; }
   rxBldg(id,d){ if(!bldgSpr[id])return; d._holdPct=bldgSpr[id]._d._holdPct||0; bldgSpr[id]._d=d; this.drawBldg(bldgSpr[id],d); }
   mkLoot(id,d){
     const items=[...RESOURCES,...TOOLS].filter(t=>(d[t]||0)>0);
@@ -713,10 +744,46 @@ class Game extends Phaser.Scene {
     if(buildMode){this.placeBuilding(ptr);return;}
     if(this.tryLootBag(ptr))return;
     if(this.tryAtkWolf(ptr))return;
+    if(this.tryHammerBldg(ptr))return;
     if(this.tryHitRes(ptr))return;
     if(this.tryAtkPlayer(ptr))return;
     if(this.tryOpenChest(ptr))return;
     this.tryAtkBldg(ptr);
+  }
+
+  tryHammerBldg(ptr){
+    if(getActiveTool()!=='hammer')return false;
+    const px=this.pbody.x, py=this.pbody.y;
+    for(const [id,g] of Object.entries(bldgSpr)){
+      const d=g._d;
+      if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
+      if(dist2(d.x,d.y,px,py)>ATK_RNG+20)continue;
+      if(Math.abs(ptr.worldX-d.x)>36||Math.abs(ptr.worldY-d.y)>36)continue;
+      const tier=d.tier||0;
+      const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:null;
+      if(tiers&&tier<2){
+        const next=tiers[tier+1], upgCost=next.upg;
+        if(invCanAfford(upgCost)){
+          for(const[k,v]of Object.entries(upgCost))invRemove(k,v);
+          const newHp=next.hp;
+          update(ref(db,'buildings/'+id),{tier:tier+1,hp:newHp});
+          const matName=Object.keys(upgCost)[0];
+          this.pop(d.x,d.y-32,'Upgraded to '+matName+'! ('+newHp+' HP)','#2ecc71');
+        } else {
+          const needed=Object.entries(upgCost).map(([k,v])=>v+'x'+ITEM_ICON[k]).join(' ');
+          this.pop(d.x,d.y-32,'Need '+needed+' to upgrade','#e74c3c');
+        }
+      } else {
+        const cost=BLDG_COST[d.type]||{};
+        const bag={x:d.x,y:d.y+10}; let hasDrop=false;
+        for(const[res,amt]of Object.entries(cost)){const ref2=Math.max(1,Math.floor(amt*0.5));bag[res]=(bag[res]||0)+ref2;hasDrop=true;}
+        if(hasDrop)set(ref(db,'loot/demo_'+id),bag);
+        remove(ref(db,'buildings/'+id));
+        this.pop(d.x,d.y-28,'Demolished','#aaa');
+      }
+      return true;
+    }
+    return false;
   }
 
   tryLootBag(ptr){
@@ -828,21 +895,32 @@ class Game extends Phaser.Scene {
 
   placeBuilding(ptr){
     const cost=BLDG_COST[buildType];
+    if(!cost){return;}
+    // Block building inside enemy TC zone
+    for(const[,tg] of Object.entries(bldgSpr)){
+      const td=tg._d; if(td.type!=='tc')continue;
+      if(td.ownerId===PID||(state.teamId&&td.teamId===state.teamId))continue;
+      if(dist2(ptr.worldX,ptr.worldY,td.x,td.y)<TC_ZONE){
+        this.pop(this.pbody.x,this.pbody.y-30,'Enemy cabinet blocks building here!','#e74c3c'); return;
+      }
+    }
     for(const [res,amt] of Object.entries(cost)){
       if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}
     }
     for(const [res,amt] of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
     const id=buildType[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
-    set(ref(db,'buildings/'+id),{x:Math.round(ptr.worldX),y:Math.round(ptr.worldY),type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType]});
-    if(buildType==='monument')this.pop(ptr.worldX,ptr.worldY-40,'Monument! Stand on it 3 min to win!','#f0c040');
+    const extra=(buildType==='wall'||buildType==='door')?{tier:0}:{};
+    set(ref(db,'buildings/'+id),{x:Math.round(ptr.worldX),y:Math.round(ptr.worldY),type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
+    if(buildType==='tc')this.pop(ptr.worldX,ptr.worldY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
+    if(buildType==='monument')this.pop(ptr.worldX,ptr.worldY-40,'Monument! Stand on it 90s to win!','#f0c040');
   }
 
   resolveWalls(){
     let px=this.pbody.x, py=this.pbody.y;
     for(const g of Object.values(bldgSpr)){
       const d=g._d;
-      if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest')continue;
+      if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
       if(d.type==='door'&&d.ownerId===PID)continue;
       if(d.type==='door'&&state.teamId&&d.teamId===state.teamId)continue;
       const hw=d.type==='wall'?20:17, hh=d.type==='wall'?13:20;
@@ -875,7 +953,7 @@ class Game extends Phaser.Scene {
     refreshHotbar();
     state.hp=MAX_HP; state.food_meter=MAX_FOOD; state.thirst=MAX_THIRST;
     let rx=400+Math.random()*(MAP_W-800), ry=400+Math.random()*(MAP_H-800);
-    for(const g of Object.values(bldgSpr)){const d=g._d;if(d.type==='campfire'&&d.ownerId===PID){rx=d.x+30;ry=d.y+30;break;}}
+    for(const g of Object.values(bldgSpr)){const d=g._d;if((d.type==='tc'||d.type==='campfire')&&d.ownerId===PID){rx=d.x+30;ry=d.y+30;break;}}
     state.x=rx; state.y=ry;
     this.pbody.setPosition(state.x,state.y);
     this.cameras.main.centerOn(state.x,state.y);
@@ -925,7 +1003,7 @@ class Game extends Phaser.Scene {
       if(d>WOLF_ATK_RNG){w.x+=(dx/d)*WOLF_SPEED*(delta/1000);w.y+=(dy/d)*WOLF_SPEED*(delta/1000);}
       // wall push
       for(const g of Object.values(bldgSpr)){
-        const bd=g._d; if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest')continue;
+        const bd=g._d; if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
         const hw=20,hh=13,nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
         const wdx=w.x-nx,wdy=w.y-ny,wd=Math.sqrt(wdx*wdx+wdy*wdy);
         if(wd<12&&wd>0.01){w.x+=(wdx/wd)*(12-wd);w.y+=(wdy/wd)*(12-wd);}
@@ -1054,24 +1132,13 @@ class Game extends Phaser.Scene {
     // Build preview
     if(buildMode){
       const p=this.input.activePointer; bPrev.clear().setVisible(true);
-      if(buildType==='campfire'){bPrev.fillStyle(0xf06020,0.35).fillCircle(p.worldX,p.worldY,18);bPrev.lineStyle(2,0xf06020,0.7).strokeCircle(p.worldX,p.worldY,18);}
+      if(buildType==='foundation'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-30,p.worldY-30,60,60);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-30,p.worldY-30,60,60);}
       else if(buildType==='door'){bPrev.fillStyle(0xd4a96a,0.35).fillRect(p.worldX-17,p.worldY-20,34,40);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-17,p.worldY-20,34,40);}
+      else if(buildType==='tc'){bPrev.fillStyle(0x6a4a2a,0.4).fillRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(2,0x27ae60,0.7).strokeRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);}
       else if(buildType==='monument'){bPrev.fillStyle(0xf0c040,0.3).fillRect(p.worldX-15,p.worldY-50,30,65);bPrev.lineStyle(2,0xf0c040,0.8).strokeRect(p.worldX-15,p.worldY-50,30,65);}
       else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,30);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,30);}
       else{bPrev.fillStyle(0xd4a96a,0.35).fillRoundedRect(p.worldX-20,p.worldY-13,40,26,3);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRoundedRect(p.worldX-20,p.worldY-13,40,26,3);}
     } else if(bPrev)bPrev.setVisible(false);
-
-    // Campfire heal
-    fireTimer+=delta;
-    if(fireTimer>=1600){
-      fireTimer=0;
-      if(state.hp<MAX_HP){
-        for(const g of Object.values(bldgSpr)){
-          const d=g._d; if(d.type!=='campfire')continue;
-          if(dist2(d.x,d.y,state.x,state.y)<FIRE_RNG){state.hp=Math.min(MAX_HP,state.hp+2);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-28,'+2 HP','#f8a020');break;}
-        }
-      }
-    }
 
     // Hunger
     foodTimer+=delta;
@@ -1093,18 +1160,6 @@ class Game extends Phaser.Scene {
       if(state.thirst===2)this.pop(state.x,state.y-46,'Thirsty! Find a pond (F)','#3498db');
     }
 
-    // Cold (night only, away from fire)
-    coldTimer+=delta;
-    if(coldTimer>=COLD_TICK){
-      coldTimer=0;
-      const ph=dayTimer/DAY_CYCLE;
-      if(ph>0.55&&ph<0.95){
-        let nearFire=false;
-        for(const g of Object.values(bldgSpr)){const d=g._d;if(d.type==='campfire'&&dist2(d.x,d.y,state.x,state.y)<COLD_RNG){nearFire=true;break;}}
-        if(!nearFire){state.hp=Math.max(0,state.hp-COLD_DMG);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-38,'❄️ Freezing! Build a campfire!','#7ec8e3');if(state.hp<=0)this.handleDeath();}
-      }
-    }
-
     // Day / night
     dayTimer=(dayTimer+delta)%DAY_CYCLE;
     const phase=dayTimer/DAY_CYCLE;
@@ -1120,10 +1175,8 @@ class Game extends Phaser.Scene {
       this.lightGfx.fillStyle(0x334422,Math.min(0.5,nightAlpha*0.6)).fillCircle(state.x,state.y,170);
       this.lightGfx.fillStyle(0x446633,Math.min(0.3,nightAlpha*0.35)).fillCircle(state.x,state.y,100);
       for(const g of Object.values(bldgSpr)){
-        const d=g._d; if(d.type!=='campfire')continue;
-        this.lightGfx.fillStyle(0xff6600,Math.min(0.3,nightAlpha*0.36)).fillCircle(d.x,d.y,140);
-        this.lightGfx.fillStyle(0xff9900,Math.min(0.25,nightAlpha*0.3)).fillCircle(d.x,d.y,80);
-        this.lightGfx.fillStyle(0xffcc44,Math.min(0.15,nightAlpha*0.18)).fillCircle(d.x,d.y,40);
+        const d=g._d; if(d.type!=='tc')continue;
+        this.lightGfx.fillStyle(0x3355aa,Math.min(0.18,nightAlpha*0.22)).fillCircle(d.x,d.y,TC_ZONE);
       }
     }
     const timeStr=phase<0.45?'🌞 DAY':phase<0.55?'🌅 DUSK':phase<0.9?'🌙 NIGHT':'🌄 DAWN';
