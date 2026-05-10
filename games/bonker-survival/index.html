@@ -140,6 +140,64 @@
       padding:6px 12px; color:#888; font-size:10px;
       border-radius:5px; z-index:20; pointer-events:none; line-height:1.8;
     }
+    /* ── Death Screen ── */
+    #death-screen {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.90);
+      z-index:300; align-items:center; justify-content:center;
+    }
+    .death-panel {
+      background:rgba(10,6,6,0.97); border:1px solid rgba(140,30,30,0.35);
+      border-radius:10px; padding:32px 40px; min-width:340px; text-align:center;
+      font-family:'Segoe UI',sans-serif;
+    }
+    .death-title {
+      font-size:38px; font-weight:900; color:#c0392b; letter-spacing:4px;
+      margin-bottom:6px; text-shadow:0 0 24px rgba(192,57,43,0.4);
+    }
+    .death-cause { font-size:13px; color:#777; margin-bottom:18px; letter-spacing:.4px; }
+    .death-timer-label { font-size:11px; color:#444; margin-bottom:14px; }
+    .death-bags { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .bag-btn {
+      background:rgba(22,22,30,0.9); border:1px solid #38384a; border-radius:6px;
+      padding:9px 14px; display:flex; align-items:center; justify-content:space-between;
+      cursor:pointer; color:#bbb; font-size:12px; width:100%;
+      transition:border-color .15s, color .15s; font-family:'Segoe UI',sans-serif;
+    }
+    .bag-btn:hover:not([disabled]) { border-color:#666; color:#fff; }
+    .bag-btn[disabled] { opacity:0.32; cursor:not-allowed; }
+    .bag-cd { font-size:10px; color:#555; }
+    .btn-respawn-random {
+      background:rgba(16,16,22,0.9); border:1px solid #38384a; border-radius:6px;
+      padding:9px 20px; color:#999; font-size:12px; cursor:pointer; width:100%;
+      transition:border-color .15s, color .15s; font-family:'Segoe UI',sans-serif; margin-top:2px;
+    }
+    .btn-respawn-random:hover:not([disabled]) { border-color:#666; color:#fff; }
+    .btn-respawn-random[disabled] { opacity:0.32; cursor:not-allowed; }
+    /* ── Map Overlay ── */
+    #map-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82);
+      z-index:190; align-items:center; justify-content:center;
+    }
+    .map-wrap {
+      position:relative; border:1px solid rgba(255,255,255,0.10);
+      border-radius:8px; overflow:hidden; background:#0c120a;
+    }
+    .map-label {
+      position:absolute; top:10px; left:50%; transform:translateX(-50%);
+      color:rgba(255,255,255,0.28); font-size:9px; letter-spacing:3px;
+      pointer-events:none; font-family:'Segoe UI',sans-serif; text-transform:uppercase;
+    }
+    .map-close {
+      position:absolute; top:8px; right:10px; color:rgba(255,255,255,0.28);
+      font-size:11px; cursor:pointer; font-family:'Segoe UI',sans-serif;
+      transition:color .15s;
+    }
+    .map-close:hover { color:rgba(255,255,255,0.7); }
+    .map-legend {
+      position:absolute; bottom:10px; left:12px; font-size:9px;
+      color:rgba(255,255,255,0.3); font-family:'Segoe UI',sans-serif;
+      line-height:1.8; pointer-events:none;
+    }
     /* ── LOBBY ── */
     #lobby {
       position:fixed; inset:0; z-index:200;
@@ -249,7 +307,8 @@
   <span class="bopt"      id="bopt-tc"         onclick="setBuildType('tc')">[4] Cabinet 10🪵5🪨</span>
   <span class="bopt"      id="bopt-chest"      onclick="setBuildType('chest')">[5] Chest 5🪵</span>
   <span class="bopt"      id="bopt-monument"   onclick="setBuildType('monument')">[6] Monument 20🪵20🪨10🍎</span>
-  <span class="bopt"      id="bopt-roof"       onclick="setBuildType('roof')">[7] Roof 2🪵</span>
+  <span class="bopt"      id="bopt-roof"         onclick="setBuildType('roof')">[7] Roof 2🪵</span>
+  <span class="bopt"      id="bopt-sleeping_bag" onclick="setBuildType('sleeping_bag')">[8] Bed 3🪵</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -294,11 +353,36 @@
   <button onclick="location.reload()">Play Again</button>
 </div>
 
+<div id="death-screen">
+  <div class="death-panel">
+    <div class="death-title">YOU DIED</div>
+    <div class="death-cause" id="death-cause-txt"></div>
+    <div class="death-timer-label" id="death-timer-txt">Preparing respawn...</div>
+    <div class="death-bags" id="death-bags"></div>
+    <button class="btn-respawn-random" id="btn-respawn-random" onclick="doRespawn(null)" disabled>⚡ Respawn Random</button>
+  </div>
+</div>
+
+<div id="map-overlay">
+  <div class="map-wrap">
+    <canvas id="map-canvas" width="680" height="680"></canvas>
+    <div class="map-label">World Map</div>
+    <span class="map-close" onclick="toggleMap(false)">✕ close</span>
+    <div class="map-legend">
+      <span style="color:#6dc96d">■</span> Your base &nbsp;
+      <span style="color:#c96d6d">■</span> Enemy &nbsp;
+      <span style="color:#6d9dc9">■</span> Bed &nbsp;
+      <span style="color:#fff">●</span> You &nbsp;
+      <span style="color:#c96d6d">✕</span> Death
+    </div>
+  </div>
+</div>
+
 <div id="hint">
-  WASD: move &nbsp; T: team &nbsp; C: craft &nbsp; E: eat &nbsp; F: drink<br>
-  Build: Floor → Walls → Door → Cabinet (respawn + zone)<br>
+  WASD: move &nbsp; T: team &nbsp; C: craft &nbsp; E: eat &nbsp; F: drink &nbsp; G: map<br>
+  Build: Floor → Walls → Door → Cabinet → Bed (respawn point, max 3)<br>
+  🔒 Enemy chests must be raided — fists barely dent walls, use tools<br>
   🔨 Hammer: click own wall/door to upgrade (wood→stone→metal)<br>
-  Mine 🔩 ore with ⛏ → craft 🗡️ Metal Sword<br>
   🐺 Wolves at night — stay in your base!
 </div>
 
@@ -352,8 +436,9 @@ const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
 const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
-const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60 };
-const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10}, roof:{wood:2} };
+const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60, sleeping_bag:60 };
+const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10}, roof:{wood:2}, sleeping_bag:{wood:3} };
+const FIST_BLDG_DMG=1, BAG_COOLDOWN=120000, MAX_BAGS=3, RESPAWN_DELAY=5000;
 const WALL_TIERS=[{hp:120},{hp:400,upg:{stone:5}},{hp:800,upg:{metal:5}}];
 const DOOR_TIERS=[{hp:80},{hp:250,upg:{stone:3}},{hp:600,upg:{metal:3}}];
 const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, ore:{maxHp:4,loot:'metal',hitR:16}, bush:{maxHp:1,loot:'food',hitR:14} };
@@ -518,6 +603,8 @@ let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={};
 let wolfSyncLast=0; const remoteWolves={};
 let regenTimer=0;
+let isDead=false, deathCause='', deathX=0, deathY=0;
+let bagCooldowns={}, respawnAllowedAt=0, _deathInterval=null;
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
@@ -647,7 +734,7 @@ class Game extends Phaser.Scene {
     this.keys=this.input.keyboard.addKeys({
       up:'W',dn:'S',lt:'A',rt:'D',
       up2:'UP',dn2:'DOWN',lt2:'LEFT',rt2:'RIGHT',
-      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',enter:'ENTER',
+      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',g:'G',enter:'ENTER',
       k1:Phaser.Input.Keyboard.KeyCodes.ONE,
       k2:Phaser.Input.Keyboard.KeyCodes.TWO,
       k3:Phaser.Input.Keyboard.KeyCodes.THREE,
@@ -905,6 +992,16 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xf0c040,1).fillTriangle(x-11,y-34,x+11,y-34,x,y-60);
       gfx.lineStyle(2,0xc0a000,1).strokeTriangle(x-11,y-34,x+11,y-34,x,y-60);
       if(d._holdPct>0){gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38);gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44);}
+    } else if(type==='sleeping_bag'){
+      const bc=mine?0x3a5878:0x283448, ic=mine?0x4a78a8:0x324060;
+      gfx.fillStyle(0x000000,0.18).fillEllipse(x+2,y+8,26,9);
+      gfx.fillStyle(bc,1).fillRoundedRect(x-10,y-15,20,26,4);
+      gfx.fillStyle(ic,1).fillEllipse(x,y-11,14,10);
+      gfx.fillStyle(0x101820,0.85).fillEllipse(x,y-11,10,7);
+      gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
+      gfx.beginPath();gfx.moveTo(x-8,y-3);gfx.lineTo(x+8,y-3);gfx.strokePath();
+      gfx.beginPath();gfx.moveTo(x-8,y+3);gfx.lineTo(x+8,y+3);gfx.strokePath();
+      gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1).strokeRoundedRect(x-10,y-15,20,26,4);
     }
     if(tier>0&&(type==='wall'||type==='door')){
       gfx.fillStyle(0x000000,0.4).fillCircle(x+16,y-22,7);
@@ -1029,7 +1126,7 @@ class Game extends Phaser.Scene {
       if(from) lastHitFrom[from]=now;
       state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
       sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
-      if(state.hp<=0)sc.handleDeath();
+      if(state.hp<=0)sc.handleDeath('⚔️ Killed by '+(playerData[from]?.name||from?.substr(-4).toUpperCase()||'a player'));
     });
     onValue(sref('wolves'),snap=>{
       const all=snap.val()||{};
@@ -1168,6 +1265,9 @@ class Game extends Phaser.Scene {
       const d=g._d; if(d.type!=='chest')continue;
       if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
+      if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){
+        this.pop(d.x,d.y-28,'🔒 Raid the base to loot!','#e74c3c'); return true;
+      }
       activeChestId=id; renderChestPanel();
       document.getElementById('chest-panel').style.display='block';
       return true;
@@ -1178,7 +1278,7 @@ class Game extends Phaser.Scene {
   tryAtkBldg(ptr){
     const px=this.pbody.x, py=this.pbody.y;
     const tool=getActiveTool();
-    const dmg={msword:30,axe:22,sword:15}[tool]||10;
+    const dmg={msword:30,axe:22,sword:15,pick:12}[tool]||FIST_BLDG_DMG;
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
@@ -1240,6 +1340,11 @@ class Game extends Phaser.Scene {
       if((buildType==='wall'||buildType==='door')&&(td.type==='wall'||td.type==='door')&&dist2(placeX,placeY,td.x,td.y)<3){this.pop(this.pbody.x,this.pbody.y-30,'Already a wall/door here!','#e74c3c');return;}
       if(buildType!=='foundation'&&buildType!=='wall'&&buildType!=='door'&&td.type===buildType&&dist2(placeX,placeY,td.x,td.y)<22){this.pop(this.pbody.x,this.pbody.y-30,'Something is already here!','#e74c3c');return;}
     }
+    if(buildType==='sleeping_bag'){
+      const bagCount=Object.values(bldgSpr).filter(g=>g._d.type==='sleeping_bag'&&g._d.ownerId===PID).length;
+      if(bagCount>=MAX_BAGS){this.pop(this.pbody.x,this.pbody.y-30,'Max '+MAX_BAGS+' beds!','#e74c3c');return;}
+      const n=bagCount+1; extra.name='Bed '+n;
+    }
     for(const[res,amt]of Object.entries(cost)){if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}}
     for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
@@ -1247,6 +1352,7 @@ class Game extends Phaser.Scene {
     set(sref('buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
     if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
     if(buildType==='monument')this.pop(placeX,placeY-40,'Monument! Stand on it 90s to win!','#f0c040');
+    if(buildType==='sleeping_bag'){this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');}
   }
 
   resolveWalls(){
@@ -1276,23 +1382,23 @@ class Game extends Phaser.Scene {
     this.pbody.setPosition(px,py);
   }
 
-  handleDeath(){
-    const bag={x:Math.round(state.x),y:Math.round(state.y+20)};
-    let hasDrop=false;
+  handleDeath(cause='Unknown cause'){
+    if(isDead)return;
+    isDead=true;
+    deathCause=cause;
+    deathX=Math.round(state.x); deathY=Math.round(state.y);
+    // Drop all inventory as a loot bag
+    const bag={x:deathX,y:deathY+20}; let hasDrop=false;
     for(let i=0;i<5;i++){
       const item=inv[i]; if(!item)continue;
-      bag[item.type]=(bag[item.type]||0)+item.count;
-      inv[i]=null; hasDrop=true;
+      bag[item.type]=(bag[item.type]||0)+item.count; inv[i]=null; hasDrop=true;
     }
     if(hasDrop) set(sref('loot/bag_'+PID+'_'+Date.now()),bag);
     refreshHotbar();
-    state.hp=MAX_HP; state.food_meter=MAX_FOOD; state.thirst=MAX_THIRST;
-    let rx=400+Math.random()*(MAP_W-800), ry=400+Math.random()*(MAP_H-800);
-    for(const g of Object.values(bldgSpr)){const d=g._d;if((d.type==='tc'||d.type==='campfire')&&d.ownerId===PID){rx=d.x+30;ry=d.y+30;break;}}
-    state.x=rx; state.y=ry;
-    this.pbody.setPosition(state.x,state.y);
-    this.cameras.main.centerOn(state.x,state.y);
-    this.pop(state.x,state.y,'💀 YOU DIED — LOST EVERYTHING','#e74c3c');
+    // Close any open panels
+    ['chest-panel','craft-panel','team-panel'].forEach(id=>document.getElementById(id).style.display='none');
+    respawnAllowedAt=Date.now()+RESPAWN_DELAY;
+    showDeathScreen();
     this.updateHUD();
   }
 
@@ -1368,7 +1474,7 @@ class Game extends Phaser.Scene {
         state.hp=Math.max(0,state.hp-WOLF_DMG);
         this.updateHUD();this.redrawMe();this.flashDamage();
         this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
-        if(state.hp<=0)this.handleDeath();
+        if(state.hp<=0)this.handleDeath('🐺 Killed by a wolf');
       }
     }
     // Throttled position sync so others can see our wolves
@@ -1441,6 +1547,8 @@ class Game extends Phaser.Scene {
   update(time,delta){
     const k=this.keys;
     if(chatOpen)return;
+    if(Phaser.Input.Keyboard.JustDown(k.g))toggleMap();
+    if(isDead){this.pbody.setVelocity(0,0);return;}
 
     let vx=0,vy=0;
     if(k.lt.isDown||k.lt2.isDown)vx=-SPEED;
@@ -1562,7 +1670,7 @@ class Game extends Phaser.Scene {
     if(foodTimer>=FOOD_TICK){
       foodTimer=0;
       if(state.food_meter>0) state.food_meter--;
-      else{state.hp=Math.max(0,state.hp-5);this.flashDamage();if(state.hp<=0)this.handleDeath();}
+      else{state.hp=Math.max(0,state.hp-5);this.flashDamage();if(state.hp<=0)this.handleDeath('💀 Died of starvation');}
       this.updateHUD(); this.redrawMe();
     }
 
@@ -1571,7 +1679,7 @@ class Game extends Phaser.Scene {
     if(thirstTimer>=THIRST_TICK){
       thirstTimer=0;
       if(state.thirst>0) state.thirst--;
-      else{state.hp=Math.max(0,state.hp-4);this.flashDamage();if(state.hp<=0)this.handleDeath();}
+      else{state.hp=Math.max(0,state.hp-4);this.flashDamage();if(state.hp<=0)this.handleDeath('💧 Died of dehydration');}
       this.updateHUD(); this.redrawMe();
     }
 
@@ -1651,6 +1759,104 @@ new Phaser.Game({
   physics:{default:'arcade',arcade:{debug:false}},
   scene:Game
 });
+
+// ── Death Screen ─────────────────────────────────────────────────────────────
+function showDeathScreen(){
+  document.getElementById('death-screen').style.display='flex';
+  if(_deathInterval)clearInterval(_deathInterval);
+  _deathInterval=setInterval(updateDeathScreen,500);
+  updateDeathScreen();
+}
+function updateDeathScreen(){
+  const now=Date.now();
+  const rem=Math.max(0,Math.ceil((respawnAllowedAt-now)/1000));
+  const can=now>=respawnAllowedAt;
+  document.getElementById('death-cause-txt').textContent=deathCause;
+  document.getElementById('death-timer-txt').textContent=rem>0?'Respawn in '+rem+'s…':'Choose your spawn point';
+  document.getElementById('btn-respawn-random').disabled=!can;
+  const myBags=Object.entries(bldgSpr)
+    .filter(([,g])=>g._d.type==='sleeping_bag'&&g._d.ownerId===PID)
+    .map(([id,g])=>({id,d:g._d}));
+  document.getElementById('death-bags').innerHTML=myBags.length
+    ? myBags.map(({id,d})=>{
+        const cdLeft=bagCooldowns[id]?Math.max(0,Math.ceil((bagCooldowns[id]-now)/1000)):0;
+        const ready=can&&cdLeft===0;
+        return`<button class="bag-btn"${ready?'':' disabled="true"'} onclick="doRespawn('${id}')">
+          <span>🛏 ${d.name||'Sleeping Bag'}</span>
+          <span class="bag-cd">${cdLeft>0?cdLeft+'s cooldown':ready?'Ready':'—'}</span>
+        </button>`;
+      }).join('')
+    : '<div style="color:#444;font-size:11px;padding:4px 0">No sleeping bags placed</div>';
+}
+window.doRespawn=function(bagId){
+  if(Date.now()<respawnAllowedAt)return;
+  if(_deathInterval){clearInterval(_deathInterval);_deathInterval=null;}
+  let rx,ry;
+  if(bagId){
+    const g=bldgSpr[bagId];
+    if(!g){window.doRespawn(null);return;}
+    rx=g._d.x+15; ry=g._d.y+15;
+    bagCooldowns[bagId]=Date.now()+BAG_COOLDOWN;
+  } else {
+    rx=400+Math.random()*(MAP_W-800); ry=400+Math.random()*(MAP_H-800);
+  }
+  state.hp=MAX_HP; state.food_meter=MAX_FOOD; state.thirst=MAX_THIRST;
+  state.x=rx; state.y=ry; isDead=false;
+  const sc=window._scene;
+  if(sc){sc.pbody.setPosition(rx,ry);sc.cameras.main.centerOn(rx,ry);sc.updateHUD();sc.redrawMe();}
+  document.getElementById('death-screen').style.display='none';
+};
+// ── World Map ─────────────────────────────────────────────────────────────────
+window.toggleMap=function(force){
+  const el=document.getElementById('map-overlay');
+  const show=force!==undefined?force:el.style.display!=='flex';
+  el.style.display=show?'flex':'none';
+  if(show)drawWorldMap();
+};
+function drawWorldMap(){
+  const canvas=document.getElementById('map-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, sx=W/MAP_W, sy=H/MAP_H;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#111a0f'; ctx.fillRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=0.5;
+  for(let x=0;x<MAP_W;x+=200){ctx.beginPath();ctx.moveTo(x*sx,0);ctx.lineTo(x*sx,H);ctx.stroke();}
+  for(let y=0;y<MAP_H;y+=200){ctx.beginPath();ctx.moveTo(0,y*sy);ctx.lineTo(W,y*sy);ctx.stroke();}
+  // water
+  for(const w of WATER_SRCS){ctx.fillStyle='rgba(40,110,200,0.55)';ctx.beginPath();ctx.arc(w.x*sx,w.y*sy,4,0,Math.PI*2);ctx.fill();}
+  // buildings
+  for(const[,g]of Object.entries(bldgSpr)){
+    const d=g._d, mine=d.ownerId===PID||(state.teamId&&d.teamId===state.teamId);
+    ctx.fillStyle=d.type==='sleeping_bag'?'rgba(80,120,200,0.9)':d.type==='tc'?(mine?'rgba(140,210,140,0.9)':'rgba(200,140,60,0.8)'):(mine?'rgba(90,175,90,0.7)':'rgba(170,70,70,0.6)');
+    ctx.fillRect(d.x*sx-2,d.y*sy-2,4,4);
+  }
+  // other players
+  for(const[,od]of Object.entries(playerData)){
+    const hx=od.color?('000000'+od.color.toString(16)).slice(-6):'aaaaaa';
+    ctx.fillStyle='#'+hx; ctx.beginPath();ctx.arc(od.x*sx,od.y*sy,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='9px Segoe UI';
+    ctx.fillText(od.name||'?',od.x*sx+5,od.y*sy-2);
+  }
+  // wolves
+  const allW=[...wolves.filter(w=>w.alive),...Object.values(remoteWolves).flat()];
+  for(const w of allW){ctx.fillStyle='rgba(155,20,20,0.75)';ctx.beginPath();ctx.arc(w.x*sx,w.y*sy,2.5,0,Math.PI*2);ctx.fill();}
+  // death marker
+  if(deathX||deathY){
+    const dx=deathX*sx,dy=deathY*sy;
+    ctx.strokeStyle='rgba(200,40,40,0.9)'; ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(dx-5,dy-5);ctx.lineTo(dx+5,dy+5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dx+5,dy-5);ctx.lineTo(dx-5,dy+5);ctx.stroke();
+  }
+  // self
+  const mx=state.x*sx, my=state.y*sy;
+  ctx.fillStyle='#fff'; ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(mx,my,10,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.font='bold 9px Segoe UI';
+  ctx.fillText('YOU',mx+7,my-4);
+}
+
 } // end startGame
 </script>
 </body>
