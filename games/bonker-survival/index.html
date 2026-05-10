@@ -659,7 +659,7 @@ class Game extends Phaser.Scene {
     const sc=this;
     get(ref(db,'resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
-      if(keys.length<10||(keys.length&&val[keys[0]].hp===undefined)) remove(ref(db,'resources')).then(()=>sc.seedMap());
+      if(keys.length<(RES_N*Object.keys(RES_DEF).length*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(ref(db,'resources')).then(()=>sc.seedMap());
     });
     onChildAdded(ref(db,'resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
     onChildChanged(ref(db,'resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
