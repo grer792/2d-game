@@ -24,6 +24,7 @@
   --select: rgba(246,246,105,0.58);
   --move: rgba(255,255,255,0.38);
   --capture: rgba(255,92,122,0.38);
+  --board-size: min(calc(100vh - 168px), calc(100vw - 540px), 760px);
 }
 
 html, body {
@@ -48,6 +49,7 @@ button {
   gap: 28px;
   padding: 22px 28px;
   position: relative;
+  overflow: hidden;
 }
 
 .mode-screen {
@@ -74,6 +76,7 @@ button {
   box-shadow: 0 18px 48px rgba(0,0,0,0.22);
   padding: 24px;
   overflow-y: auto;
+  max-height: calc(100vh - 44px);
 }
 
 .mode-title {
@@ -269,7 +272,7 @@ button {
 body.mode-active .side { display: none; }
 
 .board-shell {
-  width: min(calc(100vh - 112px), calc(100vw - 520px), 760px);
+  width: var(--board-size);
   min-width: 300px;
   aspect-ratio: 1;
   position: relative;
@@ -352,7 +355,7 @@ body.mode-active .side { display: none; }
 .square.dark .inner-coord { color: #eeeed2; }
 
 .player-strip {
-  width: min(calc(100vh - 112px), calc(100vw - 520px), 760px);
+  width: var(--board-size);
   min-width: 300px;
   display: flex;
   align-items: center;
@@ -387,6 +390,7 @@ body.mode-active .side { display: none; }
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
 }
 
 .panel {
@@ -642,6 +646,9 @@ h1 {
 }
 
 @media (max-width: 840px) {
+  :root {
+    --board-size: min(94vw, 620px);
+  }
   html, body { overflow: auto; }
   .game {
     height: auto;
@@ -656,10 +663,10 @@ h1 {
     grid-row: auto;
   }
   .board-shell {
-    width: min(94vw, 620px);
+    width: var(--board-size);
   }
   .player-strip {
-    width: min(94vw, 620px);
+    width: var(--board-size);
   }
   .moves {
     max-height: 220px;
@@ -667,6 +674,9 @@ h1 {
 }
 
 @media (max-width: 520px) {
+  :root {
+    --board-size: 100%;
+  }
   .game { padding: 8px; gap: 10px; }
   .board-shell, .player-strip { width: 100%; }
   .mode-card { padding: 16px; }
