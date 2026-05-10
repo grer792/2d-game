@@ -168,6 +168,7 @@
   <span class="bopt"      id="bopt-tc"         onclick="setBuildType('tc')">[4] Cabinet 10🪵5🪨</span>
   <span class="bopt"      id="bopt-chest"      onclick="setBuildType('chest')">[5] Chest 5🪵</span>
   <span class="bopt"      id="bopt-monument"   onclick="setBuildType('monument')">[6] Monument 20🪵20🪨10🍎</span>
+  <span class="bopt"      id="bopt-roof"       onclick="setBuildType('roof')">[7] Roof 2🪵</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -252,8 +253,8 @@ const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
 const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
-const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500 };
-const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10} };
+const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60 };
+const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10}, roof:{wood:2} };
 const WALL_TIERS=[{hp:120},{hp:400,upg:{stone:5}},{hp:800,upg:{metal:5}}];
 const DOOR_TIERS=[{hp:80},{hp:250,upg:{stone:3}},{hp:600,upg:{metal:3}}];
 const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, ore:{maxHp:4,loot:'metal',hitR:16}, bush:{maxHp:1,loot:'food',hitR:14} };
@@ -287,6 +288,7 @@ function segIntersectsRect(ax,ay,bx,by,rx1,ry1,rx2,ry2){
 function pathBlocked(ax,ay,bx,by){
   for(const g of Object.values(bldgSpr)){
     const d=g._d; if(d.type!=='wall'&&d.type!=='door')continue;
+    if(d.type==='door'&&d.open)continue;
     const rot=d.rot||0;
     const hw=d.type==='wall'?(rot?4:30):(rot?20:30), hh=d.type==='wall'?(rot?30:4):(rot?30:20);
     if(segIntersectsRect(ax,ay,bx,by,d.x-hw,d.y-hh,d.x+hw,d.y+hh))return true;
@@ -313,7 +315,7 @@ function getFoundationSnap(wx,wy){
   const founds=Object.values(bldgSpr).filter(g=>g._d.type==='foundation');
   if(!founds.length)return{x:Math.round(wx),y:Math.round(wy),free:true};
   const offsets=[{dx:60,dy:0},{dx:-60,dy:0},{dx:0,dy:60},{dx:0,dy:-60}];
-  let best=null,bestDist=46;
+  let best=null,bestDist=55;
   for(const g of founds){
     const d=g._d;
     for(const o of offsets){
@@ -322,6 +324,18 @@ function getFoundationSnap(wx,wy){
       const dst=dist2(wx,wy,nx,ny);
       if(dst<bestDist){bestDist=dst;best={x:nx,y:ny};}
     }
+  }
+  return best;
+}
+function getRoofSnap(wx,wy){
+  const founds=Object.values(bldgSpr).filter(g=>g._d.type==='foundation');
+  const roofs=Object.values(roofSpr).map(g=>g._d);
+  let best=null,bestDist=55;
+  for(const g of founds){
+    const d=g._d;
+    if(roofs.some(r=>r&&Math.abs(r.x-d.x)<2&&Math.abs(r.y-d.y)<2))continue;
+    const dst=dist2(wx,wy,d.x,d.y);
+    if(dst<bestDist){bestDist=dst;best={x:d.x,y:d.y};}
   }
   return best;
 }
@@ -539,7 +553,8 @@ class Game extends Phaser.Scene {
       k3:Phaser.Input.Keyboard.KeyCodes.THREE,
       k4:Phaser.Input.Keyboard.KeyCodes.FOUR,
       k5:Phaser.Input.Keyboard.KeyCodes.FIVE,
-      k6:Phaser.Input.Keyboard.KeyCodes.SIX
+      k6:Phaser.Input.Keyboard.KeyCodes.SIX,
+      k7:Phaser.Input.Keyboard.KeyCodes.SEVEN
     });
     this.input.on('pointerdown',ptr=>this.handleClick(ptr));
     this.setupFirebase();
@@ -707,29 +722,57 @@ class Game extends Phaser.Scene {
         gfx.lineStyle(1.5,dk,1).strokeRect(x-4,y-30,8,60);
       }
     } else if(type==='door'){
-      const rot=d.rot||0;
+      const rot=d.rot||0, open=d.open||false;
       if(rot===0){
-        gfx.fillStyle(dk,1);gfx.fillRect(x-30,y-18,8,36);gfx.fillRect(x+22,y-18,8,36);gfx.fillRect(x-30,y-18,60,6);
-        gfx.fillStyle(pCol,1).fillRect(x-22,y-12,44,30);
-        gfx.fillStyle(hi,0.3).fillRect(x-22,y-12,44,8);
-        if(tier===0){gfx.lineStyle(1,dk,0.3);gfx.beginPath();for(let r=y-4;r<y+16;r+=8){gfx.moveTo(x-20,r);gfx.lineTo(x+20,r);}gfx.strokePath();}
-        else if(tier===1){gfx.fillStyle(hi,0.2).fillRect(x-20,y-4,20,16);gfx.fillStyle(hi,0.15).fillRect(x+2,y-4,20,16);}
-        else{gfx.fillStyle(hi,0.35).fillRect(x-20,y-12,44,10);gfx.fillStyle(hi,1);gfx.fillCircle(x-14,y+12,2);gfx.fillCircle(x+14,y+12,2);}
-        gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+14:x-14,y+6,3);
-        gfx.lineStyle(2,dk,1).strokeRect(x-22,y-12,44,30);
-        gfx.lineStyle(1,dk,0.8).strokeRect(x-30,y-18,60,36);
+        // Frame: posts + top + bottom beam
+        gfx.fillStyle(dk,1);
+        gfx.fillRect(x-30,y-18,6,36); // left post
+        gfx.fillRect(x+24,y-18,6,36); // right post
+        gfx.fillRect(x-30,y-18,60,5); // top beam
+        gfx.fillRect(x-30,y+13,60,5); // bottom beam
+        if(!open){
+          // Left panel
+          gfx.fillStyle(pCol,1).fillRect(x-24,y-13,23,26);
+          gfx.fillStyle(hi,0.25).fillRect(x-24,y-13,23,7);
+          // Right panel
+          gfx.fillStyle(pCol,1).fillRect(x+1,y-13,23,26);
+          gfx.fillStyle(hi,0.25).fillRect(x+1,y-13,23,7);
+          // X-brace left
+          gfx.lineStyle(1.5,dk,0.65);
+          gfx.beginPath();gfx.moveTo(x-24,y-13);gfx.lineTo(x-1,y+13);gfx.moveTo(x-1,y-13);gfx.lineTo(x-24,y+13);gfx.strokePath();
+          // X-brace right
+          gfx.beginPath();gfx.moveTo(x+1,y-13);gfx.lineTo(x+24,y+13);gfx.moveTo(x+24,y-13);gfx.lineTo(x+1,y+13);gfx.strokePath();
+          // Handles at center meet
+          gfx.fillStyle(0xf0c040,1).fillCircle(x-3,y+2,3);gfx.fillCircle(x+3,y+2,3);
+        }
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-30,y-18,60,36);
         if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x,y-24,4);
+        if(open)gfx.fillStyle(0xf0c040,0.7).fillCircle(x,y,4);
       } else {
-        gfx.fillStyle(dk,1);gfx.fillRect(x-18,y-30,36,8);gfx.fillRect(x-18,y+22,36,8);gfx.fillRect(x-18,y-30,6,60);
-        gfx.fillStyle(pCol,1).fillRect(x-12,y-22,30,44);
-        gfx.fillStyle(hi,0.3).fillRect(x-12,y-22,8,44);
-        if(tier===0){gfx.lineStyle(1,dk,0.3);gfx.beginPath();for(let c2=x-4;c2<x+16;c2+=8){gfx.moveTo(c2,y-20);gfx.lineTo(c2,y+20);}gfx.strokePath();}
-        else if(tier===1){gfx.fillStyle(hi,0.2).fillRect(x-10,y-20,26,20);gfx.fillStyle(hi,0.15).fillRect(x-10,y+2,26,20);}
-        else{gfx.fillStyle(hi,0.35).fillRect(x-12,y-20,10,44);gfx.fillStyle(hi,1);gfx.fillCircle(x+10,y-16,2);gfx.fillCircle(x+10,y+16,2);}
-        gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+6:x-6,y+14,3);
-        gfx.lineStyle(2,dk,1).strokeRect(x-12,y-22,30,44);
-        gfx.lineStyle(1,dk,0.8).strokeRect(x-18,y-30,36,60);
+        // Frame: posts + left + right beam
+        gfx.fillStyle(dk,1);
+        gfx.fillRect(x-18,y-30,36,5); // top beam
+        gfx.fillRect(x-18,y+25,36,5); // bottom beam
+        gfx.fillRect(x-18,y-30,5,60); // left post
+        gfx.fillRect(x+13,y-30,5,60); // right post
+        if(!open){
+          // Top panel
+          gfx.fillStyle(pCol,1).fillRect(x-13,y-25,26,24);
+          gfx.fillStyle(hi,0.25).fillRect(x-13,y-25,7,24);
+          // Bottom panel
+          gfx.fillStyle(pCol,1).fillRect(x-13,y+1,26,24);
+          gfx.fillStyle(hi,0.25).fillRect(x-13,y+1,7,24);
+          // X-brace top
+          gfx.lineStyle(1.5,dk,0.65);
+          gfx.beginPath();gfx.moveTo(x-13,y-25);gfx.lineTo(x+13,y-1);gfx.moveTo(x+13,y-25);gfx.lineTo(x-13,y-1);gfx.strokePath();
+          // X-brace bottom
+          gfx.beginPath();gfx.moveTo(x-13,y+1);gfx.lineTo(x+13,y+25);gfx.moveTo(x+13,y+1);gfx.lineTo(x-13,y+25);gfx.strokePath();
+          // Handles
+          gfx.fillStyle(0xf0c040,1).fillCircle(x+2,y-2,3);gfx.fillCircle(x+2,y+2,3);
+        }
+        gfx.lineStyle(1.5,dk,1).strokeRect(x-18,y-30,36,60);
         if(mine)gfx.fillStyle(0x27ae60,0.9).fillCircle(x+24,y,4);
+        if(open)gfx.fillStyle(0xf0c040,0.7).fillCircle(x,y,4);
       }
     } else if(type==='tc'){
       const cc=mine?0x6a4a2a:0x3a2808;
@@ -776,16 +819,15 @@ class Game extends Phaser.Scene {
   }
 
   drawRoof(gfx,d){
-    const {x,y,ownerId}=d, mine=ownerId===PID;
-    const col=mine?0x8a5c30:0x6a4420, edge=mine?0x5a3810:0x3a2008;
+    const {x,y}=d;
     gfx.clear();
-    gfx.fillStyle(col,1).fillRect(x-31,y-31,62,62);
-    gfx.fillStyle(0x000000,0.2).fillRect(x-31,y-31,62,62);
-    gfx.lineStyle(1,edge,0.4);
+    gfx.fillStyle(0x252530,1).fillRect(x-31,y-31,62,62);
+    gfx.fillStyle(0x000000,0.25).fillRect(x-31,y-31,62,62);
+    gfx.lineStyle(1,0x1a1a22,0.5);
     gfx.beginPath();
     for(let r=y-19;r<y+31;r+=12){gfx.moveTo(x-31,r);gfx.lineTo(x+31,r);}
     gfx.strokePath();
-    gfx.lineStyle(2,edge,0.8).strokeRect(x-31,y-31,62,62);
+    gfx.lineStyle(2,0x1a1a22,0.9).strokeRect(x-31,y-31,62,62);
   }
 
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
@@ -806,8 +848,18 @@ class Game extends Phaser.Scene {
     else{others[id].chat.setText('').setVisible(false);}
     this.updateScoreboard();
   }
-  mkBldg(id,d){ const depth=d.type==='foundation'?d.y-10:d.y+5; const g=this.add.graphics().setDepth(depth); d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g; if(d.type==='foundation'){const rg=this.add.graphics().setDepth(100000);this.drawRoof(rg,d);roofSpr[id]=rg;} }
-  rxBldg(id,d){ if(!bldgSpr[id])return; d._holdPct=bldgSpr[id]._d._holdPct||0; bldgSpr[id]._d=d; this.drawBldg(bldgSpr[id],d); }
+  mkBldg(id,d){
+    if(d.type==='roof'){
+      const rg=this.add.graphics().setDepth(100000);
+      d._holdPct=0; this.drawRoof(rg,d); rg._d=d;
+      bldgSpr[id]=rg; roofSpr[id]=rg;
+    } else {
+      const depth=d.type==='foundation'?d.y-10:d.y+5;
+      const g=this.add.graphics().setDepth(depth);
+      d._holdPct=0; this.drawBldg(g,d); g._d=d; bldgSpr[id]=g;
+    }
+  }
+  rxBldg(id,d){ if(!bldgSpr[id])return; d._holdPct=bldgSpr[id]._d._holdPct||0; bldgSpr[id]._d=d; if(d.type==='roof')this.drawRoof(bldgSpr[id],d);else this.drawBldg(bldgSpr[id],d); }
   mkLoot(id,d){
     const items=[...RESOURCES,...TOOLS].filter(t=>(d[t]||0)>0);
     const icon=items.map(t=>ITEM_ICON[t]||'?').join('') || '📦';
@@ -847,7 +899,7 @@ class Game extends Phaser.Scene {
     });
     onChildAdded(ref(db,'buildings'),  s=>{if(s.val()&&!bldgSpr[s.key])sc.mkBldg(s.key,s.val());});
     onChildChanged(ref(db,'buildings'),s=>{if(s.val()&&bldgSpr[s.key]) sc.rxBldg(s.key,s.val());});
-    onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(roofSpr[s.key]){roofSpr[s.key].destroy();delete roofSpr[s.key];}if(activeChestId===s.key)activeChestId=null;});
+    onChildRemoved(ref(db,'buildings'),s=>{if(bldgSpr[s.key]){bldgSpr[s.key].destroy();delete bldgSpr[s.key];}if(roofSpr[s.key])delete roofSpr[s.key];if(activeChestId===s.key)activeChestId=null;});
     onChildAdded(ref(db,'loot'),  s=>{if(s.val()&&!lootSpr[s.key])sc.mkLoot(s.key,s.val());});
     onChildRemoved(ref(db,'loot'),s=>{const spr=lootSpr[s.key];if(spr){spr.g.destroy();if(spr.txt)spr.txt.destroy();delete lootSpr[s.key];}});
     onValue(ref(db,'monument_hold'),snap=>{
@@ -1038,6 +1090,20 @@ class Game extends Phaser.Scene {
         }
       }
       placeX=snap.x; placeY=snap.y; extra={tier:0,rot:snap.rot};
+    } else if(buildType==='roof'){
+      const snap=getRoofSnap(ptr.worldX,ptr.worldY);
+      if(!snap){this.pop(this.pbody.x,this.pbody.y-30,'No floor tile to roof here!','#e74c3c');return;}
+      placeX=snap.x; placeY=snap.y;
+    }
+    // Block placement inside wall geometry
+    if(buildType!=='wall'&&buildType!=='door'){
+      for(const[,tg] of Object.entries(bldgSpr)){
+        const td=tg._d; if(td.type!=='wall')continue;
+        const rot=td.rot||0, hw=rot?4:30, hh=rot?30:4;
+        if(Math.abs(placeX-td.x)<=hw&&Math.abs(placeY-td.y)<=hh){
+          this.pop(this.pbody.x,this.pbody.y-30,'Can\'t place inside a wall!','#e74c3c');return;
+        }
+      }
     }
     for(const[,tg] of Object.entries(bldgSpr)){
       const td=tg._d; if(td.type!=='tc')continue;
@@ -1064,8 +1130,7 @@ class Game extends Phaser.Scene {
     for(const g of Object.values(bldgSpr)){
       const d=g._d;
       if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
-      if(d.type==='door'&&d.ownerId===PID)continue;
-      if(d.type==='door'&&state.teamId&&d.teamId===state.teamId)continue;
+      if(d.type==='door'&&(d.open||d.ownerId===PID||(state.teamId&&d.teamId===state.teamId)))continue;
       const rot=d.rot||0;
       const hw=d.type==='wall'?(rot?4:30):(rot?20:30), hh=d.type==='wall'?(rot?30:4):(rot?30:20);
       const nearX=Math.max(d.x-hw,Math.min(px,d.x+hw)), nearY=Math.max(d.y-hh,Math.min(py,d.y+hh));
@@ -1235,7 +1300,9 @@ class Game extends Phaser.Scene {
     state.x=this.pbody.x; state.y=this.pbody.y;
     let _insideId=null;for(const[id,g] of Object.entries(bldgSpr)){const d=g._d;if(d.type==='foundation'&&Math.abs(state.x-d.x)<29&&Math.abs(state.y-d.y)<29){_insideId=id;break;}}
     const _vis=_insideId?getConnectedFoundations(_insideId):new Set();
-    for(const[id,rg] of Object.entries(roofSpr))rg.setAlpha(_vis.has(id)?0:0.93);
+    const _visFPos=new Set();
+    for(const fid of _vis){const fd=bldgSpr[fid]?._d;if(fd)_visFPos.add(`${Math.round(fd.x)},${Math.round(fd.y)}`);}
+    for(const[,rg] of Object.entries(roofSpr)){const rd=rg._d;rg.setAlpha(rd&&_visFPos.has(`${Math.round(rd.x)},${Math.round(rd.y)}`)?0:0.93);}
     const depth=state.y;
     this.pgfx.setPosition(state.x,state.y).setDepth(depth);
     this.nameTag.setPosition(state.x,state.y-P_RAD-15).setDepth(depth+1);
@@ -1260,6 +1327,7 @@ class Game extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.k4))selectSlot(3);
     if(Phaser.Input.Keyboard.JustDown(k.k5))selectSlot(4);
     if(Phaser.Input.Keyboard.JustDown(k.k6))selectSlot(5);
+    if(Phaser.Input.Keyboard.JustDown(k.k7)){selectSlot(5);window.setBuildType('roof');}
 
     // F = drink water
     if(Phaser.Input.Keyboard.JustDown(k.f)){
@@ -1268,16 +1336,24 @@ class Game extends Phaser.Scene {
       if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
     }
 
-    // E = eat food from active slot
+    // E = open/close nearby door, or eat food
     if(Phaser.Input.Keyboard.JustDown(k.e)){
-      const slot=inv[selectedSlot];
-      if(slot&&slot.type==='food'&&slot.count>0){
-        if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
-        else{
-          invRemove('food',1); state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);
-          this.updateHUD(); this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');
-        }
-      } else this.pop(state.x,state.y-30,'No food in slot!','#555');
+      let doorToggled=false;
+      for(const[id,g] of Object.entries(bldgSpr)){
+        const d=g._d; if(d.type!=='door')continue;
+        if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
+        if(dist2(state.x,state.y,d.x,d.y)>55)continue;
+        update(ref(db,'buildings/'+id),{open:!d.open});
+        this.pop(state.x,state.y-30,d.open?'Door closed':'Door opened','#f0c040');
+        doorToggled=true; break;
+      }
+      if(!doorToggled){
+        const slot=inv[selectedSlot];
+        if(slot&&slot.type==='food'&&slot.count>0){
+          if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
+          else{invRemove('food',1);state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);this.updateHUD();this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');}
+        } else this.pop(state.x,state.y-30,'No food in slot!','#555');
+      }
     }
 
     // Build preview
@@ -1294,6 +1370,7 @@ class Game extends Phaser.Scene {
       }
       else if(buildType==='tc'){bPrev.fillStyle(0x6a4a2a,0.4).fillRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(2,0x27ae60,0.7).strokeRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);}
       else if(buildType==='monument'){bPrev.fillStyle(0xf0c040,0.3).fillRect(p.worldX-15,p.worldY-50,30,65);bPrev.lineStyle(2,0xf0c040,0.8).strokeRect(p.worldX-15,p.worldY-50,30,65);}
+      else if(buildType==='roof'){const rsnap=getRoofSnap(p.worldX,p.worldY);const rx=rsnap?rsnap.x:p.worldX,ry=rsnap?rsnap.y:p.worldY,rcol=rsnap?0x252530:0xe74c3c;bPrev.fillStyle(rcol,0.45).fillRect(rx-31,ry-31,62,62);bPrev.lineStyle(2,rcol,0.8).strokeRect(rx-31,ry-31,62,62);}
       else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,30);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,30);}
       else{bPrev.fillStyle(0xd4a96a,0.35).fillRoundedRect(p.worldX-20,p.worldY-13,40,26,3);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRoundedRect(p.worldX-20,p.worldY-13,40,26,3);}
     } else if(bPrev)bPrev.setVisible(false);
