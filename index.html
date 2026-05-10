@@ -222,9 +222,10 @@ body.sidebar-on .sidebar:hover .sb-contact .label { opacity: 1; }
 .sb-footer {
   padding: 10px 8px 4px;
   border-top: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 6px;
+  display: none; flex-direction: column; gap: 6px;
   overflow: hidden;
 }
+body.sidebar-on .sidebar:hover .sb-footer { display: flex; }
 .sb-footer-title {
   font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.8px; color: var(--text2); white-space: nowrap;
