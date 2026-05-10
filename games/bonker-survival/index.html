@@ -9,9 +9,9 @@
     body { background:#4a8a3a; overflow:hidden; font-family:'Segoe UI',sans-serif; }
     #hud {
       position:fixed; bottom:80px; left:12px;
-      background:rgba(8,8,10,0.82);
-      padding:7px 8px 7px 6px; color:#fff;
-      z-index:20; pointer-events:none; width:200px; border-radius:7px;
+      background:none;
+      padding:4px 6px; color:#fff;
+      z-index:20; pointer-events:none; width:210px;
       font-family:'Segoe UI',sans-serif;
     }
     .sbar { display:flex; align-items:center; margin-bottom:4px; }
@@ -22,6 +22,7 @@
     }
     .sbar-bg {
       flex:1; height:24px; border-radius:4px; overflow:hidden; position:relative;
+      background:rgba(0,0,0,0.32);
     }
     .sbar-fill { height:100%; transition:width .2s; border-radius:4px; }
     .sbar-val {
@@ -220,7 +221,6 @@
       <span class="sbar-val" id="ui-fm">500</span>
     </div>
   </div>
-  <div id="ui-tools">🔧 <b id="ui-tool-list">none crafted</b></div>
 </div>
 
 <div id="dmg-vignette" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:15;background:radial-gradient(ellipse at center,transparent 40%,rgba(200,0,0,0.55) 100%);"></div>
@@ -344,7 +344,7 @@ const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 const MAP_W=3000, MAP_H=3000, SPEED=210, P_RAD=13;
 const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45, BLDG_DMG=15;
 const SYNC_MS=50, RES_N=55, HIT_CD=320;
-const FOOD_TICK=18000, THIRST_TICK=12000;
+const FOOD_TICK=55000, THIRST_TICK=36000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
 const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
@@ -514,6 +514,7 @@ let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={};
 let wolfSyncLast=0; const remoteWolves={};
+let regenTimer=0;
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
@@ -1409,8 +1410,6 @@ class Game extends Phaser.Scene {
     document.getElementById('ui-hp').textContent=Math.max(0,Math.round(state.hp));
     document.getElementById('ui-fm').textContent=Math.round(state.food_meter/MAX_FOOD*500);
     document.getElementById('ui-th').textContent=Math.round(state.thirst/MAX_THIRST*250);
-    const tools=TOOLS.filter(t=>invHasTool(t)).map(t=>ITEM_ICON[t]).join(' ');
-    document.getElementById('ui-tool-list').textContent=tools||'none crafted';
     // Warning banner
     const warn=document.getElementById('hud-warn');
     const starving=state.food_meter===0, dehydrated=state.thirst===0;
@@ -1568,6 +1567,17 @@ class Game extends Phaser.Scene {
       else{state.hp=Math.max(0,state.hp-4);this.flashDamage();if(state.hp<=0)this.handleDeath();}
       this.updateHUD(); this.redrawMe();
     }
+
+    // Health regen when well fed and hydrated
+    if(state.hp<MAX_HP && state.food_meter/MAX_FOOD>=0.6 && state.thirst/MAX_THIRST>=0.6){
+      regenTimer+=delta;
+      if(regenTimer>=4000){
+        regenTimer=0;
+        state.hp=Math.min(MAX_HP,state.hp+3);
+        this.updateHUD(); this.redrawMe();
+        this.pop(state.x,state.y-32,'+3 ❤️','#2ecc71');
+      }
+    } else regenTimer=0;
 
     // Day / night
     if(serverEpoch) dayTimer=((Date.now()-serverEpoch)%DAY_CYCLE+DAY_CYCLE)%DAY_CYCLE;
