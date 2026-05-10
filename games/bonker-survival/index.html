@@ -33,6 +33,10 @@
     #ui-tools b { color:#f0c040; }
     #ui-mode-row { color:#7ec8e3; font-size:10px; margin-top:1px; padding-left:2px; }
     #ui-time { color:#f0c040; font-size:10px; padding-left:2px; }
+    @keyframes warn-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .warn-active { animation:warn-pulse 1s ease-in-out infinite; }
+    @keyframes vignette-fade { 0%{opacity:1} 100%{opacity:0} }
+    .vignette-flash { animation:vignette-fade 0.7s ease-out forwards; }
     #scores {
       position:fixed; top:12px; right:12px;
       background:rgba(20,20,20,0.85); border:1px solid #444;
@@ -194,6 +198,7 @@
 </div>
 
 <div id="hud">
+  <div id="hud-warn" style="display:none;font-size:13px;font-weight:700;letter-spacing:.5px;margin-bottom:5px;text-align:center;"></div>
   <div class="sbar">
     <div class="sbar-icon">➕</div>
     <div class="sbar-bg">
@@ -205,20 +210,20 @@
     <div class="sbar-icon">🪣</div>
     <div class="sbar-bg">
       <div id="thirst-bar" class="sbar-fill" style="background:#2196f3;width:100%"></div>
-      <span class="sbar-val" id="ui-th">10</span>
+      <span class="sbar-val" id="ui-th">250</span>
     </div>
   </div>
   <div class="sbar">
     <div class="sbar-icon">🍴</div>
     <div class="sbar-bg">
       <div id="hunger-bar" class="sbar-fill" style="background:#e67e22;width:100%"></div>
-      <span class="sbar-val" id="ui-fm">10</span>
+      <span class="sbar-val" id="ui-fm">500</span>
     </div>
   </div>
   <div id="ui-tools">🔧 <b id="ui-tool-list">none crafted</b></div>
-  <div id="ui-mode-row">Score <b id="ui-score" style="color:#f0c040">0</b> &nbsp; <span id="ui-mode">EXPLORE</span></div>
-  <div id="ui-time">🌞 DAY</div>
 </div>
+
+<div id="dmg-vignette" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:15;background:radial-gradient(ellipse at center,transparent 40%,rgba(200,0,0,0.55) 100%);"></div>
 
 <div id="scores">
   <div class="title">LEADERBOARD</div>
@@ -671,6 +676,14 @@ class Game extends Phaser.Scene {
     });
   }
 
+  flashDamage(){
+    const v=document.getElementById('dmg-vignette');
+    v.style.display='block'; v.className='';
+    void v.offsetWidth; // force reflow so animation restarts
+    v.className='vignette-flash';
+    v.addEventListener('animationend',()=>{v.style.display='none';},{once:true});
+  }
+
   redrawMe(){
     const g=this.pgfx; g.clear();
     const ang=Math.atan2(state.dirY,state.dirX);
@@ -1012,7 +1025,7 @@ class Game extends Phaser.Scene {
       const now=Date.now();
       if(from&&lastHitFrom[from]&&now-lastHitFrom[from]<350)return;
       if(from) lastHitFrom[from]=now;
-      state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe();
+      state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
       sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
       if(state.hp<=0)sc.handleDeath();
     });
@@ -1345,7 +1358,7 @@ class Game extends Phaser.Scene {
       if(d<WOLF_ATK_RNG&&w.atkTimer>=WOLF_ATK_TICK){
         w.atkTimer=0;
         state.hp=Math.max(0,state.hp-WOLF_DMG);
-        this.updateHUD();this.redrawMe();
+        this.updateHUD();this.redrawMe();this.flashDamage();
         this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
         if(state.hp<=0)this.handleDeath();
       }
@@ -1394,13 +1407,20 @@ class Game extends Phaser.Scene {
     document.getElementById('hunger-bar').style.width=(state.food_meter/MAX_FOOD*100)+'%';
     document.getElementById('thirst-bar').style.width=(state.thirst/MAX_THIRST*100)+'%';
     document.getElementById('ui-hp').textContent=Math.max(0,Math.round(state.hp));
-    document.getElementById('ui-fm').textContent=state.food_meter;
-    document.getElementById('ui-th').textContent=state.thirst;
-    document.getElementById('ui-score').textContent=state.score;
-    const teamLabel=state.teamId?` [${state.teamId}]`:'';
-    document.getElementById('ui-mode').textContent=buildMode?'BUILD: '+buildType.toUpperCase():('EXPLORE'+teamLabel);
+    document.getElementById('ui-fm').textContent=Math.round(state.food_meter/MAX_FOOD*500);
+    document.getElementById('ui-th').textContent=Math.round(state.thirst/MAX_THIRST*250);
     const tools=TOOLS.filter(t=>invHasTool(t)).map(t=>ITEM_ICON[t]).join(' ');
     document.getElementById('ui-tool-list').textContent=tools||'none crafted';
+    // Warning banner
+    const warn=document.getElementById('hud-warn');
+    const starving=state.food_meter===0, dehydrated=state.thirst===0;
+    if(starving&&dehydrated){warn.textContent='⚠️ STARVING & DEHYDRATED';warn.style.color='#ff4444';warn.style.display='block';warn.className='warn-active';}
+    else if(starving){warn.textContent='⚠️ STARVING';warn.style.color='#ff9900';warn.style.display='block';warn.className='warn-active';}
+    else if(dehydrated){warn.textContent='⚠️ DEHYDRATED';warn.style.color='#44aaff';warn.style.display='block';warn.className='warn-active';}
+    else if(state.food_meter<=2||state.thirst<=2){
+      warn.textContent=state.food_meter<=2&&state.thirst<=2?'🍎 Hungry  💧 Thirsty':state.food_meter<=2?'🍎 Getting Hungry':'💧 Getting Thirsty';
+      warn.style.color='#ffcc44';warn.style.display='block';warn.className='';
+    } else {warn.style.display='none';warn.className='';}
     this.updateScoreboard();
   }
 
@@ -1536,9 +1556,8 @@ class Game extends Phaser.Scene {
     if(foodTimer>=FOOD_TICK){
       foodTimer=0;
       if(state.food_meter>0) state.food_meter--;
-      else{state.hp=Math.max(0,state.hp-5);if(state.hp<=0)this.handleDeath();}
+      else{state.hp=Math.max(0,state.hp-5);this.flashDamage();if(state.hp<=0)this.handleDeath();}
       this.updateHUD(); this.redrawMe();
-      if(state.food_meter===2)this.pop(state.x,state.y-38,'Hungry! Press E to eat food 🍎','#f39c12');
     }
 
     // Thirst
@@ -1546,9 +1565,8 @@ class Game extends Phaser.Scene {
     if(thirstTimer>=THIRST_TICK){
       thirstTimer=0;
       if(state.thirst>0) state.thirst--;
-      else{state.hp=Math.max(0,state.hp-4);if(state.hp<=0)this.handleDeath();}
+      else{state.hp=Math.max(0,state.hp-4);this.flashDamage();if(state.hp<=0)this.handleDeath();}
       this.updateHUD(); this.redrawMe();
-      if(state.thirst===2)this.pop(state.x,state.y-46,'Thirsty! Find a pond (F)','#3498db');
     }
 
     // Day / night
