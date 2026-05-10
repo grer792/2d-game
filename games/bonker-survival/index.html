@@ -162,11 +162,11 @@
 </div>
 
 <div id="build-sub">
-  <span class="bopt bsel" id="bopt-wall"     onclick="setBuildType('wall')">[1] Fence 5🪵</span>
-  <span class="bopt"      id="bopt-door"     onclick="setBuildType('door')">[2] Door 3🪵</span>
-  <span class="bopt"      id="bopt-campfire" onclick="setBuildType('campfire')">[3] Fire 3🪵</span>
-  <span class="bopt"      id="bopt-chest"    onclick="setBuildType('chest')">[4] Chest 8🪵</span>
-  <span class="bopt"      id="bopt-monument" onclick="setBuildType('monument')">[5] Monument 50🪵50🪨20🍎</span>
+  <span class="bopt bsel" id="bopt-wall"     onclick="setBuildType('wall')">[1] Fence 3🪵</span>
+  <span class="bopt"      id="bopt-door"     onclick="setBuildType('door')">[2] Door 2🪵</span>
+  <span class="bopt"      id="bopt-campfire" onclick="setBuildType('campfire')">[3] Fire 2🪵</span>
+  <span class="bopt"      id="bopt-chest"    onclick="setBuildType('chest')">[4] Chest 5🪵</span>
+  <span class="bopt"      id="bopt-monument" onclick="setBuildType('monument')">[5] Monument 20🪵20🪨10🍎</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -214,9 +214,9 @@
 <div id="hint">
   WASD: move &nbsp; T: team &nbsp; C: craft<br>
   Enter: chat &nbsp; 1-6: slots &nbsp; Q: drop item<br>
-  F: drink water (near ponds)<br>
-  Click tree/rock/bush: gather<br>
-  Click player/building: attack
+  F: drink water (near ponds) &nbsp; E: eat food<br>
+  Click tree/rock/bush: gather &nbsp; Click wolf: attack<br>
+  🌙 Night: cold damage unless near fire, 🐺 wolves spawn!
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
@@ -248,10 +248,12 @@ const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, BLDG_DMG=15;
 const SYNC_MS=100, RES_N=55, HIT_CD=320;
 const FOOD_TICK=18000, THIRST_TICK=12000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
-const FIRE_RNG=70, WATER_RNG=65, MON_HOLD=180000, DAY_CYCLE=240000;
+const FIRE_RNG=70, WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000;
+const COLD_TICK=3000, COLD_DMG=4, COLD_RNG=FIRE_RNG*1.4;
+const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
 const BLDG_HP  ={ wall:120, door:80, campfire:50, chest:150, monument:500 };
-const BLDG_COST={ wall:{wood:5}, door:{wood:3}, campfire:{wood:3}, chest:{wood:8}, monument:{wood:50,stone:50,food:20} };
+const BLDG_COST={ wall:{wood:3}, door:{wood:2}, campfire:{wood:2}, chest:{wood:5}, monument:{wood:20,stone:20,food:10} };
 const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, bush:{maxHp:1,loot:'food',hitR:14} };
 // Random drop amounts per resource hit
 const RES_DROP ={ tree:()=>2+Math.floor(Math.random()*3), rock:()=>1+Math.floor(Math.random()*3), bush:()=>1+Math.floor(Math.random()*2) };
@@ -335,7 +337,8 @@ const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}
 let activeChestId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
 let selectedSlot=0, buildMode=false, buildType='wall', bPrev;
-let foodTimer=0, thirstTimer=0, fireTimer=0, lastSync=0, dayTimer=60000;
+let foodTimer=0, thirstTimer=0, fireTimer=0, coldTimer=0, lastSync=0, dayTimer=60000;
+let wolves=[], wolvesSpawned=false;
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
@@ -458,13 +461,14 @@ class Game extends Phaser.Scene {
     this.cameras.main.startFollow(this.pbody,true,0.08,0.08);
     this.cameras.main.setZoom(1.8);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
+    this.wolfGfx=this.add.graphics().setDepth(50000);
     this.nightOverlay=this.add.graphics().setDepth(96000);
     this.lightGfx=this.add.graphics().setDepth(96001).setBlendMode(Phaser.BlendModes.ADD);
 
     this.keys=this.input.keyboard.addKeys({
       up:'W',dn:'S',lt:'A',rt:'D',
       up2:'UP',dn2:'DOWN',lt2:'LEFT',rt2:'RIGHT',
-      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',enter:'ENTER',
+      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',enter:'ENTER',
       k1:Phaser.Input.Keyboard.KeyCodes.ONE,
       k2:Phaser.Input.Keyboard.KeyCodes.TWO,
       k3:Phaser.Input.Keyboard.KeyCodes.THREE,
@@ -695,6 +699,7 @@ class Game extends Phaser.Scene {
   handleClick(ptr){
     if(buildMode){this.placeBuilding(ptr);return;}
     if(this.tryLootBag(ptr))return;
+    if(this.tryAtkWolf(ptr))return;
     if(this.tryHitRes(ptr))return;
     if(this.tryAtkPlayer(ptr))return;
     if(this.tryOpenChest(ptr))return;
@@ -858,6 +863,78 @@ class Game extends Phaser.Scene {
     this.updateHUD(); this.pop(state.x,state.y,'RESPAWNED','#fff');
   }
 
+  spawnWolves(){
+    wolves=[];
+    for(let i=0;i<WOLF_N;i++){
+      const a=Math.random()*Math.PI*2, d=220+Math.random()*300;
+      wolves.push({x:Math.max(50,Math.min(MAP_W-50,state.x+Math.cos(a)*d)),y:Math.max(50,Math.min(MAP_H-50,state.y+Math.sin(a)*d)),hp:WOLF_HP,maxHp:WOLF_HP,atkTimer:0,alive:true});
+    }
+    wolvesSpawned=true;
+    this.pop(state.x,state.y-50,'🐺 Wolves are coming!','#c0392b');
+  }
+
+  despawnWolves(){
+    wolves=[]; wolvesSpawned=false; this.wolfGfx.clear();
+  }
+
+  drawWolves(){
+    const g=this.wolfGfx; g.clear();
+    for(const w of wolves){
+      if(!w.alive)continue;
+      const dx=state.x-w.x, dy=state.y-w.y, a=Math.atan2(dy,dx);
+      const hx=w.x+Math.cos(a)*10, hy=w.y+Math.sin(a)*10;
+      g.fillStyle(0x000000,0.2).fillEllipse(w.x+3,w.y+12,34,12);
+      g.fillStyle(0x3d2208,1).fillEllipse(w.x,w.y,30,20);
+      g.fillStyle(0x5c3410,1).fillCircle(hx,hy,10);
+      const la=a+0.45, ra=a-0.45;
+      g.fillStyle(0x2a1804,1);
+      g.fillTriangle(hx+Math.cos(la)*8,hy+Math.sin(la)*8,hx+Math.cos(la)*14,hy+Math.sin(la)*14,hx+Math.cos(a)*8,hy+Math.sin(a)*8);
+      g.fillTriangle(hx+Math.cos(ra)*8,hy+Math.sin(ra)*8,hx+Math.cos(ra)*14,hy+Math.sin(ra)*14,hx+Math.cos(a)*8,hy+Math.sin(a)*8);
+      g.fillStyle(0xff2200,1).fillCircle(hx+Math.cos(la)*4,hy+Math.sin(la)*4,2.5);
+      g.fillStyle(0xff2200,1).fillCircle(hx+Math.cos(ra)*4,hy+Math.sin(ra)*4,2.5);
+      const r=w.hp/w.maxHp;
+      g.fillStyle(0x27ae60,1).fillRect(w.x-14,w.y-20,28*r,3);
+      g.fillStyle(0xc0392b,1).fillRect(w.x-14+28*r,w.y-20,28*(1-r),3);
+    }
+  }
+
+  updateWolves(delta){
+    for(const w of wolves){
+      if(!w.alive)continue;
+      const dx=state.x-w.x, dy=state.y-w.y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d>WOLF_ATK_RNG){w.x+=(dx/d)*WOLF_SPEED*(delta/1000);w.y+=(dy/d)*WOLF_SPEED*(delta/1000);}
+      // wall push
+      for(const g of Object.values(bldgSpr)){
+        const bd=g._d; if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest')continue;
+        const hw=20,hh=13,nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
+        const wdx=w.x-nx,wdy=w.y-ny,wd=Math.sqrt(wdx*wdx+wdy*wdy);
+        if(wd<12&&wd>0.01){w.x+=(wdx/wd)*(12-wd);w.y+=(wdy/wd)*(12-wd);}
+      }
+      w.atkTimer+=delta;
+      if(d<WOLF_ATK_RNG&&w.atkTimer>=WOLF_ATK_TICK){
+        w.atkTimer=0;
+        state.hp=Math.max(0,state.hp-WOLF_DMG);
+        this.updateHUD();this.redrawMe();
+        this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
+        if(state.hp<=0)this.handleDeath();
+      }
+    }
+  }
+
+  tryAtkWolf(ptr){
+    for(const w of wolves){
+      if(!w.alive)continue;
+      if(dist2(ptr.worldX,ptr.worldY,w.x,w.y)>22)continue;
+      if(dist2(state.x,state.y,w.x,w.y)>ATK_RNG+10)continue;
+      const tool=getActiveTool();
+      const dmg=tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
+      w.hp-=dmg; this.pop(w.x,w.y-22,'-'+dmg,'#f0c040');
+      if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
+      return true;
+    }
+    return false;
+  }
+
   startMyChatBubble(msg){
     if(this.myChatBubble){this.myChatBubble.destroy();this.myChatBubble=null;}
     this.myChatBubble=this.add.text(state.x,state.y-P_RAD-32,msg,{
@@ -942,6 +1019,18 @@ class Game extends Phaser.Scene {
       if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
     }
 
+    // E = eat food from active slot
+    if(Phaser.Input.Keyboard.JustDown(k.e)){
+      const slot=inv[selectedSlot];
+      if(slot&&slot.type==='food'&&slot.count>0){
+        if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
+        else{
+          invRemove('food',1); state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);
+          this.updateHUD(); this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');
+        }
+      } else this.pop(state.x,state.y-30,'No food in slot!','#555');
+    }
+
     // Build preview
     if(buildMode){
       const p=this.input.activePointer; bPrev.clear().setVisible(true);
@@ -971,7 +1060,7 @@ class Game extends Phaser.Scene {
       if(state.food_meter>0) state.food_meter--;
       else{state.hp=Math.max(0,state.hp-5);if(state.hp<=0)this.handleDeath();}
       this.updateHUD(); this.redrawMe();
-      if(state.food_meter===2)this.pop(state.x,state.y-38,'Eat something! (collect bushes)','#f39c12');
+      if(state.food_meter===2)this.pop(state.x,state.y-38,'Hungry! Press E to eat food 🍎','#f39c12');
     }
 
     // Thirst
@@ -982,6 +1071,18 @@ class Game extends Phaser.Scene {
       else{state.hp=Math.max(0,state.hp-4);if(state.hp<=0)this.handleDeath();}
       this.updateHUD(); this.redrawMe();
       if(state.thirst===2)this.pop(state.x,state.y-46,'Thirsty! Find a pond (F)','#3498db');
+    }
+
+    // Cold (night only, away from fire)
+    coldTimer+=delta;
+    if(coldTimer>=COLD_TICK){
+      coldTimer=0;
+      const ph=dayTimer/DAY_CYCLE;
+      if(ph>0.55&&ph<0.95){
+        let nearFire=false;
+        for(const g of Object.values(bldgSpr)){const d=g._d;if(d.type==='campfire'&&dist2(d.x,d.y,state.x,state.y)<COLD_RNG){nearFire=true;break;}}
+        if(!nearFire){state.hp=Math.max(0,state.hp-COLD_DMG);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-38,'❄️ Freezing! Build a campfire!','#7ec8e3');if(state.hp<=0)this.handleDeath();}
+      }
     }
 
     // Day / night
@@ -1007,6 +1108,11 @@ class Game extends Phaser.Scene {
     }
     const timeStr=phase<0.45?'🌞 DAY':phase<0.55?'🌅 DUSK':phase<0.9?'🌙 NIGHT':'🌄 DAWN';
     document.getElementById('ui-time').textContent=timeStr;
+
+    // Wolves (spawn at night, despawn at dawn)
+    if(phase>0.55&&phase<0.95&&!wolvesSpawned)this.spawnWolves();
+    if((phase<=0.55||phase>=0.95)&&wolvesSpawned)this.despawnWolves();
+    if(wolvesSpawned){this.updateWolves(delta);this.drawWolves();}
 
     // Monument hold
     let nearMon=false, nearMonId=null;
