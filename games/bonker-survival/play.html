@@ -155,7 +155,10 @@ a { text-decoration: none; color: inherit; }
   border-radius: 0 0 12px 12px;
 }
 .game-bar-left { display: flex; align-items: center; gap: 10px; }
-.bar-logo { height: 30px; width: auto; mix-blend-mode: screen; }
+.bar-logo-wrap {
+  width: 48px; height: 48px; overflow: hidden; flex-shrink: 0;
+}
+.bar-logo { height: 48px; width: auto; mix-blend-mode: screen; display: block; }
 .bar-game-title { font-size: 0.95rem; font-weight: 700; }
 .game-bar-actions { display: flex; align-items: center; gap: 4px; }
 .bar-btn {
@@ -280,7 +283,9 @@ a { text-decoration: none; color: inherit; }
       </div>
       <div class="game-bar">
         <div class="game-bar-left">
-          <img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo">
+          <div class="bar-logo-wrap">
+            <img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo">
+          </div>
           <span class="bar-game-title">Bonker Survival</span>
         </div>
         <div class="game-bar-actions">
@@ -379,10 +384,10 @@ function toggleFav() {
   document.getElementById('favBtn').style.background = faved ? 'rgba(255,77,109,0.1)' : '';
 }
 function goFullscreen() {
-  const wrap = document.getElementById('gameWrap');
-  if (wrap.requestFullscreen) wrap.requestFullscreen();
-  else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
-  else if (wrap.mozRequestFullScreen) wrap.mozRequestFullScreen();
+  const iframe = document.getElementById('gameFrame');
+  if (iframe.requestFullscreen) iframe.requestFullscreen();
+  else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+  else if (iframe.mozRequestFullScreen) iframe.mozRequestFullScreen();
 }
 </script>
 </body>
