@@ -446,7 +446,9 @@
       <span style="color:#2ecc71">⚑</span> Base &nbsp;
       <span style="color:#4090e0">●</span> Water &nbsp;
       <span style="color:#c0392b">✕</span> Last death &nbsp;
-      <span style="color:#fff">●</span> You<br>
+      <span style="color:#fff">●</span> You &nbsp;
+      <span style="color:#e74c3c">●</span> Players &nbsp;
+      <span style="color:#5588cc">●</span> Sleeping<br>
       <span style="color:#285018">●</span> Trees &nbsp;
       <span style="color:#a04010">●</span> Iron &nbsp;
       <span style="color:#202030">●</span> Coal &nbsp;
@@ -530,7 +532,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
   getDatabase, ref, set, get, remove, update,
-  onChildAdded, onChildChanged, onChildRemoved, onValue
+  onChildAdded, onChildChanged, onChildRemoved, onValue, onDisconnect
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
 
 const firebaseApp = initializeApp({
@@ -822,12 +824,13 @@ const state={
   armor:{head:false, chest:false, legs:false}
 };
 const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}, roofSpr={};
+const sleepingData={}, sleepingSpr={};
 let activeChestId=null, activeFurnaceId=null, activeWorkbenchId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
 let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
-let serverEpoch=null, lastAtkTime=0, lastHitFrom={};
+let serverEpoch=null, lastAtkTime=0, lastHitFrom={}, lastDCUpdate=0;
 let wolfSyncLast=0; const remoteWolves={};
 let regenTimer=0;
 let isDead=false, deathCause='', deathX=0, deathY=0;
@@ -941,6 +944,13 @@ function openChat(){ chatOpen=true; document.getElementById('chat-wrap').style.d
 function closeChat(){ chatOpen=false; document.getElementById('chat-wrap').style.display='none'; }
 function sendChat(){
   const msg=document.getElementById('chat-input').value.trim(); closeChat(); if(!msg)return;
+  if(msg==='/reset'){
+    if(confirm('Reset the world? All buildings, resources and sleeping players will be wiped.')){
+      Promise.all(['resources','buildings','loot','sleeping','wolves','monument_hold'].map(p=>remove(sref(p)))).then(()=>{window._scene&&window._scene.seedMap();});
+      window._scene&&window._scene.pop(window._scene.pbody.x,window._scene.pbody.y-50,'🌍 World Reset!','#f0c040');
+    }
+    return;
+  }
   update(sref('players/'+PID),{chat:msg,chatT:Date.now()});
   window._scene&&window._scene.startMyChatBubble(msg);
 }
@@ -994,7 +1004,12 @@ class Game extends Phaser.Scene {
     });
     this.input.on('pointerdown',ptr=>this.handleClick(ptr));
     this.setupFirebase();
-    window.addEventListener('beforeunload',()=>{remove(sref('players/'+PID));remove(sref('wolves/'+PID));});
+    window.addEventListener('beforeunload',()=>{
+      if(!isDead){
+        try{set(sref('sleeping/'+PID),{x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now()});}catch(e){}
+      }
+      remove(sref('players/'+PID));remove(sref('wolves/'+PID));
+    });
     refreshHotbar();
     this.updateHUD();
   }
@@ -1059,6 +1074,29 @@ class Game extends Phaser.Scene {
     gfx.lineStyle(1,0xc49060,0.7).strokeCircle(hx,hy,6);
     if(d.held){ const tx=x+Math.cos(ang)*(P_RAD+10), ty=y+Math.sin(ang)*(P_RAD+10); drawHeldItem(gfx,tx,ty,ang,d.held); }
     if(d.hp<MAX_HP){ const r=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-P_RAD-8,32*r,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*r,y-P_RAD-8,32*(1-r),4); }
+  }
+
+  mkSleeping(id,d){
+    const g=this.add.graphics().setDepth(d.y); this.drawSleeping(g,d);
+    const l=this.add.text(d.x,d.y-P_RAD-18,(d.name||id.substr(-4).toUpperCase())+' 💤',{fontSize:'11px',color:'#88aadd',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(d.y+1);
+    sleepingSpr[id]={g,l}; sleepingData[id]=d;
+  }
+  rxSleeping(id,d){
+    sleepingData[id]=d;
+    if(!sleepingSpr[id]){this.mkSleeping(id,d);return;}
+    this.drawSleeping(sleepingSpr[id].g,d);
+  }
+  drawSleeping(g,d){
+    const {x,y,color}=d, c=color||0x888888;
+    const hp=d.hp??MAX_HP, hpPct=Math.max(0,hp/MAX_HP);
+    g.clear();
+    g.fillStyle(0x000000,0.16).fillEllipse(x+3,y+7,P_RAD*3.2,P_RAD*1.1);
+    g.fillStyle(c,0.62).fillEllipse(x,y,P_RAD*2.8,P_RAD*1.65);
+    g.fillStyle(0x001040,0.38).fillEllipse(x,y,P_RAD*2.8,P_RAD*1.65);
+    g.lineStyle(2,0x000000,0.45).strokeEllipse(x,y,P_RAD*2.8,P_RAD*1.65);
+    const bw=34,bx=x-bw/2,by=y-P_RAD-9;
+    g.fillStyle(0x330000,1).fillRect(bx,by,bw,4);
+    g.fillStyle(hpPct>0.5?0x27ae60:hpPct>0.25?0xe67e22:0xc0392b,1).fillRect(bx,by,bw*hpPct,4);
   }
 
   drawRes(gfx,d){
@@ -1415,6 +1453,31 @@ class Game extends Phaser.Scene {
       for(const pid of Object.keys(remoteWolves)){if(!all[pid])delete remoteWolves[pid];}
       for(const [pid,wlist] of Object.entries(all)){if(pid!==PID)remoteWolves[pid]=wlist?Object.values(wlist):[];}
     });
+    // Restore own state if we disconnected last session
+    get(sref('sleeping/'+PID)).then(snap=>{
+      if(snap.val()&&snap.val().hp>0){
+        const d=snap.val();
+        state.hp=d.hp; if(d.armor)state.armor={...d.armor};
+        refreshArmorHUD(); sc.updateHUD(); sc.redrawMe();
+      }
+      remove(sref('sleeping/'+PID));
+    });
+    // Sleeping (offline) players
+    onChildAdded(sref('sleeping'),s=>{if(s.key!==PID&&s.val())sc.mkSleeping(s.key,s.val());});
+    onChildChanged(sref('sleeping'),s=>{if(s.key!==PID&&s.val())sc.rxSleeping(s.key,s.val());});
+    onChildRemoved(sref('sleeping'),s=>{
+      if(sleepingSpr[s.key]){sleepingSpr[s.key].g.destroy();sleepingSpr[s.key].l.destroy();delete sleepingSpr[s.key];}
+      delete sleepingData[s.key];
+    });
+    // Register onDisconnect to persist sleeping state when connection drops
+    const registerDisconnect=()=>{
+      if(isDead)return;
+      onDisconnect(sref('sleeping/'+PID)).set({x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now()});
+      onDisconnect(sref('players/'+PID)).remove();
+      onDisconnect(sref('wolves/'+PID)).remove();
+    };
+    registerDisconnect();
+    sc.registerDisconnect=registerDisconnect;
   }
 
   handleClick(ptr){
@@ -1573,6 +1636,31 @@ class Game extends Phaser.Scene {
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
     }
+    // Attack sleeping (offline) players
+    for(const [id,d] of Object.entries(sleepingData)){
+      if(state.teamId&&d.teamId===state.teamId)continue;
+      const sx=d.x, sy=d.y;
+      if(dist2(sx,sy,px,py)>range+20)continue;
+      if(dist2(ptr.worldX,ptr.worldY,sx,sy)>clickRange)continue;
+      if(isBow){if(!invCount('arrow')){this.pop(state.x,state.y-30,'No arrows!','#e74c3c');return false;}invRemove('arrow',1);refreshHotbar();}
+      if(isCrossbow){if(!invCount('bolt')){this.pop(state.x,state.y-30,'No bolts!','#e74c3c');return false;}invRemove('bolt',1);refreshHotbar();}
+      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:isBow?BOW_DMG:isCrossbow?CROSSBOW_DMG:FIST_DMG;
+      lastAtkTime=now;
+      state.score+=5; this.updateHUD();
+      const newHp=Math.max(0,(d.hp!==undefined?d.hp:MAX_HP)-dmg);
+      this.pop(sx,sy-24,'-'+dmg,'#e74c3c');
+      if(newHp<=0){
+        const bag={x:sx,y:sy+10}; let hasDrop=false;
+        if(d.armor){for(const slot of ['head','chest','legs']){if(d.armor[slot]){bag['armor_'+slot]=(bag['armor_'+slot]||0)+1;hasDrop=true;}}}
+        if(hasDrop)set(sref('loot/sleep_'+id+'_'+Date.now()),bag);
+        remove(sref('sleeping/'+id));
+        state.score+=50; this.updateHUD();
+        this.pop(sx,sy-36,'💀 Killed sleeping!','#f0c040');
+      } else {
+        update(sref('sleeping/'+id),{hp:newHp});
+      }
+      return true;
+    }
     return false;
   }
 
@@ -1708,6 +1796,9 @@ class Game extends Phaser.Scene {
   handleDeath(cause='Unknown cause'){
     if(isDead)return;
     isDead=true;
+    // Cancel sleeping disconnect handler so dead players don't appear sleeping
+    try{onDisconnect(sref('sleeping/'+PID)).remove();}catch(e){}
+    remove(sref('sleeping/'+PID));
     deathCause=cause;
     deathX=Math.round(state.x); deathY=Math.round(state.y);
     // Drop all inventory as loot
@@ -2076,6 +2167,7 @@ class Game extends Phaser.Scene {
       lastSync=time;
       update(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100,held:getActiveTool()||inv[selectedSlot]?.type||null});
     }
+    if(time-lastDCUpdate>8000){lastDCUpdate=time;this.registerDisconnect?.();}
   }
 }
 
@@ -2465,6 +2557,21 @@ function drawWorldMap(){
     ctx.fillStyle='rgba(255,100,100,0.55)';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';
     ctx.fillText('DIED HERE',dx,dy+20);ctx.textAlign='left';
     ctx.lineCap='butt';
+  }
+  // Sleeping (offline) players — blue dots
+  for(const [,d] of Object.entries(sleepingData)){
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(85,136,204,0.85)';ctx.beginPath();ctx.arc(rx,ry,4,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(136,170,220,0.6)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(rx,ry,7,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(170,204,255,0.7)';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText((d.name||'?')+'💤',rx,ry-10);ctx.textAlign='left';
+  }
+  // Online players — red dots
+  for(const [,d] of Object.entries(playerData)){
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(231,76,60,0.85)';ctx.beginPath();ctx.arc(rx,ry,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,160,160,0.7)';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText(d.name||'?',rx,ry-8);ctx.textAlign='left';
   }
   // Self (white dot + ring — no label needed, always center of attention)
   const mx=state.x*sx,my=state.y*sy;
