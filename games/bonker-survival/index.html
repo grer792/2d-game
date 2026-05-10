@@ -960,6 +960,12 @@ class Game extends Phaser.Scene {
       if(td.ownerId===PID||(state.teamId&&td.teamId===state.teamId))continue;
       if(dist2(placeX,placeY,td.x,td.y)<TC_ZONE){this.pop(this.pbody.x,this.pbody.y-30,'Enemy cabinet blocks building here!','#e74c3c');return;}
     }
+    for(const[,tg] of Object.entries(bldgSpr)){
+      const td=tg._d;
+      if(buildType==='foundation'&&td.type==='foundation'&&Math.abs(placeX-td.x)<58&&Math.abs(placeY-td.y)<58){this.pop(this.pbody.x,this.pbody.y-30,'Overlaps an existing foundation!','#e74c3c');return;}
+      if((buildType==='wall'||buildType==='door')&&(td.type==='wall'||td.type==='door')&&dist2(placeX,placeY,td.x,td.y)<3){this.pop(this.pbody.x,this.pbody.y-30,'Already a wall/door here!','#e74c3c');return;}
+      if(buildType!=='foundation'&&buildType!=='wall'&&buildType!=='door'&&td.type===buildType&&dist2(placeX,placeY,td.x,td.y)<22){this.pop(this.pbody.x,this.pbody.y-30,'Something is already here!','#e74c3c');return;}
+    }
     for(const[res,amt]of Object.entries(cost)){if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}}
     for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
