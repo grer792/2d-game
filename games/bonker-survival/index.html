@@ -8,31 +8,29 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:#4a8a3a; overflow:hidden; font-family:'Segoe UI',sans-serif; }
     #hud {
-      position:fixed; bottom:14px; left:14px;
-      background:rgba(8,8,12,0.68);
-      border:1px solid rgba(255,255,255,0.07);
-      border-radius:8px;
-      padding:8px 10px; color:#fff;
-      z-index:20; pointer-events:none; width:242px;
+      position:fixed; bottom:20px; left:20px;
+      background:rgba(4,4,8,0.82);
+      border:1px solid rgba(255,255,255,0.04);
+      border-radius:7px;
+      padding:5px 8px; color:#fff;
+      z-index:20; pointer-events:none; width:188px;
       font-family:'Segoe UI',sans-serif;
     }
-    .sbar { display:flex; align-items:center; margin-bottom:3px; gap:6px; }
+    .sbar { display:flex; align-items:center; margin-bottom:2px; gap:5px; }
     .sbar:last-of-type { margin-bottom:0; }
     .sbar-icon {
-      width:18px; text-align:center;
-      font-size:13px; flex-shrink:0;
-      filter:drop-shadow(0 1px 2px rgba(0,0,0,0.9));
+      width:14px; text-align:center;
+      font-size:10px; flex-shrink:0; opacity:0.75;
     }
     .sbar-bg {
-      flex:1; height:20px; border-radius:4px; overflow:hidden; position:relative;
-      background:rgba(0,0,0,0.50);
+      flex:1; height:13px; border-radius:3px; overflow:hidden; position:relative;
+      background:rgba(0,0,0,0.60);
     }
-    .sbar-fill { height:100%; transition:width .25s; border-radius:4px; }
+    .sbar-fill { height:100%; transition:width .3s; border-radius:3px; }
     .sbar-val {
-      position:absolute; left:7px; top:50%; transform:translateY(-50%);
-      font-size:11px; font-weight:700; color:#fff;
-      text-shadow:0 1px 4px rgba(0,0,0,1); pointer-events:none;
-      letter-spacing:.2px;
+      position:absolute; left:5px; top:50%; transform:translateY(-50%);
+      font-size:9px; font-weight:600; color:rgba(255,255,255,0.80);
+      text-shadow:0 1px 3px rgba(0,0,0,1); pointer-events:none;
     }
     #ui-tools { font-size:11px; color:#888; margin-top:5px; padding-left:2px; }
     #ui-tools b { color:#f0c040; }
@@ -203,25 +201,25 @@
 </div>
 
 <div id="hud">
-  <div id="hud-warn" style="display:none;font-size:11px;font-weight:700;letter-spacing:.4px;margin-bottom:4px;text-align:left;text-shadow:0 1px 5px rgba(0,0,0,1);"></div>
+  <div id="hud-warn" style="display:none;font-size:10px;font-weight:600;letter-spacing:.3px;margin-bottom:3px;text-align:left;text-shadow:0 1px 4px rgba(0,0,0,1);opacity:0.9;"></div>
   <div class="sbar">
     <div class="sbar-icon">❤️</div>
     <div class="sbar-bg">
-      <div id="hp-bar" class="sbar-fill" style="background:linear-gradient(to right,#6e1010,#b52020);width:100%"></div>
+      <div id="hp-bar" class="sbar-fill" style="background:linear-gradient(to right,rgba(80,12,12,0.90),rgba(120,24,24,0.90));width:100%"></div>
       <span class="sbar-val" id="ui-hp">100</span>
     </div>
   </div>
   <div class="sbar">
     <div class="sbar-icon">💧</div>
     <div class="sbar-bg">
-      <div id="thirst-bar" class="sbar-fill" style="background:linear-gradient(to right,#14366a,#1f6aaa);width:100%"></div>
+      <div id="thirst-bar" class="sbar-fill" style="background:linear-gradient(to right,rgba(12,32,72,0.90),rgba(20,60,108,0.90));width:100%"></div>
       <span class="sbar-val" id="ui-th">250</span>
     </div>
   </div>
   <div class="sbar">
     <div class="sbar-icon">🍗</div>
     <div class="sbar-bg">
-      <div id="hunger-bar" class="sbar-fill" style="background:linear-gradient(to right,#5c2a08,#a04e10);width:100%"></div>
+      <div id="hunger-bar" class="sbar-fill" style="background:linear-gradient(to right,rgba(56,22,4,0.90),rgba(96,44,8,0.90));width:100%"></div>
       <span class="sbar-val" id="ui-fm">500</span>
     </div>
   </div>
