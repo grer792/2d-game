@@ -1592,9 +1592,9 @@ class Game extends Phaser.Scene {
     const phase=dayTimer/DAY_CYCLE;
     let nightAlpha=0;
     if(phase<0.45)nightAlpha=0;
-    else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.72;
-    else if(phase<0.9)nightAlpha=0.72;
-    else nightAlpha=((1-phase)/0.1)*0.72;
+    else if(phase<0.55)nightAlpha=((phase-0.45)/0.1)*0.88;
+    else if(phase<0.9)nightAlpha=0.88;
+    else nightAlpha=((1-phase)/0.1)*0.88;
     const nd=document.getElementById('night-overlay');
     if(nightAlpha>0.01){
       nd.style.display='block';
