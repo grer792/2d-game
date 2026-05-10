@@ -490,6 +490,7 @@ let monHoldStart=null, monHoldId=null;
 let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
+let serverEpoch=null, lastAtkTime=0, lastHitFrom={};
 
 window._gameState=state; window._db=db; window._PID=PID; window._PNAME=PNAME;
 
@@ -954,6 +955,11 @@ class Game extends Phaser.Scene {
 
   setupFirebase(){
     const sc=this;
+    // Sync server epoch for day/night — first joiner seeds it
+    get(ref(db,'servers/'+SERVER_KEY+'/epoch')).then(snap=>{
+      if(!snap.val()) set(ref(db,'servers/'+SERVER_KEY+'/epoch'),Date.now()-DAY_CYCLE*0.2);
+      onValue(ref(db,'servers/'+SERVER_KEY+'/epoch'),s=>{ if(s.val()) serverEpoch=s.val(); });
+    });
     get(sref('resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
       const hasOre=keys.some(k=>k.startsWith('ore_'));
@@ -982,10 +988,13 @@ class Game extends Phaser.Scene {
     });
     onChildAdded(sref('players/'+PID+'/hits'),snap=>{
       if(!snap.val())return;
-      const {dmg}=snap.val();
+      const {dmg,from}=snap.val();
+      remove(sref('players/'+PID+'/hits/'+snap.key));
+      const now=Date.now();
+      if(from&&lastHitFrom[from]&&now-lastHitFrom[from]<350)return;
+      if(from) lastHitFrom[from]=now;
       state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe();
       sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
-      remove(sref('players/'+PID+'/hits/'+snap.key));
       if(state.hp<=0)sc.handleDeath();
     });
   }
@@ -1095,6 +1104,8 @@ class Game extends Phaser.Scene {
   }
 
   tryAtkPlayer(ptr){
+    const now=Date.now();
+    if(now-lastAtkTime<380)return false;
     const px=this.pbody.x, py=this.pbody.y;
     const tool=getActiveTool();
     for(const [id,od] of Object.entries(playerData)){
@@ -1104,7 +1115,8 @@ class Game extends Phaser.Scene {
       if(dist2(rx,ry,px,py)>ATK_RNG+20)continue;
       if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD+16)continue;
       const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
-      set(sref('players/'+id+'/hits/'+Date.now()),{dmg,from:PID});
+      lastAtkTime=now;
+      set(sref('players/'+id+'/hits/'+now),{dmg,from:PID});
       state.score+=5; this.updateHUD();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
@@ -1490,7 +1502,8 @@ class Game extends Phaser.Scene {
     }
 
     // Day / night
-    dayTimer=(dayTimer+delta)%DAY_CYCLE;
+    if(serverEpoch) dayTimer=((Date.now()-serverEpoch)%DAY_CYCLE+DAY_CYCLE)%DAY_CYCLE;
+    else dayTimer=(dayTimer+delta)%DAY_CYCLE;
     const phase=dayTimer/DAY_CYCLE;
     let nightAlpha=0;
     if(phase<0.45)nightAlpha=0;
