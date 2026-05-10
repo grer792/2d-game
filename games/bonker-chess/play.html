@@ -391,6 +391,11 @@ function goFullscreen() {
   else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
   else if (iframe.mozRequestFullScreen) iframe.mozRequestFullScreen();
 }
+
+const room = new URLSearchParams(location.search).get('room');
+if (room) {
+  document.getElementById('gameFrame').src = `index.html?room=${encodeURIComponent(room)}`;
+}
 </script>
 </body>
 </html>

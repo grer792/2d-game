@@ -220,6 +220,106 @@ h1 {
   background: #273044;
 }
 
+.online-box {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.online-title {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.online-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.online-btn {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--panel2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 10px 8px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.online-btn.primary {
+  background: var(--accent);
+  color: #07120e;
+}
+
+.online-btn:hover {
+  border-color: rgba(63,191,143,0.45);
+  background: #273044;
+}
+
+.online-btn.primary:hover {
+  background: #55d8a6;
+}
+
+.room-line {
+  display: none;
+  gap: 8px;
+  align-items: center;
+}
+
+.room-line.active {
+  display: flex;
+}
+
+.room-code {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  padding: 8px 9px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.small-btn {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--panel2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 8px 9px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.online-note {
+  min-height: 30px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.color-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(63,191,143,0.12);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .capture-box {
   padding: 12px;
   display: grid;
@@ -310,6 +410,7 @@ h1 {
   .game { padding: 8px; gap: 10px; }
   .board-shell { width: 100%; border-width: 6px; }
   .controls { grid-template-columns: 1fr; }
+  .online-actions { grid-template-columns: 1fr; }
   .side { gap: 10px; }
   .piece { font-size: clamp(28px, 10vw, 54px); }
 }
@@ -340,6 +441,20 @@ h1 {
       <button class="control-btn" id="flipBtn">Flip</button>
     </section>
 
+    <section class="panel online-box">
+      <div class="online-title">Online match</div>
+      <div class="online-actions">
+        <button class="online-btn primary" id="friendBtn">Play friend</button>
+        <button class="online-btn" id="randomBtn">Play random</button>
+      </div>
+      <div class="room-line" id="roomLine">
+        <div class="room-code" id="roomCode"></div>
+        <button class="small-btn" id="copyBtn">Copy</button>
+        <button class="small-btn" id="leaveBtn">Leave</button>
+      </div>
+      <div class="online-note" id="onlineNote">Local 2 player is ready. Start online to invite a friend or find a random player.</div>
+    </section>
+
     <section class="panel capture-box">
       <div class="capture-row">
         <span class="capture-label">White took</span>
@@ -360,6 +475,20 @@ h1 {
 
 <script type="module">
 import { Chess } from 'https://esm.run/chess.js@1.4.0';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+import {
+  getDatabase, ref, set, get, remove, update, onValue, onDisconnect, runTransaction, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
+
+const firebaseApp = initializeApp({
+  apiKey: 'AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU',
+  authDomain: 'd-game-b50ef.firebaseapp.com',
+  projectId: 'd-game-b50ef',
+  storageBucket: 'd-game-b50ef.firebasestorage.app',
+  messagingSenderId: '80712714092',
+  appId: '1:80712714092:web:4b15f70196f05942905549'
+});
+const db = getDatabase(firebaseApp);
 
 const boardEl = document.getElementById('board');
 const statusText = document.getElementById('statusText');
@@ -368,6 +497,13 @@ const blackTurn = document.getElementById('blackTurn');
 const moveList = document.getElementById('moveList');
 const whiteCaptured = document.getElementById('whiteCaptured');
 const blackCaptured = document.getElementById('blackCaptured');
+const friendBtn = document.getElementById('friendBtn');
+const randomBtn = document.getElementById('randomBtn');
+const roomLine = document.getElementById('roomLine');
+const roomCode = document.getElementById('roomCode');
+const copyBtn = document.getElementById('copyBtn');
+const leaveBtn = document.getElementById('leaveBtn');
+const onlineNote = document.getElementById('onlineNote');
 
 const pieceMap = {
   wp: '♙', wn: '♘', wb: '♗', wr: '♖', wq: '♕', wk: '♔',
@@ -385,6 +521,16 @@ let selected = null;
 let legalTargets = [];
 let flipped = false;
 let lastMove = null;
+let onlineMode = false;
+let currentRoomId = null;
+let playerColor = null;
+let roomState = null;
+let roomUnsubscribe = null;
+let queueUnsubscribe = null;
+let syncingRemote = false;
+
+const playerId = getPlayerId();
+const urlRoom = new URLSearchParams(location.search).get('room');
 
 function files() {
   return flipped ? ['h','g','f','e','d','c','b','a'] : ['a','b','c','d','e','f','g','h'];
@@ -392,6 +538,73 @@ function files() {
 
 function ranks() {
   return flipped ? ['1','2','3','4','5','6','7','8'] : ['8','7','6','5','4','3','2','1'];
+}
+
+function getPlayerId() {
+  const existing = localStorage.getItem('bonkerChessPlayerId');
+  if (existing) return existing;
+  const id = `p_${Math.random().toString(36).slice(2, 10)}_${Date.now().toString(36)}`;
+  localStorage.setItem('bonkerChessPlayerId', id);
+  return id;
+}
+
+function makeRoomId() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+function roomRef(roomId) {
+  return ref(db, `chessRooms/${roomId}`);
+}
+
+function queueRef(id = playerId) {
+  return ref(db, `chessQueue/${id}`);
+}
+
+function roomUrl(roomId) {
+  const url = new URL('play.html', location.href);
+  url.searchParams.set('room', roomId);
+  return url.toString();
+}
+
+function setUrlRoom(roomId) {
+  const url = new URL(location.href);
+  if (roomId) url.searchParams.set('room', roomId);
+  else url.searchParams.delete('room');
+  history.replaceState(null, '', url);
+}
+
+function setOnlineNote(text) {
+  onlineNote.textContent = text;
+}
+
+function showRoomControls(roomId) {
+  roomLine.classList.toggle('active', Boolean(roomId));
+  roomCode.textContent = roomId ? roomUrl(roomId) : '';
+}
+
+function applyRemoteGame(state) {
+  syncingRemote = true;
+  const next = new Chess();
+  try {
+    if (state.pgn) next.loadPgn(state.pgn);
+    else if (state.fen) next.load(state.fen);
+  } catch (error) {
+    console.warn('Could not load remote chess state', error);
+  }
+  chess = next;
+  lastMove = state.lastMove || null;
+  selected = null;
+  legalTargets = [];
+  syncingRemote = false;
+}
+
+function onlineStatusSuffix() {
+  if (!onlineMode) return '';
+  const color = playerColor === 'w' ? 'White' : playerColor === 'b' ? 'Black' : 'Spectator';
+  const waiting = roomState && (!roomState.white || !roomState.black);
+  if (waiting) return ` You are ${color}. Waiting for opponent.`;
+  if (playerColor !== chess.turn()) return ` You are ${color}. Waiting for opponent move.`;
+  return ` You are ${color}. Your move.`;
 }
 
 function renderBoard() {
@@ -451,6 +664,15 @@ function renderBoard() {
 }
 
 function handleSquare(square) {
+  if (onlineMode && (!roomState || !roomState.white || !roomState.black)) {
+    setOnlineNote('Waiting for both players before the game starts.');
+    return;
+  }
+  if (onlineMode && playerColor !== chess.turn()) {
+    setOnlineNote('Not your turn yet.');
+    return;
+  }
+
   const piece = chess.get(square);
 
   if (selected) {
@@ -464,6 +686,9 @@ function handleSquare(square) {
       lastMove = move ? { from: move.from, to: move.to } : null;
       selected = null;
       legalTargets = [];
+      if (onlineMode && move) {
+        syncOnlineMove(move);
+      }
       render();
       return;
     }
@@ -501,15 +726,15 @@ function renderStatus() {
   blackTurn.classList.toggle('active', chess.turn() === 'b');
 
   if (chess.isCheckmate()) {
-    statusText.textContent = `Checkmate. ${turnName === 'White' ? 'Black' : 'White'} wins.`;
+    statusText.textContent = `Checkmate. ${turnName === 'White' ? 'Black' : 'White'} wins.${onlineStatusSuffix()}`;
   } else if (chess.isDraw()) {
-    statusText.textContent = 'Draw. No legal winning path left.';
+    statusText.textContent = `Draw. No legal winning path left.${onlineStatusSuffix()}`;
   } else if (chess.inCheck()) {
-    statusText.textContent = `${turnName} is in check. Find a safe move.`;
+    statusText.textContent = `${turnName} is in check. Find a safe move.${onlineStatusSuffix()}`;
   } else if (selected) {
-    statusText.textContent = `${turnName} to move. Choose where to move from ${selected}.`;
+    statusText.textContent = `${turnName} to move. Choose where to move from ${selected}.${onlineStatusSuffix()}`;
   } else {
-    statusText.textContent = `${turnName} to move. Pick a piece.`;
+    statusText.textContent = `${turnName} to move. Pick a piece.${onlineStatusSuffix()}`;
   }
 }
 
@@ -563,6 +788,216 @@ function render() {
   renderStatus();
   renderMoves();
   renderCaptures();
+  renderOnlinePanel();
+}
+
+function renderOnlinePanel() {
+  showRoomControls(currentRoomId);
+  friendBtn.disabled = onlineMode;
+  randomBtn.disabled = onlineMode;
+  leaveBtn.disabled = !onlineMode;
+  document.getElementById('undoBtn').disabled = onlineMode;
+  if (onlineMode) {
+    const color = playerColor === 'w' ? 'White' : playerColor === 'b' ? 'Black' : 'Spectator';
+    const status = roomState && roomState.white && roomState.black ? 'playing' : 'waiting';
+    const badge = `<span class="color-badge">${color}</span>`;
+    roomCode.innerHTML = `${currentRoomId} ${badge}`;
+    if (status === 'waiting') setOnlineNote(`Room ${currentRoomId} is waiting. Copy the link and send it to your friend.`);
+    else if (playerColor === chess.turn()) setOnlineNote('Online match connected. Your move.');
+    else setOnlineNote('Online match connected. Waiting for opponent.');
+  }
+}
+
+async function syncOnlineMove(move) {
+  if (!currentRoomId || syncingRemote) return;
+  const status = chess.isCheckmate() ? 'checkmate' : chess.isDraw() ? 'draw' : 'playing';
+  await update(roomRef(currentRoomId), {
+    fen: chess.fen(),
+    pgn: chess.pgn(),
+    turn: chess.turn(),
+    lastMove: { from: move.from, to: move.to },
+    status,
+    updatedAt: serverTimestamp()
+  });
+}
+
+async function createRoom(kind = 'friend') {
+  await leaveOnline(false);
+  const id = makeRoomId();
+  currentRoomId = id;
+  playerColor = 'w';
+  onlineMode = true;
+  roomState = {
+    kind,
+    white: playerId,
+    black: null,
+    fen: chess.fen(),
+    pgn: '',
+    turn: 'w',
+    status: 'waiting',
+    createdAt: Date.now()
+  };
+
+  chess = new Chess();
+  lastMove = null;
+  selected = null;
+  legalTargets = [];
+  flipped = false;
+
+  await set(roomRef(id), {
+    kind,
+    white: playerId,
+    black: null,
+    fen: chess.fen(),
+    pgn: '',
+    turn: 'w',
+    status: 'waiting',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  onDisconnect(ref(db, `chessRooms/${id}/whiteOnline`)).remove();
+  await set(ref(db, `chessRooms/${id}/whiteOnline`), true);
+  setUrlRoom(id);
+  listenToRoom(id);
+  render();
+}
+
+async function joinRoom(id) {
+  const cleanedId = String(id || '').trim().toUpperCase();
+  if (!cleanedId) return;
+  await leaveOnline(false);
+  const target = roomRef(cleanedId);
+  const result = await runTransaction(target, current => {
+    if (!current) return;
+    if (current.white === playerId || current.black === playerId) return current;
+    if (!current.white) {
+      current.white = playerId;
+      current.status = current.black ? 'playing' : 'waiting';
+      return current;
+    }
+    if (!current.black) {
+      current.black = playerId;
+      current.status = 'playing';
+      return current;
+    }
+    return;
+  });
+
+  if (!result.committed || !result.snapshot.exists()) {
+    setOnlineNote('That room is full or does not exist.');
+    render();
+    return;
+  }
+
+  const state = result.snapshot.val();
+  currentRoomId = cleanedId;
+  playerColor = state.white === playerId ? 'w' : state.black === playerId ? 'b' : null;
+  onlineMode = true;
+  roomState = state;
+  flipped = playerColor === 'b';
+  applyRemoteGame(state);
+  const onlineKey = playerColor === 'w' ? 'whiteOnline' : 'blackOnline';
+  if (onlineKey) {
+    onDisconnect(ref(db, `chessRooms/${cleanedId}/${onlineKey}`)).remove();
+    await set(ref(db, `chessRooms/${cleanedId}/${onlineKey}`), true);
+  }
+  setUrlRoom(cleanedId);
+  listenToRoom(cleanedId);
+  render();
+}
+
+function listenToRoom(id) {
+  if (roomUnsubscribe) roomUnsubscribe();
+  roomUnsubscribe = onValue(roomRef(id), snapshot => {
+    if (!snapshot.exists()) {
+      leaveOnline(false);
+      setOnlineNote('Room closed.');
+      render();
+      return;
+    }
+    const state = snapshot.val();
+    roomState = state;
+    if (!playerColor) playerColor = state.white === playerId ? 'w' : state.black === playerId ? 'b' : null;
+    applyRemoteGame(state);
+    render();
+  });
+}
+
+async function playRandom() {
+  await leaveOnline(false);
+  setOnlineNote('Looking for a random opponent...');
+  const queueSnap = await get(ref(db, 'chessQueue'));
+  const queue = queueSnap.val() || {};
+  const candidateId = Object.keys(queue).find(id => id !== playerId);
+
+  if (candidateId) {
+    await remove(queueRef());
+    const id = makeRoomId();
+    currentRoomId = id;
+    playerColor = 'b';
+    onlineMode = true;
+    chess = new Chess();
+    flipped = true;
+    await set(roomRef(id), {
+      kind: 'random',
+      white: candidateId,
+      black: playerId,
+      fen: chess.fen(),
+      pgn: '',
+      turn: 'w',
+      status: 'playing',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    await set(queueRef(candidateId), {
+      playerId: candidateId,
+      roomId: id,
+      matchedAt: serverTimestamp()
+    });
+    onDisconnect(ref(db, `chessRooms/${id}/blackOnline`)).remove();
+    await set(ref(db, `chessRooms/${id}/blackOnline`), true);
+    setUrlRoom(id);
+    listenToRoom(id);
+    render();
+    return;
+  }
+
+  await set(queueRef(), {
+    playerId,
+    createdAt: serverTimestamp()
+  });
+  onDisconnect(queueRef()).remove();
+  setOnlineNote('Waiting for a random opponent...');
+
+  if (queueUnsubscribe) queueUnsubscribe();
+  queueUnsubscribe = onValue(queueRef(), snapshot => {
+    const entry = snapshot.val();
+    if (!entry || !entry.roomId) return;
+    if (queueUnsubscribe) queueUnsubscribe();
+    queueUnsubscribe = null;
+    joinRoom(entry.roomId);
+  });
+}
+
+async function leaveOnline(updateUrl = true) {
+  if (queueUnsubscribe) {
+    queueUnsubscribe();
+    queueUnsubscribe = null;
+  }
+  if (roomUnsubscribe) {
+    roomUnsubscribe();
+    roomUnsubscribe = null;
+  }
+  await remove(queueRef()).catch(() => {});
+  if (currentRoomId && playerColor) {
+    const onlineKey = playerColor === 'w' ? 'whiteOnline' : 'blackOnline';
+    await remove(ref(db, `chessRooms/${currentRoomId}/${onlineKey}`)).catch(() => {});
+  }
+  onlineMode = false;
+  currentRoomId = null;
+  playerColor = null;
+  roomState = null;
+  if (updateUrl) setUrlRoom(null);
 }
 
 document.getElementById('newGameBtn').addEventListener('click', () => {
@@ -570,10 +1005,22 @@ document.getElementById('newGameBtn').addEventListener('click', () => {
   selected = null;
   legalTargets = [];
   lastMove = null;
+  if (onlineMode && currentRoomId) {
+    update(roomRef(currentRoomId), {
+      fen: chess.fen(),
+      pgn: '',
+      turn: 'w',
+      lastMove: null,
+      status: roomState && roomState.white && roomState.black ? 'playing' : 'waiting',
+      updatedAt: serverTimestamp()
+    });
+    return;
+  }
   render();
 });
 
 document.getElementById('undoBtn').addEventListener('click', () => {
+  if (onlineMode) return;
   chess.undo();
   selected = null;
   legalTargets = [];
@@ -590,7 +1037,55 @@ document.getElementById('flipBtn').addEventListener('click', () => {
   render();
 });
 
-render();
+friendBtn.addEventListener('click', () => {
+  createRoom('friend').catch(error => {
+    console.error(error);
+    setOnlineNote('Could not create friend room. Try again.');
+  });
+});
+
+randomBtn.addEventListener('click', () => {
+  playRandom().catch(error => {
+    console.error(error);
+    setOnlineNote('Could not start random matchmaking. Try again.');
+  });
+});
+
+copyBtn.addEventListener('click', async () => {
+  if (!currentRoomId) return;
+  const link = roomUrl(currentRoomId);
+  try {
+    await navigator.clipboard.writeText(link);
+    setOnlineNote('Invite link copied.');
+  } catch {
+    setOnlineNote(link);
+  }
+});
+
+leaveBtn.addEventListener('click', async () => {
+  await leaveOnline();
+  chess = new Chess();
+  selected = null;
+  legalTargets = [];
+  lastMove = null;
+  setOnlineNote('Left online match. Local 2 player is ready.');
+  render();
+});
+
+window.addEventListener('beforeunload', () => {
+  remove(queueRef()).catch(() => {});
+});
+
+if (urlRoom) {
+  joinRoom(urlRoom).catch(error => {
+    console.error(error);
+    setOnlineNote('Could not join that room.');
+    render();
+  });
+} else {
+  render();
+}
+
 </script>
 </body>
 </html>
