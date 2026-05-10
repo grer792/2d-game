@@ -369,10 +369,10 @@
     <div class="map-label">World Map</div>
     <span class="map-close" onclick="toggleMap(false)">✕ close</span>
     <div class="map-legend">
-      <span style="color:#6dc96d">■</span> Your base &nbsp;
-      <span style="color:#6d9dc9">■</span> Bed &nbsp;
-      <span style="color:#fff">●</span> You &nbsp;
-      <span style="color:#c96d6d">✕</span> Death
+      <span style="color:#2ecc71">⚑</span> Base &nbsp;
+      <span style="color:#4090e0">●</span> Water &nbsp;
+      <span style="color:#c0392b">✕</span> Last death &nbsp;
+      <span style="color:#fff">●</span> You
     </div>
   </div>
 </div>
@@ -869,6 +869,7 @@ class Game extends Phaser.Scene {
 
   drawBldg(gfx,d){
     const {x,y,type,hp}=d, tier=d.tier||0;
+    const mine=d.ownerId===PID||(state.teamId&&d.teamId===state.teamId);
     const tData=type==='wall'?WALL_TIERS[tier]:type==='door'?DOOR_TIERS[tier]:null;
     const maxHp=(tData?tData.hp:BLDG_HP[type])||100;
     const hpR=Math.max(0,hp/maxHp);
@@ -1820,47 +1821,66 @@ window.toggleMap=function(force){
 function drawWorldMap(){
   const canvas=document.getElementById('map-canvas');
   const ctx=canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height, sx=W/MAP_W, sy=H/MAP_H;
+  const W=canvas.width,H=canvas.height,sx=W/MAP_W,sy=H/MAP_H;
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#111a0f'; ctx.fillRect(0,0,W,H);
-  // grid
-  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=0.5;
-  for(let x=0;x<MAP_W;x+=200){ctx.beginPath();ctx.moveTo(x*sx,0);ctx.lineTo(x*sx,H);ctx.stroke();}
-  for(let y=0;y<MAP_H;y+=200){ctx.beginPath();ctx.moveTo(0,y*sy);ctx.lineTo(W,y*sy);ctx.stroke();}
-  // water
-  for(const w of WATER_SRCS){ctx.fillStyle='rgba(40,110,200,0.55)';ctx.beginPath();ctx.arc(w.x*sx,w.y*sy,4,0,Math.PI*2);ctx.fill();}
-  // buildings — only yours/team shown (enemy positions stay secret)
-  for(const[,g]of Object.entries(bldgSpr)){
-    const d=g._d;
-    const mine=d.ownerId===PID||(state.teamId&&d.teamId===state.teamId);
-    if(!mine)continue;
-    ctx.fillStyle=d.type==='sleeping_bag'?'rgba(80,130,210,0.9)':d.type==='tc'?'rgba(140,210,140,0.9)':'rgba(90,175,90,0.7)';
-    ctx.fillRect(d.x*sx-2,d.y*sy-2,4,4);
+  // Rich green terrain
+  const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*0.75);
+  bg.addColorStop(0,'#1c3018');bg.addColorStop(1,'#0e1a0a');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Vignette
+  const vg=ctx.createRadialGradient(W/2,H/2,W*0.28,W/2,H/2,W*0.72);
+  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.42)');
+  ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+  // Trees
+  for(const[,rs]of Object.entries(resSpr)){
+    const d=rs._d;if(!d||d.type!=='tree')continue;
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(20,62,18,0.9)';ctx.beginPath();ctx.arc(rx,ry,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(44,110,36,0.65)';ctx.beginPath();ctx.arc(rx-0.5,ry-0.5,1.8,0,Math.PI*2);ctx.fill();
   }
-  // other players
-  for(const[,od]of Object.entries(playerData)){
-    const hx=od.color?('000000'+od.color.toString(16)).slice(-6):'aaaaaa';
-    ctx.fillStyle='#'+hx; ctx.beginPath();ctx.arc(od.x*sx,od.y*sy,4,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='9px Segoe UI';
-    ctx.fillText(od.name||'?',od.x*sx+5,od.y*sy-2);
+  // Rocks / ore
+  for(const[,rs]of Object.entries(resSpr)){
+    const d=rs._d;if(!d||(d.type!=='rock'&&d.type!=='ore'))continue;
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(82,78,72,0.85)';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(128,122,112,0.55)';ctx.beginPath();ctx.arc(rx-0.5,ry-0.8,1.2,0,Math.PI*2);ctx.fill();
   }
-  // wolves
-  const allW=[...wolves.filter(w=>w.alive),...Object.values(remoteWolves).flat()];
-  for(const w of allW){ctx.fillStyle='rgba(155,20,20,0.75)';ctx.beginPath();ctx.arc(w.x*sx,w.y*sy,2.5,0,Math.PI*2);ctx.fill();}
-  // death marker
+  // Water (glowing blue)
+  for(const w of WATER_SRCS){
+    const wx=w.x*sx,wy=w.y*sy;
+    const wg=ctx.createRadialGradient(wx,wy,0,wx,wy,9);
+    wg.addColorStop(0,'rgba(70,150,255,0.5)');wg.addColorStop(1,'rgba(30,80,180,0)');
+    ctx.fillStyle=wg;ctx.beginPath();ctx.arc(wx,wy,9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(110,180,255,0.85)';ctx.beginPath();ctx.arc(wx,wy,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(215,238,255,0.7)';ctx.beginPath();ctx.arc(wx-0.8,wy-0.8,1.2,0,Math.PI*2);ctx.fill();
+  }
+  // Base flag — centroid of your buildings
+  const myBs=Object.values(bldgSpr).filter(g=>g._d.ownerId===PID||(state.teamId&&g._d.teamId===state.teamId)).map(g=>g._d);
+  if(myBs.length){
+    const fx=myBs.reduce((s,d)=>s+d.x,0)/myBs.length*sx;
+    const fy=myBs.reduce((s,d)=>s+d.y,0)/myBs.length*sy;
+    ctx.strokeStyle='rgba(210,210,210,0.9)';ctx.lineWidth=1.5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(fx,fy+12);ctx.lineTo(fx,fy-12);ctx.stroke();
+    ctx.fillStyle='rgba(46,204,113,0.92)';
+    ctx.beginPath();ctx.moveTo(fx,fy-12);ctx.lineTo(fx+12,fy-6);ctx.lineTo(fx,fy);ctx.fill();
+    ctx.fillStyle='rgba(160,240,180,0.5)';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText('BASE',fx,fy+22);ctx.textAlign='left';
+  }
+  // Death marker — big red X
   if(deathX||deathY){
     const dx=deathX*sx,dy=deathY*sy;
-    ctx.strokeStyle='rgba(200,40,40,0.9)'; ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(dx-5,dy-5);ctx.lineTo(dx+5,dy+5);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(dx+5,dy-5);ctx.lineTo(dx-5,dy+5);ctx.stroke();
+    ctx.strokeStyle='rgba(220,30,30,0.95)';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(dx-9,dy-9);ctx.lineTo(dx+9,dy+9);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dx+9,dy-9);ctx.lineTo(dx-9,dy+9);ctx.stroke();
+    ctx.fillStyle='rgba(255,100,100,0.55)';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText('DIED HERE',dx,dy+20);ctx.textAlign='left';
+    ctx.lineCap='butt';
   }
-  // self
-  const mx=state.x*sx, my=state.y*sy;
-  ctx.fillStyle='#fff'; ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
-  ctx.beginPath();ctx.arc(mx,my,10,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.font='bold 9px Segoe UI';
-  ctx.fillText('YOU',mx+7,my-4);
+  // Self (white dot + ring — no label needed, always center of attention)
+  const mx=state.x*sx,my=state.y*sy;
+  ctx.fillStyle='rgba(255,255,255,0.92)';ctx.beginPath();ctx.arc(mx,my,4,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(mx,my,8,0,Math.PI*2);ctx.stroke();
 }
 
 } // end startGame
