@@ -276,6 +276,35 @@ const WATER_SRCS=Array.from({length:7},()=>({x:250+_wr()*(MAP_W-500),y:250+_wr()
 function teamColor(id){ const c=[0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6,0x1abc9c,0xe67e22]; let h=0; for(const ch of id) h=h*31+ch.charCodeAt(0); return c[Math.abs(h)%c.length]; }
 function lerpColor(a,b,t){ const ar=(a>>16)&0xff,ag=(a>>8)&0xff,ab=a&0xff,br=(b>>16)&0xff,bg=(b>>8)&0xff,bb=b&0xff; return ((ar+(br-ar)*t)<<16)|((ag+(bg-ag)*t)<<8)|(ab+(bb-ab)*t); }
 function dist2(ax,ay,bx,by){ const dx=ax-bx,dy=ay-by; return Math.sqrt(dx*dx+dy*dy); }
+function segIntersectsRect(ax,ay,bx,by,rx1,ry1,rx2,ry2){
+  const dx=bx-ax,dy=by-ay; let tmin=0,tmax=1;
+  if(Math.abs(dx)<0.5){if(ax<rx1||ax>rx2)return false;}
+  else{let t1=(rx1-ax)/dx,t2=(rx2-ax)/dx;if(t1>t2){const t=t1;t1=t2;t2=t;}tmin=Math.max(tmin,t1);tmax=Math.min(tmax,t2);if(tmin>tmax)return false;}
+  if(Math.abs(dy)<0.5){if(ay<ry1||ay>ry2)return false;}
+  else{let t1=(ry1-ay)/dy,t2=(ry2-ay)/dy;if(t1>t2){const t=t1;t1=t2;t2=t;}tmin=Math.max(tmin,t1);tmax=Math.min(tmax,t2);if(tmin>tmax)return false;}
+  return true;
+}
+function pathBlocked(ax,ay,bx,by){
+  for(const g of Object.values(bldgSpr)){
+    const d=g._d; if(d.type!=='wall'&&d.type!=='door')continue;
+    const rot=d.rot||0;
+    const hw=d.type==='wall'?(rot?13:20):(rot?20:17), hh=d.type==='wall'?(rot?20:13):(rot?17:20);
+    if(segIntersectsRect(ax,ay,bx,by,d.x-hw,d.y-hh,d.x+hw,d.y+hh))return true;
+  }
+  return false;
+}
+function getSnapPos(wx,wy){
+  const edges=[{dx:0,dy:-30,rot:0},{dx:0,dy:30,rot:0},{dx:-30,dy:0,rot:1},{dx:30,dy:0,rot:1}];
+  let best=null,bestDist=55;
+  for(const g of Object.values(bldgSpr)){
+    const d=g._d; if(d.type!=='foundation')continue;
+    for(const e of edges){
+      const ex=d.x+e.dx,ey=d.y+e.dy,dst=dist2(wx,wy,ex,ey);
+      if(dst<bestDist){bestDist=dst;best={x:ex,y:ey,rot:e.rot};}
+    }
+  }
+  return best;
+}
 
 // ── Inventory ─────────────────────────────────────────────────────────────────
 // inv[0..4]: {type, count} | null  — tools: count always 1, resources: stackable
@@ -608,20 +637,37 @@ class Game extends Phaser.Scene {
       gfx.moveTo(x-10,y-30);gfx.lineTo(x-10,y+30);gfx.moveTo(x+10,y-30);gfx.lineTo(x+10,y+30);
       gfx.strokePath(); return;
     } else if(type==='wall'){
-      const c=TC[tier]||TC[0], pCol=mine?c.p:0x666666, rCol=mine?c.r:0x888888, dark=mine?c.d:0x444444;
-      gfx.fillStyle(pCol,1); gfx.fillRoundedRect(x-20,y-13,7,26,3); gfx.fillRoundedRect(x+13,y-13,7,26,3);
-      gfx.lineStyle(1.5,dark,1); gfx.strokeRoundedRect(x-20,y-13,7,26,3); gfx.strokeRoundedRect(x+13,y-13,7,26,3);
-      gfx.fillStyle(rCol,1); gfx.fillRoundedRect(x-15,y-9,30,5,2); gfx.fillRoundedRect(x-15,y+4,30,5,2);
-      gfx.lineStyle(1,dark,0.7); gfx.strokeRoundedRect(x-15,y-9,30,5,2); gfx.strokeRoundedRect(x-15,y+4,30,5,2);
+      const c=TC[tier]||TC[0], pCol=mine?c.p:0x666666, rCol=mine?c.r:0x888888, dark=mine?c.d:0x444444, rot=d.rot||0;
+      if(rot===0){
+        gfx.fillStyle(pCol,1); gfx.fillRoundedRect(x-20,y-13,7,26,3); gfx.fillRoundedRect(x+13,y-13,7,26,3);
+        gfx.lineStyle(1.5,dark,1); gfx.strokeRoundedRect(x-20,y-13,7,26,3); gfx.strokeRoundedRect(x+13,y-13,7,26,3);
+        gfx.fillStyle(rCol,1); gfx.fillRoundedRect(x-15,y-9,30,5,2); gfx.fillRoundedRect(x-15,y+4,30,5,2);
+        gfx.lineStyle(1,dark,0.7); gfx.strokeRoundedRect(x-15,y-9,30,5,2); gfx.strokeRoundedRect(x-15,y+4,30,5,2);
+      } else {
+        gfx.fillStyle(pCol,1); gfx.fillRoundedRect(x-13,y-20,26,7,3); gfx.fillRoundedRect(x-13,y+13,26,7,3);
+        gfx.lineStyle(1.5,dark,1); gfx.strokeRoundedRect(x-13,y-20,26,7,3); gfx.strokeRoundedRect(x-13,y+13,26,7,3);
+        gfx.fillStyle(rCol,1); gfx.fillRoundedRect(x-9,y-15,5,30,2); gfx.fillRoundedRect(x+4,y-15,5,30,2);
+        gfx.lineStyle(1,dark,0.7); gfx.strokeRoundedRect(x-9,y-15,5,30,2); gfx.strokeRoundedRect(x+4,y-15,5,30,2);
+      }
     } else if(type==='door'){
-      const c=TC[tier]||TC[0], frame=mine?c.d:0x444444, panel=mine?c.p:0x666666, dark=mine?c.d:0x222222;
-      gfx.fillStyle(frame,1).fillRect(x-17,y-20,34,40); gfx.fillStyle(panel,1).fillRect(x-12,y-17,24,34);
-      gfx.lineStyle(1,dark,0.5);
-      for(let row=y-13;row<y+14;row+=8){gfx.moveTo(x-10,row);gfx.lineTo(x+10,row);}
-      gfx.moveTo(x-10,y-17);gfx.lineTo(x+10,y+17); gfx.strokePath();
-      gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+8:x-8,y,3);
-      gfx.lineStyle(2,dark,1).strokeRect(x-17,y-20,34,40);
-      if(mine)gfx.fillStyle(0x27ae60,0.8).fillCircle(x,y-25,4);
+      const c=TC[tier]||TC[0], frame=mine?c.d:0x444444, panel=mine?c.p:0x666666, dark=mine?c.d:0x222222, rot=d.rot||0;
+      if(rot===0){
+        gfx.fillStyle(frame,1).fillRect(x-17,y-20,34,40); gfx.fillStyle(panel,1).fillRect(x-12,y-17,24,34);
+        gfx.lineStyle(1,dark,0.5);
+        for(let row=y-13;row<y+14;row+=8){gfx.moveTo(x-10,row);gfx.lineTo(x+10,row);}
+        gfx.moveTo(x-10,y-17);gfx.lineTo(x+10,y+17); gfx.strokePath();
+        gfx.fillStyle(0xf0c040,1).fillCircle(mine?x+8:x-8,y,3);
+        gfx.lineStyle(2,dark,1).strokeRect(x-17,y-20,34,40);
+        if(mine)gfx.fillStyle(0x27ae60,0.8).fillCircle(x,y-25,4);
+      } else {
+        gfx.fillStyle(frame,1).fillRect(x-20,y-17,40,34); gfx.fillStyle(panel,1).fillRect(x-17,y-12,34,24);
+        gfx.lineStyle(1,dark,0.5);
+        for(let col=x-13;col<x+14;col+=8){gfx.moveTo(col,y-10);gfx.lineTo(col,y+10);}
+        gfx.moveTo(x-17,y-10);gfx.lineTo(x+17,y+10); gfx.strokePath();
+        gfx.fillStyle(0xf0c040,1).fillCircle(x,mine?y+8:y-8,3);
+        gfx.lineStyle(2,dark,1).strokeRect(x-20,y-17,40,34);
+        if(mine)gfx.fillStyle(0x27ae60,0.8).fillCircle(x+25,y,4);
+      }
     } else if(type==='tc'){
       const cc=mine?0x6a4a2a:0x3a2808;
       gfx.fillStyle(cc,1).fillRect(x-16,y-20,32,34);
@@ -791,6 +837,7 @@ class Game extends Phaser.Scene {
       const d=spr._d;
       if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+20)continue;
+      if(pathBlocked(state.x,state.y,d.x,d.y))continue;
       const picked=[];
       for(const type of [...RESOURCES,...TOOLS]){
         const cnt=d[type]||0; if(cnt<1)continue;
@@ -894,26 +941,31 @@ class Game extends Phaser.Scene {
   }
 
   placeBuilding(ptr){
-    const cost=BLDG_COST[buildType];
-    if(!cost){return;}
-    // Block building inside enemy TC zone
+    const cost=BLDG_COST[buildType]; if(!cost)return;
+    let placeX=Math.round(ptr.worldX), placeY=Math.round(ptr.worldY), extra={};
+    if(buildType==='wall'||buildType==='door'){
+      const snap=getSnapPos(ptr.worldX,ptr.worldY);
+      if(!snap){this.pop(this.pbody.x,this.pbody.y-30,'Snap to a floor tile first!','#e74c3c');return;}
+      for(const[,g] of Object.entries(bldgSpr)){
+        const bd=g._d;
+        if((bd.type==='wall'||bd.type==='door')&&Math.abs(bd.x-snap.x)<8&&Math.abs(bd.y-snap.y)<8){
+          this.pop(this.pbody.x,this.pbody.y-30,'Already built there!','#e74c3c');return;
+        }
+      }
+      placeX=snap.x; placeY=snap.y; extra={tier:0,rot:snap.rot};
+    }
     for(const[,tg] of Object.entries(bldgSpr)){
       const td=tg._d; if(td.type!=='tc')continue;
       if(td.ownerId===PID||(state.teamId&&td.teamId===state.teamId))continue;
-      if(dist2(ptr.worldX,ptr.worldY,td.x,td.y)<TC_ZONE){
-        this.pop(this.pbody.x,this.pbody.y-30,'Enemy cabinet blocks building here!','#e74c3c'); return;
-      }
+      if(dist2(placeX,placeY,td.x,td.y)<TC_ZONE){this.pop(this.pbody.x,this.pbody.y-30,'Enemy cabinet blocks building here!','#e74c3c');return;}
     }
-    for(const [res,amt] of Object.entries(cost)){
-      if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}
-    }
-    for(const [res,amt] of Object.entries(cost))invRemove(res,amt);
+    for(const[res,amt]of Object.entries(cost)){if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}}
+    for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
     const id=buildType[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
-    const extra=(buildType==='wall'||buildType==='door')?{tier:0}:{};
-    set(ref(db,'buildings/'+id),{x:Math.round(ptr.worldX),y:Math.round(ptr.worldY),type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
-    if(buildType==='tc')this.pop(ptr.worldX,ptr.worldY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
-    if(buildType==='monument')this.pop(ptr.worldX,ptr.worldY-40,'Monument! Stand on it 90s to win!','#f0c040');
+    set(ref(db,'buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
+    if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
+    if(buildType==='monument')this.pop(placeX,placeY-40,'Monument! Stand on it 90s to win!','#f0c040');
   }
 
   resolveWalls(){
@@ -923,7 +975,8 @@ class Game extends Phaser.Scene {
       if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
       if(d.type==='door'&&d.ownerId===PID)continue;
       if(d.type==='door'&&state.teamId&&d.teamId===state.teamId)continue;
-      const hw=d.type==='wall'?20:17, hh=d.type==='wall'?13:20;
+      const rot=d.rot||0;
+      const hw=d.type==='wall'?(rot?13:20):(rot?20:17), hh=d.type==='wall'?(rot?20:13):(rot?17:20);
       const nearX=Math.max(d.x-hw,Math.min(px,d.x+hw)), nearY=Math.max(d.y-hh,Math.min(py,d.y+hh));
       const dx=px-nearX, dy=py-nearY, dst=Math.sqrt(dx*dx+dy*dy);
       if(dst<P_RAD&&dst>0.01){const push=P_RAD-dst; px+=(dx/dst)*push; py+=(dy/dst)*push;}
@@ -1004,7 +1057,9 @@ class Game extends Phaser.Scene {
       // wall push
       for(const g of Object.values(bldgSpr)){
         const bd=g._d; if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
-        const hw=20,hh=13,nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
+        const rot=bd.rot||0;
+        const hw=bd.type==='wall'?(rot?13:20):22, hh=bd.type==='wall'?(rot?20:13):22;
+        const nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
         const wdx=w.x-nx,wdy=w.y-ny,wd=Math.sqrt(wdx*wdx+wdy*wdy);
         if(wd<12&&wd>0.01){w.x+=(wdx/wd)*(12-wd);w.y+=(wdy/wd)*(12-wd);}
       }
@@ -1133,7 +1188,14 @@ class Game extends Phaser.Scene {
     if(buildMode){
       const p=this.input.activePointer; bPrev.clear().setVisible(true);
       if(buildType==='foundation'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-30,p.worldY-30,60,60);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-30,p.worldY-30,60,60);}
-      else if(buildType==='door'){bPrev.fillStyle(0xd4a96a,0.35).fillRect(p.worldX-17,p.worldY-20,34,40);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-17,p.worldY-20,34,40);}
+      else if(buildType==='wall'||buildType==='door'){
+        const snap=getSnapPos(p.worldX,p.worldY);
+        const sx=snap?snap.x:p.worldX,sy=snap?snap.y:p.worldY,rot=snap?snap.rot:0;
+        const hw=buildType==='wall'?(rot?13:20):(rot?20:17),hh=buildType==='wall'?(rot?20:13):(rot?17:20);
+        const col=snap?0xd4a96a:0xe74c3c;
+        bPrev.fillStyle(col,0.35).fillRoundedRect(sx-hw,sy-hh,hw*2,hh*2,3);
+        bPrev.lineStyle(2,col,0.7).strokeRoundedRect(sx-hw,sy-hh,hw*2,hh*2,3);
+      }
       else if(buildType==='tc'){bPrev.fillStyle(0x6a4a2a,0.4).fillRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(2,0x27ae60,0.7).strokeRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);}
       else if(buildType==='monument'){bPrev.fillStyle(0xf0c040,0.3).fillRect(p.worldX-15,p.worldY-50,30,65);bPrev.lineStyle(2,0xf0c040,0.8).strokeRect(p.worldX-15,p.worldY-50,30,65);}
       else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,30);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,30);}
@@ -1213,6 +1275,7 @@ new Phaser.Game({
   type:Phaser.AUTO,
   width:window.innerWidth, height:window.innerHeight,
   backgroundColor:'#4a8a3a',
+  scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
   physics:{default:'arcade',arcade:{debug:false}},
   scene:Game
 });
