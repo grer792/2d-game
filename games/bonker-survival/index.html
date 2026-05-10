@@ -236,6 +236,72 @@
       font-family:'Segoe UI',sans-serif; letter-spacing:0.5px;
     }
     .srv-join:hover { background:#ffd060; transform:scale(1.04); }
+    /* ── Inventory Panel ── */
+    #inv-panel {
+      display:none; position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(14,14,14,0.97); border:1px solid #555;
+      padding:18px 20px; border-radius:8px; z-index:30; color:#ddd; min-width:320px;
+    }
+    #inv-panel h3 { color:#f0c040; margin-bottom:6px; font-size:14px; }
+    .inv-section-lbl { font-size:9px; color:#555; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 3px; }
+    .inv-grid-big { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+    .inv-slot-big {
+      border:1px solid #444; border-radius:4px; background:#1e1e1e;
+      padding:4px; text-align:center; cursor:pointer; font-size:17px; min-height:46px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      position:relative; user-select:none; transition:border-color .1s;
+    }
+    .inv-slot-big:hover { border-color:#888; }
+    .inv-slot-big.hotbar-slot { background:#252520; border-color:#666; }
+    .inv-slot-big.drag-src { border-color:#f0c040; background:#2a2010; }
+    .inv-slot-big.drag-over { border-color:#3498db; background:#101828; }
+    .inv-slot-big .ic { font-size:9px; color:#aaa; line-height:1; }
+    /* ── Furnace Panel ── */
+    #furnace-panel {
+      display:none; position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(14,14,14,0.97); border:1px solid #e67e22;
+      padding:20px 24px; border-radius:8px; z-index:30; color:#ddd; min-width:340px;
+    }
+    #furnace-panel h3 { color:#e67e22; margin-bottom:12px; font-size:15px; }
+    .furn-row { display:flex; align-items:center; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
+    .furn-slot {
+      border:1px solid #555; border-radius:6px; background:#181818;
+      width:64px; height:64px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; font-size:22px; position:relative;
+    }
+    .furn-slot .f-lbl { font-size:8px; color:#555; position:absolute; bottom:3px; text-align:center; width:100%; }
+    .furn-slot .f-cnt { font-size:10px; color:#aaa; position:absolute; top:3px; right:5px; }
+    .furn-arrow { font-size:26px; color:#e67e22; }
+    .furn-bar { height:7px; background:#222; border-radius:4px; overflow:hidden; margin-bottom:10px; }
+    .furn-bar-fill { height:100%; background:linear-gradient(to right,#c0392b,#e67e22,#f0c040); transition:width .3s; border-radius:4px; }
+    /* ── Workbench Panel ── */
+    #workbench-panel {
+      display:none; position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(14,14,14,0.97); border:1px solid #3498db;
+      padding:20px 24px; border-radius:8px; z-index:30; color:#ddd;
+      min-width:380px; max-width:500px; max-height:82vh; overflow-y:auto;
+    }
+    #workbench-panel h3 { color:#3498db; margin-bottom:4px; font-size:15px; }
+    #workbench-panel .wb-sub { font-size:10px; color:#555; margin-bottom:12px; }
+    /* ── Armor HUD ── */
+    #armor-row { display:flex; gap:3px; margin-top:3px; align-items:center; }
+    .armor-pip { font-size:11px; opacity:0.28; transition:opacity .2s, filter .2s; }
+    .armor-pip.on { opacity:1; filter:drop-shadow(0 0 4px rgba(180,210,255,0.8)); }
+    /* ── Chest grid ── */
+    .chest-inv-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-top:4px; }
+    .cslot {
+      border:1px solid #3a3a3a; border-radius:3px; background:#1a1a1a;
+      font-size:16px; min-height:42px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; cursor:pointer; transition:border-color .1s; position:relative;
+    }
+    .cslot:hover { border-color:#777; }
+    .cslot.hotbar-s { background:#222018; border-color:#555; }
+    .cslot.drag-src { border-color:#f0c040 !important; }
+    .cslot.drag-over { border-color:#3498db !important; background:#0f1820; }
+    .cslot .cc { font-size:9px; color:#999; }
   </style>
 </head>
 <body>
@@ -281,6 +347,12 @@
       <span class="sbar-val" id="ui-fm">500</span>
     </div>
   </div>
+  <div id="armor-row">
+    <span style="font-size:9px;color:#555;margin-right:2px">ARM</span>
+    <span class="armor-pip" id="ap-head" title="Helmet">⛑️</span>
+    <span class="armor-pip" id="ap-chest" title="Vest">🦺</span>
+    <span class="armor-pip" id="ap-legs" title="Greaves">👖</span>
+  </div>
 </div>
 
 <div id="night-overlay" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:10;"></div>
@@ -309,6 +381,8 @@
   <span class="bopt"      id="bopt-monument"   onclick="setBuildType('monument')">[6] Monument 20🪵20🪨10🍎</span>
   <span class="bopt"      id="bopt-roof"         onclick="setBuildType('roof')">[7] Roof 2🪵</span>
   <span class="bopt"      id="bopt-sleeping_bag" onclick="setBuildType('sleeping_bag')">[8] Bed 3🪵</span>
+  <span class="bopt"      id="bopt-workbench"   onclick="setBuildType('workbench')">[9] Workbench 20🪵5🪨</span>
+  <span class="bopt"      id="bopt-furnace"     onclick="setBuildType('furnace')">[0] Furnace 15🪨5🔩</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -327,17 +401,17 @@
   <div id="craft-list"></div>
 </div>
 
-<div id="chest-panel" class="panel" style="min-width:400px">
+<div id="chest-panel" class="panel" style="min-width:460px">
   <button class="close-btn" onclick="document.getElementById('chest-panel').style.display='none'">✕</button>
   <h3>📦 CHEST</h3>
   <div class="chest-cols">
     <div class="chest-col">
       <h4>YOUR INVENTORY</h4>
-      <div id="inv-grid"></div>
+      <div id="inv-grid" class="chest-inv-grid"></div>
     </div>
     <div class="chest-col">
       <h4>CHEST CONTENTS</h4>
-      <div id="chest-contents"></div>
+      <div id="chest-contents" class="chest-inv-grid"></div>
     </div>
   </div>
 </div>
@@ -372,17 +446,83 @@
       <span style="color:#2ecc71">⚑</span> Base &nbsp;
       <span style="color:#4090e0">●</span> Water &nbsp;
       <span style="color:#c0392b">✕</span> Last death &nbsp;
-      <span style="color:#fff">●</span> You
+      <span style="color:#fff">●</span> You<br>
+      <span style="color:#285018">●</span> Trees &nbsp;
+      <span style="color:#a04010">●</span> Iron &nbsp;
+      <span style="color:#202030">●</span> Coal &nbsp;
+      <span style="color:#c8b010">●</span> Sulfur
     </div>
   </div>
 </div>
 
+<div id="inv-panel">
+  <button class="close-btn" onclick="document.getElementById('inv-panel').style.display='none'">✕</button>
+  <h3>🎒 INVENTORY</h3>
+  <div class="inv-section-lbl">Hotbar (1–5)</div>
+  <div class="inv-grid-big" id="inv-hotbar-grid"></div>
+  <div class="inv-section-lbl">Backpack</div>
+  <div class="inv-grid-big" id="inv-pack-grid"></div>
+  <div class="inv-section-lbl" style="margin-top:10px">Armor</div>
+  <div style="display:flex;gap:8px;margin-top:4px" id="inv-armor-row">
+    <div class="inv-slot-big" id="iap-head" onclick="invArmorSlotClick('head')" title="Helmet slot" style="border-color:#3a4a5a">
+      <span id="iap-head-icon" style="font-size:20px">⛑️</span><span class="ic" style="color:#444">HEAD</span>
+    </div>
+    <div class="inv-slot-big" id="iap-chest" onclick="invArmorSlotClick('chest')" title="Chest slot" style="border-color:#3a4a5a">
+      <span id="iap-chest-icon" style="font-size:20px">🦺</span><span class="ic" style="color:#444">CHEST</span>
+    </div>
+    <div class="inv-slot-big" id="iap-legs" onclick="invArmorSlotClick('legs')" title="Legs slot" style="border-color:#3a4a5a">
+      <span id="iap-legs-icon" style="font-size:20px">👖</span><span class="ic" style="color:#444">LEGS</span>
+    </div>
+  </div>
+</div>
+
+<div id="furnace-panel">
+  <button class="close-btn" onclick="closeFurnace()">✕</button>
+  <h3>🔥 FURNACE</h3>
+  <div class="furn-row">
+    <div class="furn-slot" id="furn-in-slot">
+      <span id="furn-in-icon">—</span>
+      <span class="f-cnt" id="furn-in-cnt"></span>
+      <span class="f-lbl">ORE INPUT</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="furn-slot" id="furn-fuel-slot">
+        <span id="furn-fuel-icon">—</span>
+        <span class="f-cnt" id="furn-fuel-cnt"></span>
+        <span class="f-lbl">FUEL</span>
+      </div>
+    </div>
+    <div class="furn-arrow">⇒</div>
+    <div class="furn-slot" id="furn-out-slot">
+      <span id="furn-out-icon">—</span>
+      <span class="f-cnt" id="furn-out-cnt"></span>
+      <span class="f-lbl">OUTPUT</span>
+    </div>
+    <button onclick="furnaceTakeOutput()" id="furn-take-btn" disabled style="align-self:center">Take</button>
+  </div>
+  <div class="furn-bar"><div class="furn-bar-fill" id="furn-bar-fill" style="width:0%"></div></div>
+  <div style="font-size:11px;color:#777;margin-bottom:10px" id="furn-status">Select ore and fuel, then smelt.</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button onclick="furnaceSmelt('iron_ore','coal',1)">Smelt Iron (coal)</button>
+    <button onclick="furnaceSmelt('iron_ore','wood',2)">Smelt Iron (2 wood)</button>
+    <button onclick="furnaceSmeltAll()">Smelt All Iron</button>
+  </div>
+  <div style="font-size:10px;color:#555;margin-top:8px">iron ore + coal → 🔩 metal &nbsp;|&nbsp; iron ore + 2 wood → 🔩 metal</div>
+</div>
+
+<div id="workbench-panel">
+  <button class="close-btn" onclick="document.getElementById('workbench-panel').style.display='none'">✕</button>
+  <h3>🔧 T1 WORKBENCH</h3>
+  <div class="wb-sub">Advanced crafting — must be near a placed workbench</div>
+  <div id="wb-list"></div>
+</div>
+
 <div id="hint">
-  WASD: move &nbsp; T: team &nbsp; C: craft &nbsp; E: eat &nbsp; F: drink &nbsp; G: map<br>
-  Build: Floor → Walls → Door → Cabinet → Bed (respawn point, max 3)<br>
-  🔒 Enemy chests must be raided — fists barely dent walls, use tools<br>
-  🔨 Hammer: click own wall/door to upgrade (wood→stone→metal)<br>
-  🐺 Wolves at night — stay in your base!
+  WASD: move &nbsp; I: inventory &nbsp; C: basic craft &nbsp; G: map<br>
+  Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace<br>
+  ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
+  🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Explosive damages bases<br>
+  🔒 Enemy chests must be raided — fists barely dent walls
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
@@ -435,13 +575,29 @@ const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
 const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
-const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60, sleeping_bag:60 };
-const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10}, roof:{wood:2}, sleeping_bag:{wood:3} };
+const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60, sleeping_bag:60, workbench:150, furnace:200 };
+const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10}, roof:{wood:2}, sleeping_bag:{wood:3}, workbench:{wood:20,stone:5}, furnace:{stone:15,metal:5} };
 const FIST_BLDG_DMG=1, BAG_COOLDOWN=120000, MAX_BAGS=3, RESPAWN_DELAY=5000;
 const WALL_TIERS=[{hp:120},{hp:400,upg:{stone:5}},{hp:800,upg:{metal:5}}];
 const DOOR_TIERS=[{hp:80},{hp:250,upg:{stone:3}},{hp:600,upg:{metal:3}}];
-const RES_DEF  ={ tree:{maxHp:3,loot:'wood',hitR:22}, rock:{maxHp:5,loot:'stone',hitR:18}, ore:{maxHp:4,loot:'metal',hitR:16}, bush:{maxHp:1,loot:'food',hitR:14} };
-const RES_DROP ={ tree:()=>2+Math.floor(Math.random()*3), rock:()=>1+Math.floor(Math.random()*3), ore:()=>2+Math.floor(Math.random()*2), bush:()=>1+Math.floor(Math.random()*2) };
+const RES_DEF  ={
+  tree:{maxHp:3,loot:'wood',hitR:22},
+  rock:{maxHp:5,loot:'stone',hitR:18},
+  ore:{maxHp:4,loot:'metal',hitR:16},
+  bush:{maxHp:1,loot:'food',hitR:14},
+  iron:{maxHp:5,loot:'iron_ore',hitR:17,needPick:true},
+  coal:{maxHp:4,loot:'coal',hitR:16,needPick:true},
+  sulfur:{maxHp:4,loot:'sulfur',hitR:16,needPick:true},
+};
+const RES_DROP ={
+  tree:()=>2+Math.floor(Math.random()*3),
+  rock:()=>1+Math.floor(Math.random()*3),
+  ore:()=>2+Math.floor(Math.random()*2),
+  bush:()=>1+Math.floor(Math.random()*2),
+  iron:()=>2+Math.floor(Math.random()*3),
+  coal:()=>2+Math.floor(Math.random()*3),
+  sulfur:()=>1+Math.floor(Math.random()*3),
+};
 const RECIPES  =[
   {id:'axe',   name:'🪓 Stone Axe',   cost:{wood:5,stone:3}},
   {id:'pick',  name:'⛏ Stone Pick',  cost:{wood:3,stone:5}},
@@ -449,9 +605,28 @@ const RECIPES  =[
   {id:'msword',name:'🗡️ Metal Sword', cost:{metal:8,stone:2}},
   {id:'hammer',name:'🔨 Hammer',      cost:{wood:2}},
 ];
-const ITEM_ICON={ axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', hammer:'🔨', wood:'🪵', stone:'🪨', metal:'🔩', food:'🍎' };
-const TOOLS=['axe','pick','sword','msword','hammer'];
-const RESOURCES=['wood','stone','metal','food'];
+const WB_RECIPES=[
+  {id:'bow',         name:'🏹 Bow',          cost:{wood:10,stone:5},   ammo:'arrow'},
+  {id:'crossbow',    name:'🎯 Crossbow',     cost:{wood:5,metal:3},    ammo:'bolt'},
+  {id:'arrow',       name:'🏹 Arrows x10',   cost:{wood:5,stone:1},    count:10, id2:'arrow'},
+  {id:'bolt',        name:'🔩 Bolts x5',     cost:{metal:2},           count:5,  id2:'bolt'},
+  {id:'armor_head',  name:'⛑️ Helmet',       cost:{metal:6}},
+  {id:'armor_chest', name:'🦺 Vest',         cost:{metal:12}},
+  {id:'armor_legs',  name:'👖 Greaves',      cost:{metal:8}},
+  {id:'explosive',   name:'💣 Explosive x1', cost:{metal:4,sulfur:6,coal:2}, count:1, id2:'explosive'},
+];
+const ITEM_ICON={
+  axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', hammer:'🔨',
+  wood:'🪵', stone:'🪨', metal:'🔩', food:'🍎',
+  iron_ore:'🟤', coal:'⬛', sulfur:'🟡',
+  explosive:'💣', bow:'🏹', crossbow:'🎯', arrow:'🏹', bolt:'🔩',
+  armor_head:'⛑️', armor_chest:'🦺', armor_legs:'👖',
+};
+const TOOLS=['axe','pick','sword','msword','hammer','bow','crossbow'];
+const RESOURCES=['wood','stone','metal','food','iron_ore','coal','sulfur','explosive','arrow','bolt','armor_head','armor_chest','armor_legs'];
+const BOW_RNG=ATK_RNG*2, CROSSBOW_RNG=ATK_RNG*2.4, BOW_DMG=18, CROSSBOW_DMG=28;
+const ARMOR_REDUCE={head:0.10,chest:0.20,legs:0.10};
+const EXP_BUILD_DMG=80;
 
 function seededRand(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(1664525,s)+1013904223)>>>0; return s/0x100000000; }; }
 const _wr=seededRand(77777);
@@ -535,15 +710,20 @@ function getConnectedFoundations(startId){
 }
 
 // ── Inventory ─────────────────────────────────────────────────────────────────
-// inv[0..4]: {type, count} | null  — tools: count always 1, resources: stackable
-const inv = Array(5).fill(null);
+// inv[0..4]: hotbar   inv[5..24]: backpack (20 slots)
+const INV_SIZE=25, HOTBAR_SIZE=5;
+const inv = Array(INV_SIZE).fill(null);
 
 function invAdd(type, count){
-  // Stack on existing slot of same type
-  for(let i=0;i<5;i++){ if(inv[i]&&inv[i].type===type){inv[i].count+=count;refreshHotbar();return true;} }
-  // Put in first empty slot
-  for(let i=0;i<5;i++){ if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;} }
-  // Inventory full — drop on ground
+  // Stack on same type first (full inventory)
+  for(let i=0;i<INV_SIZE;i++){ if(inv[i]?.type===type){inv[i].count+=count;refreshHotbar();return true;} }
+  // Tools prefer hotbar
+  if(TOOLS.includes(type)){
+    for(let i=0;i<HOTBAR_SIZE;i++){if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;}}
+  }
+  // First empty slot anywhere
+  for(let i=0;i<INV_SIZE;i++){ if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;} }
+  // Full — drop
   const id='overflow_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
   bag[type]=count; set(sref('loot/'+id),bag);
   return false;
@@ -551,7 +731,7 @@ function invAdd(type, count){
 function invCount(type){ return inv.reduce((s,sl)=>s+(sl?.type===type?sl.count:0),0); }
 function invRemove(type, count){
   let rem=count;
-  for(let i=0;i<5&&rem>0;i++){
+  for(let i=0;i<INV_SIZE&&rem>0;i++){
     if(!inv[i]||inv[i].type!==type)continue;
     const take=Math.min(inv[i].count,rem); inv[i].count-=take; rem-=take;
     if(inv[i].count<=0)inv[i]=null;
@@ -569,16 +749,27 @@ function getActiveTool(){
 }
 
 function refreshHotbar(){
-  for(let i=0;i<5;i++){
+  for(let i=0;i<HOTBAR_SIZE;i++){
     const item=inv[i];
     document.getElementById('si-'+i).textContent=item?(ITEM_ICON[item.type]||'?'):'';
     document.getElementById('sc-'+i).textContent=item?(item.count>1?'x'+item.count:item.type.slice(0,4).toUpperCase()):'';
   }
   if(window._scene)window._scene.updateHUD();
+  refreshArmorHUD();
+}
+function refreshArmorHUD(){
+  ['head','chest','legs'].forEach(slot=>{
+    const el=document.getElementById('ap-'+slot); if(el)el.classList.toggle('on',!!state.armor[slot]);
+  });
+  // Update inv panel armor row if open
+  const h=document.getElementById('iap-head-icon'),c=document.getElementById('iap-chest-icon'),l=document.getElementById('iap-legs-icon');
+  if(h)h.style.opacity=state.armor.head?'1':'0.3';
+  if(c)c.style.opacity=state.armor.chest?'1':'0.3';
+  if(l)l.style.opacity=state.armor.legs?'1':'0.3';
 }
 
 function dropSelected(){
-  if(selectedSlot>=5)return;
+  if(selectedSlot>=HOTBAR_SIZE)return;
   const item=inv[selectedSlot]; if(!item)return;
   const id='drop_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
   bag[item.type]=item.count;
@@ -587,14 +778,51 @@ function dropSelected(){
   window._scene&&window._scene.pop(state.x,state.y-30,'Dropped '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#aaa');
 }
 
+// ── Drag state for inventory/chest panels ────────────────────────────────────
+let invDragSrc=null; // {from:'inv'|'chest', idx:number, res:string}
+window.invDragStart=function(e,from,idxOrRes){
+  invDragSrc={from,idx:typeof idxOrRes==='number'?idxOrRes:null,res:typeof idxOrRes==='string'?idxOrRes:null};
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(()=>{ const el=e.target.closest('.cslot,.inv-slot-big'); if(el)el.classList.add('drag-src'); },0);
+};
+window.invDragOver=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; e.currentTarget.classList.add('drag-over'); };
+window.invDragLeave=function(e){ e.currentTarget.classList.remove('drag-over'); };
+window.invDragEnd=function(){ document.querySelectorAll('.drag-src,.drag-over').forEach(el=>el.classList.remove('drag-src','drag-over')); invDragSrc=null; };
+window.invDrop=function(e,to,idxOrRes){
+  e.preventDefault(); document.querySelectorAll('.drag-src,.drag-over').forEach(el=>el.classList.remove('drag-src','drag-over'));
+  if(!invDragSrc)return;
+  const from=invDragSrc.from, fi=invDragSrc.idx, fr=invDragSrc.res;
+  const ti=typeof idxOrRes==='number'?idxOrRes:null, tr=typeof idxOrRes==='string'?idxOrRes:null;
+  invDragSrc=null;
+  if(from==='inv'&&to==='inv'){ // swap two inventory slots
+    const tmp=inv[fi]; inv[fi]=inv[ti]; inv[ti]=tmp; refreshHotbar(); renderChestPanel(); renderInvPanel();
+  } else if(from==='inv'&&to==='chest'){ // deposit from inv to chest
+    const item=inv[fi]; if(!item)return;
+    if(!RESOURCES.includes(item.type)&&!TOOLS.includes(item.type))return;
+    const d=bldgSpr[activeChestId]?._d; if(!d)return;
+    const cur=(d.storage||{})[item.type]||0;
+    update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
+    inv[fi]=null; refreshHotbar(); setTimeout(renderChestPanel,200);
+  } else if(from==='chest'&&to==='inv'){ // take from chest to inv slot
+    const d=bldgSpr[activeChestId]?._d; if(!d)return;
+    const stored=(d.storage||{})[fr]||0; if(!stored)return;
+    if(ti!==null){ // drop onto specific slot
+      const existing=inv[ti];
+      if(!existing){ inv[ti]={type:fr,count:stored}; update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); refreshHotbar(); setTimeout(renderChestPanel,200); }
+      else if(existing.type===fr){ existing.count+=stored; update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); refreshHotbar(); setTimeout(renderChestPanel,200); }
+    } else { invAdd(fr,stored); update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); setTimeout(renderChestPanel,200); }
+  }
+};
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const state={
   x:400+Math.random()*(MAP_W-800), y:400+Math.random()*(MAP_H-800),
   hp:MAX_HP, food_meter:MAX_FOOD, thirst:MAX_THIRST,
-  score:0, teamId:null, dirX:0, dirY:-1
+  score:0, teamId:null, dirX:0, dirY:-1,
+  armor:{head:false, chest:false, legs:false}
 };
 const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}, roofSpr={};
-let activeChestId=null, chatOpen=false;
+let activeChestId=null, activeFurnaceId=null, activeWorkbenchId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
 let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
@@ -652,44 +880,59 @@ window.craftItem=function(id){
 
 // ── Chest ─────────────────────────────────────────────────────────────────────
 function renderChestPanel(){
-  // Left: inventory
-  document.getElementById('inv-grid').innerHTML=inv.map((item,i)=>{
-    if(!item)return`<div class="inv-slot" onclick="chestDepFromSlot(${i})" title="Empty slot ${i+1}"></div>`;
-    const canDeposit=RESOURCES.includes(item.type);
-    return`<div class="inv-slot" onclick="${canDeposit?`chestDepFromSlot(${i})`:''}" title="${canDeposit?'Click to deposit':'Tools cannot be stored'}">
-      <div>${ITEM_ICON[item.type]||'?'}</div>
-      <div class="inv-count">${item.count>1?item.count:''}</div>
+  // Left: full 25-slot inventory with drag-drop
+  const leftEl=document.getElementById('inv-grid');
+  leftEl.innerHTML=inv.map((item,i)=>{
+    const isHotbar=i<HOTBAR_SIZE;
+    const icon=item?(ITEM_ICON[item.type]||'?'):'';
+    const cnt=item&&item.count>1?item.count:'';
+    return`<div class="cslot${isHotbar?' hotbar-s':''}"
+      draggable="${item?'true':'false'}"
+      ondragstart="invDragStart(event,'inv',${i})" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
+      ondrop="invDrop(event,'inv',${i})" ondragend="invDragEnd()"
+      onclick="chestInvClick(${i})"
+      title="${isHotbar?'Hotbar '+(i+1):'Backpack slot '+(i-HOTBAR_SIZE+1)}">
+      <span style="font-size:17px">${icon}</span><span class="cc">${cnt}</span>
     </div>`;
   }).join('');
-  // Right: chest
+  // Right: chest storage
   const d=bldgSpr[activeChestId]?._d; const s=d?.storage||{};
-  document.getElementById('chest-contents').innerHTML=RESOURCES.map(res=>{
-    const amt=s[res]||0;
-    return`<div class="chest-item">
-      <span class="ci-left">${ITEM_ICON[res]} <span>${res} x${amt}</span></span>
-      <button onclick="chestWithdraw('${res}')" ${amt<1?'disabled':''}>Take</button>
+  const allItems=Object.entries(s).filter(([,v])=>v>0);
+  // Show filled slots + some empty slots
+  const chestSlots=[];
+  for(const[res,amt] of allItems) chestSlots.push({res,amt});
+  // pad to at least 20 slots
+  while(chestSlots.length<20) chestSlots.push({res:null,amt:0});
+  document.getElementById('chest-contents').innerHTML=chestSlots.map((slot,i)=>{
+    const icon=slot.res?(ITEM_ICON[slot.res]||'?'):'';
+    return`<div class="cslot"
+      draggable="${slot.res?'true':'false'}"
+      ondragstart="invDragStart(event,'chest','${slot.res||''}')" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
+      ondrop="invDrop(event,'chest','${slot.res||''}')" ondragend="invDragEnd()"
+      onclick="chestSlotClick('${slot.res||''}')"
+      title="${slot.res?slot.res+' x'+slot.amt:'Empty'}">
+      <span style="font-size:17px">${icon}</span><span class="cc">${slot.amt>0?slot.amt:''}</span>
     </div>`;
   }).join('');
 }
-window.chestDepFromSlot=function(i){
+window.chestInvClick=function(i){
   if(!activeChestId)return;
-  const item=inv[i]; if(!item||!RESOURCES.includes(item.type))return;
+  const item=inv[i]; if(!item)return;
   const d=bldgSpr[activeChestId]?._d; if(!d)return;
   const cur=(d.storage||{})[item.type]||0;
   update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
   inv[i]=null; refreshHotbar();
-  setTimeout(renderChestPanel,300);
-  window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+ITEM_ICON[item.type],'#3498db');
+  window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#3498db');
+  setTimeout(renderChestPanel,200);
 };
-window.chestWithdraw=function(res){
-  if(!activeChestId)return;
+window.chestSlotClick=function(res){
+  if(!activeChestId||!res)return;
   const d=bldgSpr[activeChestId]?._d; if(!d)return;
   const stored=(d.storage||{})[res]||0; if(stored<1)return;
-  const take=Math.min(stored,stored); // take all
-  if(invAdd(res,take)){
-    update(sref('buildings/'+activeChestId+'/storage'),{[res]:stored-take});
-    setTimeout(renderChestPanel,300);
-    window._scene&&window._scene.pop(state.x,state.y-34,'Took '+take+'x '+ITEM_ICON[res],'#2ecc71');
+  if(invAdd(res,stored)){
+    update(sref('buildings/'+activeChestId+'/storage'),{[res]:0});
+    window._scene&&window._scene.pop(state.x,state.y-34,'Took '+stored+'x '+(ITEM_ICON[res]||res),'#2ecc71');
+    setTimeout(renderChestPanel,200);
   }
 };
 
@@ -704,6 +947,9 @@ function sendChat(){
 document.getElementById('chat-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault();sendChat();}
   if(e.key==='Escape'){e.preventDefault();closeChat();}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){ e.preventDefault(); } // prevent focus ring tab
 });
 
 // ── Phaser Scene ───────────────────────────────────────────────────────────────
@@ -734,14 +980,17 @@ class Game extends Phaser.Scene {
     this.keys=this.input.keyboard.addKeys({
       up:'W',dn:'S',lt:'A',rt:'D',
       up2:'UP',dn2:'DOWN',lt2:'LEFT',rt2:'RIGHT',
-      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',g:'G',enter:'ENTER',
+      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',g:'G',i:'I',enter:'ENTER',
+      tab:Phaser.Input.Keyboard.KeyCodes.TAB,
       k1:Phaser.Input.Keyboard.KeyCodes.ONE,
       k2:Phaser.Input.Keyboard.KeyCodes.TWO,
       k3:Phaser.Input.Keyboard.KeyCodes.THREE,
       k4:Phaser.Input.Keyboard.KeyCodes.FOUR,
       k5:Phaser.Input.Keyboard.KeyCodes.FIVE,
       k6:Phaser.Input.Keyboard.KeyCodes.SIX,
-      k7:Phaser.Input.Keyboard.KeyCodes.SEVEN
+      k7:Phaser.Input.Keyboard.KeyCodes.SEVEN,
+      k9:Phaser.Input.Keyboard.KeyCodes.NINE,
+      k0:Phaser.Input.Keyboard.KeyCodes.ZERO
     });
     this.input.on('pointerdown',ptr=>this.handleClick(ptr));
     this.setupFirebase();
@@ -782,6 +1031,8 @@ class Game extends Phaser.Scene {
     g.fillStyle(lerpColor(MY_COLOR,0xffffff,0.35),0.5).fillCircle(-3,-3,P_RAD*0.55);
     g.lineStyle(2.5,0x000000,0.85).strokeCircle(0,0,P_RAD);
     if(state.teamId){ g.lineStyle(3,teamColor(state.teamId),0.85).strokeCircle(0,0,P_RAD+4); }
+    const armorCount=(state.armor.head?1:0)+(state.armor.chest?1:0)+(state.armor.legs?1:0);
+    if(armorCount>0){ g.lineStyle(armorCount,0x90b8e0,0.65).strokeCircle(0,0,P_RAD+(state.teamId?8:5)); }
     g.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,7);
     g.lineStyle(1.5,0xc49060,0.9).strokeCircle(hx,hy,7);
     const r1=ang+0.55, r2=ang-0.55;
@@ -789,34 +1040,8 @@ class Game extends Phaser.Scene {
     g.fillCircle(hx+Math.cos(r1)*3.2,hy+Math.sin(r1)*3.2,1.6);
     g.fillCircle(hx+Math.cos(r2)*3.2,hy+Math.sin(r2)*3.2,1.6);
     const tx=Math.cos(ang)*(P_RAD+10), ty=Math.sin(ang)*(P_RAD+10);
-    const tool=getActiveTool();
-    if(tool==='axe'){
-      g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-9,4,16);
-      g.fillStyle(0x9ba8b2,1).fillTriangle(tx-7,ty-9,tx+5,ty-9,tx+1,ty-2);
-      g.lineStyle(1,0x6a7a80,1).strokeTriangle(tx-7,ty-9,tx+5,ty-9,tx+1,ty-2);
-    } else if(tool==='pick'){
-      g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-8,4,14);
-      g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-10,14,4);
-      g.fillTriangle(tx-7,ty-6,tx-1,ty-6,tx-7,ty+2);
-    } else if(tool==='sword'){
-      g.fillStyle(0x8796a0,1).fillRect(tx-2,ty-14,4,20);
-      g.fillStyle(0x9ba8b2,1).fillTriangle(tx-2,ty-14,tx+2,ty-14,tx,ty-26);
-      g.fillStyle(0xc8922a,1).fillRect(tx-6,ty-8,12,4);
-    } else if(tool==='msword'){
-      g.fillStyle(0xd4a830,1).fillRect(tx-2,ty-16,4,22);
-      g.fillStyle(0xf0c040,1).fillTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
-      g.lineStyle(1,0xb88820,1).strokeTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
-      g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-9,14,4);
-    } else if(tool==='hammer'){
-      g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-6,4,14);
-      g.fillStyle(0x9ba8b2,1).fillRect(tx-7,ty-14,14,10);
-      g.lineStyle(1,0x6a7a80,1).strokeRect(tx-7,ty-14,14,10);
-    } else if(tool==='build'){
-      g.fillStyle(0x2d7fc9,0.9).fillRect(tx-6,ty-8,12,14);
-      g.lineStyle(1,0x87ceeb,0.7);
-      g.moveTo(tx-4,ty-5);g.lineTo(tx+4,ty-5); g.moveTo(tx-4,ty-1);g.lineTo(tx+4,ty-1); g.moveTo(tx-4,ty+3);g.lineTo(tx+4,ty+3);
-      g.strokePath(); g.lineStyle(1.5,0x1a5c99,1).strokeRect(tx-6,ty-8,12,14);
-    }
+    const tool=getActiveTool()||inv[selectedSlot]?.type||null;
+    if(tool) drawHeldItem(g,tx,ty,ang,tool);
   }
 
   drawOther(gfx,d){
@@ -832,6 +1057,7 @@ class Game extends Phaser.Scene {
     if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.85).strokeCircle(x,y,P_RAD+4); }
     gfx.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,6);
     gfx.lineStyle(1,0xc49060,0.7).strokeCircle(hx,hy,6);
+    if(d.held){ const tx=x+Math.cos(ang)*(P_RAD+10), ty=y+Math.sin(ang)*(P_RAD+10); drawHeldItem(gfx,tx,ty,ang,d.held); }
     if(d.hp<MAX_HP){ const r=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-P_RAD-8,32*r,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*r,y-P_RAD-8,32*(1-r),4); }
   }
 
@@ -858,6 +1084,27 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xd4a820,1).fillRect(x-7,y-7,4,14); gfx.fillStyle(0xc49020,1).fillRect(x+1,y-4,4,10); gfx.fillStyle(0xf0c030,1).fillRect(x-2,y+1,3,7); gfx.fillStyle(0xe8c040,1).fillRect(x-5,y-1,3,5); gfx.fillStyle(0xffd040,0.8).fillRect(x-6,y-6,2,6);
       gfx.lineStyle(2,0x0f1a28,1).strokeCircle(x-2,y,15);
       if(ratio<0.8){ gfx.lineStyle(2,0x8090a0,1); gfx.beginPath(); gfx.moveTo(x-6,y-10);gfx.lineTo(x+4,y+7); gfx.moveTo(x+5,y-5);gfx.lineTo(x-2,y+9); gfx.strokePath(); }
+    } else if(type==='iron'){
+      gfx.fillStyle(0x000000,0.18).fillEllipse(x+4,y+16,40,13);
+      gfx.fillStyle(0x3a2018,1).fillCircle(x-2,y,15); gfx.fillStyle(0x4a2e22,1).fillCircle(x+8,y-2,11);
+      gfx.fillStyle(0x2e1810,1).fillCircle(x-1,y+5,9); gfx.fillStyle(0x4a3028,1).fillCircle(x-7,y-6,7);
+      gfx.fillStyle(0xc84a18,1).fillRect(x-8,y-6,3,12); gfx.fillStyle(0xa83818,1).fillRect(x+1,y-4,3,8);
+      gfx.fillStyle(0xd46030,0.8).fillRect(x-3,y+2,2,5);
+      gfx.lineStyle(2,0x180e08,1).strokeCircle(x-2,y,15);
+      if(ratio<0.8){ gfx.lineStyle(1.5,0x8a4020,1); gfx.beginPath(); gfx.moveTo(x-5,y-8);gfx.lineTo(x+3,y+5); gfx.moveTo(x+4,y-3);gfx.lineTo(x-2,y+8); gfx.strokePath(); }
+    } else if(type==='coal'){
+      gfx.fillStyle(0x000000,0.22).fillEllipse(x+4,y+16,38,12);
+      gfx.fillStyle(0x181818,1).fillCircle(x-2,y,15); gfx.fillStyle(0x222222,1).fillCircle(x+8,y-2,11);
+      gfx.fillStyle(0x141414,1).fillCircle(x-1,y+5,9); gfx.fillStyle(0x2a2a2a,1).fillCircle(x-7,y-6,6);
+      gfx.fillStyle(0x4040a0,0.25).fillCircle(x-8,y-4,5); gfx.fillStyle(0x606080,0.2).fillCircle(x+4,y-7,4);
+      gfx.lineStyle(2,0x060606,1).strokeCircle(x-2,y,15);
+    } else if(type==='sulfur'){
+      gfx.fillStyle(0x000000,0.15).fillEllipse(x+4,y+16,38,12);
+      gfx.fillStyle(0x6a5a10,1).fillCircle(x-2,y,15); gfx.fillStyle(0x7a6818,1).fillCircle(x+8,y-2,11);
+      gfx.fillStyle(0x5a4c0c,1).fillCircle(x-1,y+5,9); gfx.fillStyle(0x8a7820,1).fillCircle(x-7,y-6,7);
+      gfx.fillStyle(0xd4c040,1).fillRect(x-7,y-7,4,10); gfx.fillStyle(0xc4b038,1).fillRect(x+1,y-4,4,8);
+      gfx.fillStyle(0xe0d050,0.9).fillRect(x-2,y+2,3,5);
+      gfx.lineStyle(2,0x3a3000,1).strokeCircle(x-2,y,15);
     } else {
       gfx.fillStyle(0x000000,0.12).fillEllipse(x+2,y+15,30,10);
       gfx.fillStyle(0x27863a,1).fillCircle(x-7,y+1,10); gfx.fillStyle(0x2fa347,1).fillCircle(x+6,y+1,10); gfx.fillStyle(0x38c057,1).fillCircle(x,y-4,12);
@@ -993,6 +1240,38 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xf0c040,1).fillTriangle(x-11,y-34,x+11,y-34,x,y-60);
       gfx.lineStyle(2,0xc0a000,1).strokeTriangle(x-11,y-34,x+11,y-34,x,y-60);
       if(d._holdPct>0){gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38);gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44);}
+    } else if(type==='workbench'){
+      gfx.fillStyle(0x000000,0.15).fillEllipse(x+2,y+22,52,14);
+      gfx.fillStyle(0x7a5030,1).fillRect(x-22,y-8,44,14); // table top
+      gfx.fillStyle(0x9a6a40,1).fillRect(x-20,y-10,44,11); // highlight
+      gfx.fillStyle(0x6a4020,1).fillRect(x-18,y+6,6,18);gfx.fillRect(x+12,y+6,6,18); // legs
+      gfx.fillStyle(0x5a3010,1).fillRect(x-18,y+20,6,4);gfx.fillRect(x+12,y+20,6,4); // feet
+      gfx.lineStyle(2,0x4a2808,1).strokeRect(x-22,y-10,44,14);
+      // Tools on bench
+      gfx.lineStyle(1.5,0x9ba8b2,0.8);gfx.beginPath();gfx.moveTo(x-12,y-8);gfx.lineTo(x-8,y-2);gfx.strokePath();
+      gfx.fillStyle(0x8090a0,0.9).fillTriangle(x-14,y-8,x-10,y-8,x-12,y-14);
+      gfx.lineStyle(1.5,0x8b6030,0.8);gfx.beginPath();gfx.moveTo(x+8,y-8);gfx.lineTo(x+12,y-2);gfx.strokePath();
+      gfx.fillStyle(0x7080a0,0.9).fillTriangle(x+6,y-9,x+10,y-9,x+12,y-14);
+      if(mine) gfx.lineStyle(1.5,0x3498db,0.7).strokeRect(x-23,y-11,46,16);
+    } else if(type==='furnace'){
+      gfx.fillStyle(0x000000,0.20).fillEllipse(x+3,y+22,50,14);
+      // Stone body
+      gfx.fillStyle(0x484848,1).fillRect(x-19,y-16,38,34);
+      gfx.fillStyle(0x3a3a3a,1).fillRect(x-17,y-14,34,30);
+      // Chimney
+      gfx.fillStyle(0x404040,1).fillRect(x-6,y-28,12,14);gfx.lineStyle(1,0x282828,1).strokeRect(x-6,y-28,12,14);
+      // Fire opening
+      gfx.fillStyle(0x1a1a1a,1).fillRect(x-11,y-2,22,18);
+      const fireActive=true; // always glowing
+      gfx.fillStyle(0xe05010,0.9).fillRect(x-9,y,18,14);
+      gfx.fillStyle(0xf07020,0.8).fillTriangle(x-8,y+14,x+8,y+14,x-2,y-2);
+      gfx.fillStyle(0xf8a020,0.7).fillTriangle(x-5,y+14,x+5,y+14,x+1,y+2);
+      gfx.fillStyle(0xffd040,0.5).fillTriangle(x-2,y+12,x+2,y+12,x,y+4);
+      // Rivets
+      gfx.fillStyle(0x606060,1);gfx.fillCircle(x-14,y-10,2.5);gfx.fillCircle(x+14,y-10,2.5);
+      gfx.fillCircle(x-14,y+12,2.5);gfx.fillCircle(x+14,y+12,2.5);
+      gfx.lineStyle(2,0x282828,1).strokeRect(x-19,y-16,38,34);
+      if(mine) gfx.lineStyle(1.5,0xe67e22,0.7).strokeRect(x-20,y-17,40,36);
     } else if(type==='sleeping_bag'){
       const bc=mine?0x3a5878:0x283448, ic=mine?0x4a78a8:0x324060;
       gfx.fillStyle(0x000000,0.18).fillEllipse(x+2,y+8,26,9);
@@ -1077,7 +1356,7 @@ class Game extends Phaser.Scene {
 
   seedMap(){
     const batch={};
-    const counts={tree:RES_N,rock:RES_N,bush:RES_N,ore:22};
+    const counts={tree:RES_N,rock:RES_N,bush:RES_N,ore:22,iron:28,coal:24,sulfur:18};
     Object.keys(RES_DEF).forEach(type=>{
       const maxHp=RES_DEF[type].maxHp, n=counts[type]||RES_N;
       for(let i=0;i<n;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
@@ -1094,8 +1373,8 @@ class Game extends Phaser.Scene {
     });
     get(sref('resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
-      const hasOre=keys.some(k=>k.startsWith('ore_'));
-      if(!hasOre||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
+      const hasIron=keys.some(k=>k.startsWith('iron_'));
+      if(!hasIron||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
     });
     onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
     onChildChanged(sref('resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
@@ -1125,8 +1404,10 @@ class Game extends Phaser.Scene {
       const now=Date.now();
       if(from&&lastHitFrom[from]&&now-lastHitFrom[from]<350)return;
       if(from) lastHitFrom[from]=now;
-      state.hp=Math.max(0,state.hp-dmg); sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
-      sc.pop(state.x,state.y-24,'-'+dmg+' HP','#e74c3c');
+      const armorPct=(state.armor.head?ARMOR_REDUCE.head:0)+(state.armor.chest?ARMOR_REDUCE.chest:0)+(state.armor.legs?ARMOR_REDUCE.legs:0);
+      const finalDmg=Math.max(1,Math.round(dmg*(1-armorPct)));
+      state.hp=Math.max(0,state.hp-finalDmg); sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
+      sc.pop(state.x,state.y-24,'-'+finalDmg+(armorPct>0?' 🛡':''),'#e74c3c');
       if(state.hp<=0)sc.handleDeath('⚔️ Killed by '+(playerData[from]?.name||from?.substr(-4).toUpperCase()||'a player'));
     });
     onValue(sref('wolves'),snap=>{
@@ -1144,7 +1425,34 @@ class Game extends Phaser.Scene {
     if(this.tryAtkPlayer(ptr))return;
     if(this.tryHitRes(ptr))return;
     if(this.tryOpenChest(ptr))return;
+    if(this.tryOpenFurnace(ptr))return;
+    if(this.tryOpenWorkbench(ptr))return;
     this.tryAtkBldg(ptr);
+  }
+
+  tryOpenFurnace(ptr){
+    for(const [id,g] of Object.entries(bldgSpr)){
+      const d=g._d; if(d.type!=='furnace')continue;
+      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>30)continue;
+      if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
+      if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){
+        this.pop(d.x,d.y-28,'Not your furnace!','#e74c3c'); return true;
+      }
+      activeFurnaceId=id; openFurnacePanel();
+      return true;
+    }
+    return false;
+  }
+
+  tryOpenWorkbench(ptr){
+    for(const [id,g] of Object.entries(bldgSpr)){
+      const d=g._d; if(d.type!=='workbench')continue;
+      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>32)continue;
+      if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
+      activeWorkbenchId=id; openWorkbenchPanel();
+      return true;
+    }
+    return false;
   }
 
   tryHammerBldg(ptr){
@@ -1213,6 +1521,7 @@ class Game extends Phaser.Scene {
       const cy=d.type==='tree'?d.y-6:d.y;
       if(dist2(ptr.worldX,ptr.worldY,d.x,cy)>RES_DEF[d.type].hitR+8)continue;
       const now=Date.now();
+      if(RES_DEF[d.type]?.needPick&&tool!=='pick'){this.pop(d.x,d.y-30,'Need ⛏ pickaxe!','#d4a830');resHitTime[id]=now;return true;}
       if(d.type==='ore'&&tool!=='pick'){this.pop(d.x,d.y-30,'Need ⛏ for ore!','#d4a830');resHitTime[id]=now;return true;}
       const wrongTool=(d.type==='tree'&&tool!=='axe'&&tool!=='fist')||(d.type==='rock'&&tool!=='pick'&&tool!=='fist');
       const cd=wrongTool?HIT_CD*2.5:HIT_CD;
@@ -1245,13 +1554,19 @@ class Game extends Phaser.Scene {
     if(now-lastAtkTime<380)return false;
     const px=this.pbody.x, py=this.pbody.y;
     const tool=getActiveTool();
+    const isBow=tool==='bow', isCrossbow=tool==='crossbow';
+    const range=isBow?BOW_RNG:isCrossbow?CROSSBOW_RNG:ATK_RNG;
+    const clickRange=isBow||isCrossbow?range:P_RAD*3+10;
     for(const [id,od] of Object.entries(playerData)){
       if(state.teamId&&od.teamId===state.teamId)continue;
       const o=others[id]; if(!o)continue;
       const rx=o.rx??od.x, ry=o.ry??od.y;
-      if(dist2(rx,ry,px,py)>ATK_RNG+20)continue;
-      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD*3+10)continue;
-      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
+      if(dist2(rx,ry,px,py)>range+20)continue;
+      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>clickRange)continue;
+      // Ranged weapons need ammo
+      if(isBow){ if(!invCount('arrow')){this.pop(state.x,state.y-30,'No arrows!','#e74c3c');return false;} invRemove('arrow',1); }
+      if(isCrossbow){ if(!invCount('bolt')){this.pop(state.x,state.y-30,'No bolts!','#e74c3c');return false;} invRemove('bolt',1); }
+      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:isBow?BOW_DMG:isCrossbow?CROSSBOW_DMG:FIST_DMG;
       lastAtkTime=now;
       set(sref('players/'+id+'/hits/'+now),{dmg,from:PID});
       state.score+=5; this.updateHUD();
@@ -1281,7 +1596,9 @@ class Game extends Phaser.Scene {
     if(now-lastBldgAtkTime<400)return;
     const px=this.pbody.x, py=this.pbody.y;
     const tool=getActiveTool();
-    const dmg={msword:30,axe:22,sword:15,pick:12}[tool]||FIST_BLDG_DMG;
+    const heldItem=inv[selectedSlot];
+    const isExplosive=heldItem?.type==='explosive'&&heldItem.count>0;
+    const dmg=isExplosive?EXP_BUILD_DMG:({msword:30,axe:22,sword:15,pick:12}[tool]||FIST_BLDG_DMG);
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
@@ -1289,6 +1606,7 @@ class Game extends Phaser.Scene {
       if(dist2(d.x,d.y,px,py)>maxRange)continue;
       if(Math.abs(ptr.worldX-d.x)>28||Math.abs(ptr.worldY-d.y)>28)continue;
       lastBldgAtkTime=now;
+      if(isExplosive){ invRemove('explosive',1); this.pop(d.x,d.y-20,'💥 BOOM!','#e67e22'); }
       const newHp=d.hp-dmg;
       if(newHp<=0){
         if(d.type==='chest'){
@@ -1297,7 +1615,7 @@ class Game extends Phaser.Scene {
           if(hasDrop) set(sref('loot/cr_'+id),bag);
         }
         remove(sref('buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');
-      } else {update(sref('buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,'#e74c3c');}
+      } else {update(sref('buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,isExplosive?'#e67e22':'#e74c3c');}
       return;
     }
   }
@@ -1376,7 +1694,7 @@ class Game extends Phaser.Scene {
       const d=g._d; let cx,cy,colR;
       if(d.type==='tree'){cx=d.x;cy=d.y+12;colR=9;}
       else if(d.type==='rock'){cx=d.x-2;cy=d.y;colR=15;}
-      else if(d.type==='ore'){cx=d.x-2;cy=d.y;colR=14;}
+      else if(d.type==='ore'||d.type==='iron'||d.type==='coal'||d.type==='sulfur'){cx=d.x-2;cy=d.y;colR=14;}
       else if(d.type==='bush'){cx=d.x;cy=d.y-4;colR=10;}
       else continue;
       const dx=px-cx,dy=py-cy,dst=Math.sqrt(dx*dx+dy*dy),minD=P_RAD+colR;
@@ -1392,16 +1710,18 @@ class Game extends Phaser.Scene {
     isDead=true;
     deathCause=cause;
     deathX=Math.round(state.x); deathY=Math.round(state.y);
-    // Drop all inventory as a loot bag
+    // Drop all inventory as loot
     const bag={x:deathX,y:deathY+20}; let hasDrop=false;
-    for(let i=0;i<5;i++){
+    for(let i=0;i<INV_SIZE;i++){
       const item=inv[i]; if(!item)continue;
       bag[item.type]=(bag[item.type]||0)+item.count; inv[i]=null; hasDrop=true;
     }
     if(hasDrop) set(sref('loot/bag_'+PID+'_'+Date.now()),bag);
+    state.armor={head:false,chest:false,legs:false}; refreshArmorHUD();
     refreshHotbar();
     // Close any open panels
-    ['chest-panel','craft-panel','team-panel'].forEach(id=>document.getElementById(id).style.display='none');
+    ['chest-panel','craft-panel','team-panel','inv-panel','furnace-panel','workbench-panel'].forEach(id=>document.getElementById(id).style.display='none');
+    closeFurnace();
     respawnAllowedAt=Date.now()+RESPAWN_DELAY;
     showDeathScreen();
     this.updateHUD();
@@ -1587,6 +1907,7 @@ class Game extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.esc)){if(buildMode)selectSlot(0);}
     if(Phaser.Input.Keyboard.JustDown(k.t)){const tp=document.getElementById('team-panel');tp.style.display=tp.style.display==='none'?'block':'none';if(tp.style.display==='block')document.getElementById('tp-current').textContent=state.teamId||'None';}
     if(Phaser.Input.Keyboard.JustDown(k.c)){const cp=document.getElementById('craft-panel');if(cp.style.display==='block'){cp.style.display='none';}else{window.openCraftPanel();}}
+    if(Phaser.Input.Keyboard.JustDown(k.i)||Phaser.Input.Keyboard.JustDown(k.tab)){toggleInvPanel();}
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
     if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected();
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
@@ -1596,6 +1917,8 @@ class Game extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.k5))selectSlot(4);
     if(Phaser.Input.Keyboard.JustDown(k.k6))selectSlot(5);
     if(Phaser.Input.Keyboard.JustDown(k.k7)){selectSlot(5);window.setBuildType('roof');}
+    if(Phaser.Input.Keyboard.JustDown(k.k9)){selectSlot(5);window.setBuildType('workbench');}
+    if(Phaser.Input.Keyboard.JustDown(k.k0)){selectSlot(5);window.setBuildType('furnace');}
 
     // F = drink water
     if(Phaser.Input.Keyboard.JustDown(k.f)){
@@ -1751,7 +2074,7 @@ class Game extends Phaser.Scene {
     // Firebase sync
     if(time-lastSync>SYNC_MS){
       lastSync=time;
-      update(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100});
+      update(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100,held:getActiveTool()||inv[selectedSlot]?.type||null});
     }
   }
 }
@@ -1764,6 +2087,255 @@ new Phaser.Game({
   physics:{default:'arcade',arcade:{debug:false}},
   scene:Game
 });
+
+// ── Held Item Renderer ───────────────────────────────────────────────────────
+function drawHeldItem(g,tx,ty,ang,tool){
+  if(tool==='axe'){
+    g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-9,4,16);
+    g.fillStyle(0x9ba8b2,1).fillTriangle(tx-7,ty-9,tx+5,ty-9,tx+1,ty-2);
+    g.lineStyle(1,0x6a7a80,1).strokeTriangle(tx-7,ty-9,tx+5,ty-9,tx+1,ty-2);
+  } else if(tool==='pick'){
+    g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-8,4,14);
+    g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-10,14,4);
+    g.fillTriangle(tx-7,ty-6,tx-1,ty-6,tx-7,ty+2);
+  } else if(tool==='sword'){
+    g.fillStyle(0x8796a0,1).fillRect(tx-2,ty-14,4,20);
+    g.fillStyle(0x9ba8b2,1).fillTriangle(tx-2,ty-14,tx+2,ty-14,tx,ty-26);
+    g.fillStyle(0xc8922a,1).fillRect(tx-6,ty-8,12,4);
+  } else if(tool==='msword'){
+    g.fillStyle(0xd4a830,1).fillRect(tx-2,ty-16,4,22);
+    g.fillStyle(0xf0c040,1).fillTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
+    g.lineStyle(1,0xb88820,1).strokeTriangle(tx-2,ty-16,tx+2,ty-16,tx,ty-30);
+    g.fillStyle(0x8796a0,1).fillRect(tx-7,ty-9,14,4);
+  } else if(tool==='hammer'){
+    g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-6,4,14);
+    g.fillStyle(0x9ba8b2,1).fillRect(tx-7,ty-14,14,10);
+    g.lineStyle(1,0x6a7a80,1).strokeRect(tx-7,ty-14,14,10);
+  } else if(tool==='build'){
+    g.fillStyle(0x2d7fc9,0.9).fillRect(tx-6,ty-8,12,14);
+    g.lineStyle(1,0x87ceeb,0.7);
+    g.beginPath();g.moveTo(tx-4,ty-5);g.lineTo(tx+4,ty-5);g.moveTo(tx-4,ty-1);g.lineTo(tx+4,ty-1);g.moveTo(tx-4,ty+3);g.lineTo(tx+4,ty+3);
+    g.strokePath(); g.lineStyle(1.5,0x1a5c99,1).strokeRect(tx-6,ty-8,12,14);
+  } else if(tool==='wood'){
+    g.fillStyle(0x8b5e3c,1).fillRect(tx-5,ty-5,10,10);
+    g.lineStyle(1,0x5c3a1a,1).strokeRect(tx-5,ty-5,10,10);
+    g.fillStyle(0xc49060,0.6).fillRect(tx-3,ty-3,6,2);
+  } else if(tool==='stone'){
+    g.fillStyle(0x9aacb8,1).fillCircle(tx,ty-2,6);
+    g.lineStyle(1,0x5a6a76,1).strokeCircle(tx,ty-2,6);
+  } else if(tool==='metal'){
+    g.fillStyle(0xd4a820,1).fillRect(tx-5,ty-5,10,10);
+    g.lineStyle(1,0x9a7810,1).strokeRect(tx-5,ty-5,10,10);
+    g.fillStyle(0xf0c030,0.7).fillRect(tx-3,ty-4,6,2);
+  } else if(tool==='food'){
+    g.fillStyle(0xe74c3c,1).fillCircle(tx,ty-2,5);
+    g.fillStyle(0x27ae60,1).fillRect(tx-1,ty-8,2,5);
+  } else if(tool==='iron_ore'){
+    g.fillStyle(0x7a3a20,1).fillRect(tx-5,ty-5,10,10);
+    g.lineStyle(1,0x3a1a08,1).strokeRect(tx-5,ty-5,10,10);
+    g.fillStyle(0xc84a18,0.85).fillRect(tx-3,ty-3,4,6);
+  } else if(tool==='coal'){
+    g.fillStyle(0x1a1a1a,1).fillRect(tx-5,ty-5,10,10);
+    g.lineStyle(1,0x060606,1).strokeRect(tx-5,ty-5,10,10);
+    g.fillStyle(0x4040a0,0.3).fillRect(tx-2,ty-3,4,4);
+  } else if(tool==='sulfur'){
+    g.fillStyle(0x9a8a20,1).fillRect(tx-5,ty-5,10,10);
+    g.lineStyle(1,0x6a5a08,1).strokeRect(tx-5,ty-5,10,10);
+    g.fillStyle(0xd4c040,0.9).fillRect(tx-3,ty-3,5,5);
+  } else if(tool==='explosive'){
+    g.fillStyle(0x303030,1).fillCircle(tx,ty-2,7);
+    g.lineStyle(1,0x1a1a1a,1).strokeCircle(tx,ty-2,7);
+    g.fillStyle(0xc84030,1).fillCircle(tx,ty-2,4);
+    g.lineStyle(2,0x8b5e3c,1);g.beginPath();g.moveTo(tx,ty-9);g.lineTo(tx-2,ty-14);g.strokePath();
+    g.fillStyle(0xf0c040,1).fillCircle(tx-2,ty-14,2);
+  } else if(tool==='bow'){
+    g.lineStyle(3,0x8b5e3c,1);
+    g.beginPath();g.moveTo(tx-8,ty-10);g.quadraticCurveTo(tx+6,ty-2,tx-8,ty+10);g.strokePath();
+    g.fillStyle(0x8b5e3c,1).fillRect(tx-3,ty-12,4,22);
+    g.lineStyle(1,0xeee8aa,0.9);g.beginPath();g.moveTo(tx-8,ty-10);g.lineTo(tx-8,ty+10);g.strokePath();
+  } else if(tool==='crossbow'){
+    g.fillStyle(0x8b5e3c,1).fillRect(tx-2,ty-6,4,18);
+    g.fillStyle(0x9ba8b2,1).fillRect(tx-12,ty-5,24,5);
+    g.fillStyle(0xc0a060,1).fillRect(tx-8,ty-7,16,7);
+    g.lineStyle(1,0xeee8aa,0.85);g.beginPath();g.moveTo(tx-12,ty-3);g.lineTo(tx+12,ty-3);g.strokePath();
+  } else if(tool==='arrow'){
+    g.lineStyle(1.5,0x8b5e3c,1);g.beginPath();g.moveTo(tx,ty-10);g.lineTo(tx,ty+4);g.strokePath();
+    g.fillStyle(0x9ba8b2,1).fillTriangle(tx-3,ty-10,tx+3,ty-10,tx,ty-17);
+  } else if(tool==='bolt'){
+    g.lineStyle(2.5,0x8b5e3c,1);g.beginPath();g.moveTo(tx,ty-8);g.lineTo(tx,ty+4);g.strokePath();
+    g.fillStyle(0xd4a820,1).fillTriangle(tx-3,ty-8,tx+3,ty-8,tx,ty-14);
+  } else if(tool==='armor_head'){
+    g.fillStyle(0x8090a0,1).fillRect(tx-6,ty-7,12,9);
+    g.fillStyle(0xb0c0d0,0.5).fillRect(tx-4,ty-7,8,4);
+    g.lineStyle(1,0x506070,1).strokeRect(tx-6,ty-7,12,9);
+  } else if(tool==='armor_chest'){
+    g.fillStyle(0x7080a0,1).fillRect(tx-7,ty-8,14,13);
+    g.fillStyle(0xa0b0c0,0.4).fillRect(tx-5,ty-8,10,4);
+    g.lineStyle(1,0x405060,1).strokeRect(tx-7,ty-8,14,13);
+  } else if(tool==='armor_legs'){
+    g.fillStyle(0x6070a0,1).fillRect(tx-7,ty-8,6,14);g.fillRect(tx+1,ty-8,6,14);
+    g.lineStyle(1,0x304060,1).strokeRect(tx-7,ty-8,6,14);g.strokeRect(tx+1,ty-8,6,14);
+  }
+}
+
+// ── Inventory Panel ──────────────────────────────────────────────────────────
+window.toggleInvPanel=function(){
+  const p=document.getElementById('inv-panel');
+  if(p.style.display==='block'){ p.style.display='none'; return; }
+  renderInvPanel(); p.style.display='block';
+};
+function toggleInvPanel(){ window.toggleInvPanel(); }
+function renderInvPanel(){
+  function slotHtml(item,i,cls){
+    const icon=item?(ITEM_ICON[item.type]||'?'):'';
+    const cnt=item&&item.count>1?item.count:'';
+    return`<div class="${cls}" draggable="${item?'true':'false'}"
+      ondragstart="invDragStart(event,'inv',${i})" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
+      ondrop="invDrop(event,'inv',${i})" ondragend="invDragEnd()"
+      onclick="invSlotClick(${i})">
+      <span style="font-size:17px">${icon}</span><span class="ic">${cnt}</span>
+    </div>`;
+  }
+  let hotHtml='', packHtml='';
+  for(let i=0;i<HOTBAR_SIZE;i++) hotHtml+=slotHtml(inv[i],i,'inv-slot-big hotbar-slot');
+  for(let i=HOTBAR_SIZE;i<INV_SIZE;i++) packHtml+=slotHtml(inv[i],i,'inv-slot-big');
+  document.getElementById('inv-hotbar-grid').innerHTML=hotHtml;
+  document.getElementById('inv-pack-grid').innerHTML=packHtml;
+  refreshArmorHUD();
+}
+window.invSlotClick=function(i){
+  const item=inv[i]; if(!item)return;
+  // If armor item, equip it
+  if(item.type==='armor_head'||item.type==='armor_chest'||item.type==='armor_legs'){
+    const slot=item.type.replace('armor_','');
+    if(state.armor[slot]){ window._scene&&window._scene.pop(state.x,state.y-30,'Armor slot already equipped!','#e74c3c'); return; }
+    state.armor[slot]=true; invRemove(item.type,1); refreshArmorHUD(); renderInvPanel();
+    window._scene&&window._scene.pop(state.x,state.y-30,item.type+' equipped! -'+(ARMOR_REDUCE[slot]*100)+'% dmg','#2ecc71');
+    return;
+  }
+};
+window.invArmorSlotClick=function(slot){
+  if(!state.armor[slot])return;
+  // Unequip: give back to inventory
+  state.armor[slot]=false;
+  invAdd('armor_'+slot,1); refreshArmorHUD(); renderInvPanel();
+  window._scene&&window._scene.pop(state.x,state.y-30,'Armor removed','#aaa');
+};
+
+// ── Furnace Panel ────────────────────────────────────────────────────────────
+let furnaceSmeltTimer=null, furnaceSmeltProgress=0;
+function openFurnacePanel(){
+  document.getElementById('furnace-panel').style.display='block';
+  renderFurnaceSlots();
+}
+window.closeFurnace=function(){
+  document.getElementById('furnace-panel').style.display='none';
+  if(furnaceSmeltTimer){ clearInterval(furnaceSmeltTimer); furnaceSmeltTimer=null; }
+};
+const closeFurnace=window.closeFurnace;
+function renderFurnaceSlots(){
+  const ironAmt=invCount('iron_ore'), coalAmt=invCount('coal'), woodAmt=invCount('wood');
+  document.getElementById('furn-in-icon').textContent=ironAmt>0?'🟤':'—';
+  document.getElementById('furn-in-cnt').textContent=ironAmt>0?ironAmt:'';
+  document.getElementById('furn-fuel-icon').textContent=coalAmt>0?'⬛':(woodAmt>0?'🪵':'—');
+  document.getElementById('furn-fuel-cnt').textContent=coalAmt>0?coalAmt:(woodAmt>0?woodAmt:'');
+  const outAmt=document.getElementById('furn-out-cnt').textContent||'';
+  document.getElementById('furn-take-btn').disabled=!outAmt;
+}
+window.furnaceSmelt=function(oreType,fuelType,fuelPerOre){
+  if(furnaceSmeltTimer)return;
+  if(invCount(oreType)<1){ window._scene&&window._scene.pop(state.x,state.y-30,'No '+oreType+'!','#e74c3c'); return; }
+  if(invCount(fuelType)<fuelPerOre){ window._scene&&window._scene.pop(state.x,state.y-30,'Need '+fuelPerOre+'x '+(ITEM_ICON[fuelType]||fuelType)+'!','#e74c3c'); return; }
+  invRemove(oreType,1); invRemove(fuelType,fuelPerOre);
+  refreshHotbar(); renderFurnaceSlots();
+  furnaceSmeltProgress=0;
+  const duration=6000, interval=100;
+  document.getElementById('furn-status').textContent='Smelting...';
+  furnaceSmeltTimer=setInterval(()=>{
+    furnaceSmeltProgress+=interval/duration;
+    document.getElementById('furn-bar-fill').style.width=(furnaceSmeltProgress*100)+'%';
+    if(furnaceSmeltProgress>=1){
+      clearInterval(furnaceSmeltTimer); furnaceSmeltTimer=null;
+      document.getElementById('furn-bar-fill').style.width='100%';
+      document.getElementById('furn-out-icon').textContent='🔩';
+      const prev=parseInt(document.getElementById('furn-out-cnt').textContent)||0;
+      document.getElementById('furn-out-cnt').textContent=prev+1;
+      document.getElementById('furn-take-btn').disabled=false;
+      document.getElementById('furn-status').textContent='Done! Click Take to collect.';
+    }
+  },interval);
+};
+window.furnaceSmeltAll=function(){
+  if(furnaceSmeltTimer)return;
+  const ore=invCount('iron_ore'); if(ore<1){ window._scene&&window._scene.pop(state.x,state.y-30,'No iron ore!','#e74c3c'); return; }
+  const coal=invCount('coal'), wood=invCount('wood');
+  let batches=0;
+  for(let r=ore;r>0&&(invCount('coal')>0||invCount('wood')>=2);r--){
+    if(invCount('coal')>0){ invRemove('iron_ore',1); invRemove('coal',1); batches++; }
+    else if(invCount('wood')>=2){ invRemove('iron_ore',1); invRemove('wood',2); batches++; }
+    else break;
+  }
+  if(!batches){ window._scene&&window._scene.pop(state.x,state.y-30,'Not enough fuel!','#e74c3c'); return; }
+  refreshHotbar(); renderFurnaceSlots();
+  furnaceSmeltProgress=0;
+  const duration=6000+batches*1500, interval=100;
+  document.getElementById('furn-status').textContent='Smelting '+batches+' iron...';
+  furnaceSmeltTimer=setInterval(()=>{
+    furnaceSmeltProgress+=interval/duration;
+    document.getElementById('furn-bar-fill').style.width=(Math.min(1,furnaceSmeltProgress)*100)+'%';
+    if(furnaceSmeltProgress>=1){
+      clearInterval(furnaceSmeltTimer); furnaceSmeltTimer=null;
+      document.getElementById('furn-bar-fill').style.width='100%';
+      document.getElementById('furn-out-icon').textContent='🔩';
+      const prev=parseInt(document.getElementById('furn-out-cnt').textContent)||0;
+      document.getElementById('furn-out-cnt').textContent=prev+batches;
+      document.getElementById('furn-take-btn').disabled=false;
+      document.getElementById('furn-status').textContent='Done! '+batches+' metal ready.';
+    }
+  },interval);
+};
+window.furnaceTakeOutput=function(){
+  const cnt=parseInt(document.getElementById('furn-out-cnt').textContent)||0; if(!cnt)return;
+  invAdd('metal',cnt);
+  document.getElementById('furn-out-icon').textContent='—';
+  document.getElementById('furn-out-cnt').textContent='';
+  document.getElementById('furn-take-btn').disabled=true;
+  document.getElementById('furn-bar-fill').style.width='0%';
+  document.getElementById('furn-status').textContent='Select ore and fuel, then smelt.';
+  refreshHotbar(); renderFurnaceSlots();
+  window._scene&&window._scene.pop(state.x,state.y-30,'+'+cnt+' 🔩 Metal','#2ecc71');
+};
+
+// ── Workbench Panel ──────────────────────────────────────────────────────────
+function openWorkbenchPanel(){
+  renderWorkbenchPanel();
+  document.getElementById('workbench-panel').style.display='block';
+}
+function renderWorkbenchPanel(){
+  document.getElementById('wb-list').innerHTML=WB_RECIPES.map(r=>{
+    const id2=r.id2||r.id;
+    const owned=TOOLS.includes(r.id)?invHasTool(r.id):false;
+    const canAfford=invCanAfford(r.cost);
+    const costTxt=Object.entries(r.cost).map(([k,v])=>`${v}${ITEM_ICON[k]||k}`).join(' ');
+    const isTool=TOOLS.includes(r.id);
+    const btnDisabled=(isTool&&owned)||!canAfford;
+    return`<div class="recipe-row">
+      <span class="recipe-name">${r.name}</span>
+      <span class="recipe-cost${canAfford?' ok':''}">${costTxt}</span>
+      <button onclick="craftWB('${r.id}')" ${btnDisabled?'disabled':''}>${isTool&&owned?'✓ Have it':'Craft'}</button>
+    </div>`;
+  }).join('');
+}
+window.craftWB=function(id){
+  const r=WB_RECIPES.find(x=>x.id===id); if(!r)return;
+  if(TOOLS.includes(r.id)&&invHasTool(r.id))return;
+  if(!invCanAfford(r.cost))return;
+  for(const[k,v]of Object.entries(r.cost))invRemove(k,v);
+  const id2=r.id2||r.id, cnt=r.count||1;
+  invAdd(id2,cnt);
+  window._scene&&window._scene.pop(state.x,state.y-34,(ITEM_ICON[id2]||id2)+' crafted!','#3498db');
+  renderWorkbenchPanel();
+};
 
 // ── Death Screen ─────────────────────────────────────────────────────────────
 function showDeathScreen(){
@@ -1844,6 +2416,24 @@ function drawWorldMap(){
     const rx=d.x*sx,ry=d.y*sy;
     ctx.fillStyle='rgba(82,78,72,0.85)';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='rgba(128,122,112,0.55)';ctx.beginPath();ctx.arc(rx-0.5,ry-0.8,1.2,0,Math.PI*2);ctx.fill();
+  }
+  // Iron nodes (rust-red)
+  for(const[,rs]of Object.entries(resSpr)){
+    const d=rs._d;if(!d||d.type!=='iron')continue;
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(160,60,20,0.85)';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
+  }
+  // Coal nodes (near-black)
+  for(const[,rs]of Object.entries(resSpr)){
+    const d=rs._d;if(!d||d.type!=='coal')continue;
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(30,30,40,0.92)';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
+  }
+  // Sulfur nodes (yellow)
+  for(const[,rs]of Object.entries(resSpr)){
+    const d=rs._d;if(!d||d.type!=='sulfur')continue;
+    const rx=d.x*sx,ry=d.y*sy;
+    ctx.fillStyle='rgba(200,180,20,0.85)';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
   }
   // Water (glowing blue)
   for(const w of WATER_SRCS){
