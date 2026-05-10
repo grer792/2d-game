@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bonker Survival - BonkerGames</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sw-icon: 62px;
+  --header-h: 64px;
+  --bar-h: 52px;
+  --pn-w: 250px;
+  --bg: #13131f;
+  --bg2: #1c1c2e;
+  --bg3: #252538;
+  --bg4: #2e2e45;
+  --accent: #7c5cfc;
+  --accent-h: #6a4de0;
+  --text: #ffffff;
+  --text2: #9898b8;
+  --border: rgba(255,255,255,0.07);
+  --red: #ff4d6d;
+  --ease: 0.22s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg); color: var(--text);
+  height: 100vh; overflow: hidden;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ── HEADER ── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 0; z-index: 300;
+}
+.header-left { display: flex; align-items: center; gap: 6px; flex: 1; }
+.hamburger {
+  width: 40px; height: 40px; flex-shrink: 0;
+  background: transparent; border: none; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); transition: background 0.15s, color 0.15s;
+}
+.hamburger:hover { background: var(--bg3); color: var(--text); }
+.hamburger svg { width: 24px; height: 24px; fill: currentColor; }
+.header-logo {
+  display: flex; align-items: center; padding: 4px 8px;
+  border-radius: 10px; transition: background 0.15s; text-decoration: none; color: inherit;
+}
+.header-logo:hover { background: var(--bg3); }
+.logo-img { height: 56px; width: auto; mix-blend-mode: screen; display: block; }
+.header-search { flex: 0 0 420px; position: relative; margin: 0 16px; }
+.header-search input {
+  width: 100%; background: var(--bg3); border: 1.5px solid var(--border);
+  color: var(--text); padding: 10px 18px 10px 44px; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+}
+.header-search input:focus { border-color: var(--accent); }
+.header-search input::placeholder { color: var(--text2); }
+.search-ico {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--text2); display: flex; align-items: center; pointer-events: none;
+}
+.search-ico svg { width: 19px; height: 19px; fill: currentColor; }
+.header-right { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); background: transparent; border: none;
+  transition: background 0.15s, color 0.15s; position: relative;
+}
+.icon-btn:hover { background: var(--bg3); color: var(--text); }
+.icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
+.notif-dot {
+  position: absolute; top: 7px; right: 7px; width: 8px; height: 8px;
+  background: var(--red); border-radius: 50%; border: 2px solid var(--bg2);
+}
+.header-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+.btn-login {
+  background: var(--accent); border: none; color: white;
+  padding: 10px 22px; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: background 0.2s; margin-left: 4px;
+}
+.btn-login:hover { background: var(--accent-h); }
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  height: calc(100vh - var(--header-h));
+  margin-top: var(--header-h);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  flex-shrink: 0; width: var(--sw-icon);
+  background: var(--bg2); border-right: 1px solid var(--border);
+  height: 100%; overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: width var(--ease), box-shadow var(--ease);
+}
+.sidebar:hover { width: 230px; box-shadow: 4px 0 32px rgba(0,0,0,0.5); }
+.sidebar-scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 8px 7px; display: flex; flex-direction: column; gap: 2px;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 0; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 13px;
+  padding: 11px 9px; border-radius: 9px; cursor: pointer;
+  color: var(--text2); font-size: 0.875rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-item.active { background: var(--bg3); color: var(--text); }
+.sidebar-item .ico { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.sidebar-item .ico svg { width: 22px; height: 22px; fill: currentColor; }
+.sidebar-item .label { opacity: 0; transition: opacity var(--ease); }
+.sidebar:hover .sidebar-item .label { opacity: 1; }
+
+/* ── PLAY MAIN ── */
+.play-main {
+  flex: 1; min-width: 0;
+  display: flex; gap: 12px;
+  padding: 12px; overflow: hidden;
+}
+
+/* ── GAME SECTION ── */
+.game-section {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+}
+.game-frame-wrap {
+  flex: 1; position: relative;
+  background: #000; border-radius: 12px 12px 0 0;
+  overflow: hidden; min-height: 0;
+}
+.game-iframe { width: 100%; height: 100%; border: none; display: block; }
+
+/* ── GAME BAR ── */
+.game-bar {
+  height: var(--bar-h); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+.game-bar-left { display: flex; align-items: center; gap: 10px; }
+.bar-logo { height: 30px; width: auto; mix-blend-mode: screen; }
+.bar-game-title { font-size: 0.95rem; font-weight: 700; }
+.game-bar-actions { display: flex; align-items: center; gap: 4px; }
+.bar-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 11px; border-radius: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+  font-family: 'Inter', sans-serif; white-space: nowrap;
+}
+.bar-btn:hover { background: var(--bg4); color: var(--text); }
+.bar-btn svg { width: 17px; height: 17px; fill: currentColor; flex-shrink: 0; }
+.bar-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+
+/* ── PLAY NEXT ── */
+.play-next {
+  width: var(--pn-w); flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto; padding-right: 2px;
+}
+.play-next::-webkit-scrollbar { width: 0; }
+.pn-title { font-size: 0.88rem; font-weight: 700; padding: 2px 0 4px; }
+.pn-card {
+  display: flex; align-items: center;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+}
+.pn-card:hover { border-color: rgba(124,92,252,0.4); transform: translateX(3px); }
+.pn-thumb {
+  width: 80px; height: 64px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; position: relative;
+}
+.pn-overlay {
+  position: absolute; inset: 0; background: rgba(13,13,25,0.55);
+  display: flex; align-items: center; justify-content: center;
+}
+.pn-pill {
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 0.58rem; font-weight: 700;
+  padding: 3px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.pn-info { flex: 1; padding: 0 10px; }
+.pn-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 3px; }
+.pn-meta { font-size: 0.7rem; color: var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" onclick="window.location.href='/'">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <a class="header-logo" href="/">
+      <img src="../../assets/logo.png" alt="BonkerGames" class="logo-img">
+    </a>
+  </div>
+  <div class="header-search">
+    <span class="search-ico">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    </span>
+    <input type="text" placeholder="Search games and categories">
+  </div>
+  <div class="header-right">
+    <button class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <button class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </button>
+    <button class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    </button>
+    <div class="header-divider"></div>
+    <button class="btn-login">Log in</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-scroll">
+      <div class="sidebar-item" onclick="window.location.href='/'">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+        <span class="label">Home</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg></span>
+        <span class="label">Hot games</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg></span>
+        <span class="label">New games</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+        <span class="label">Top rated</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>
+        <span class="label">Favorites</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg></span>
+        <span class="label">Recent</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- PLAY MAIN -->
+  <main class="play-main">
+
+    <!-- Game + bar -->
+    <div class="game-section">
+      <div class="game-frame-wrap" id="gameWrap">
+        <iframe class="game-iframe" id="gameFrame" src="index.html" allowfullscreen allow="fullscreen *"></iframe>
+      </div>
+      <div class="game-bar">
+        <div class="game-bar-left">
+          <img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo">
+          <span class="bar-game-title">Bonker Survival</span>
+        </div>
+        <div class="game-bar-actions">
+          <button class="bar-btn" id="likeBtn" onclick="toggleLike()">
+            <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+            173K
+          </button>
+          <button class="bar-btn" id="dislikeBtn" onclick="toggleDislike()">
+            <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+          </button>
+          <div class="bar-sep"></div>
+          <button class="bar-btn" id="favBtn" onclick="toggleFav()">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            Favorite
+          </button>
+          <div class="bar-sep"></div>
+          <button class="bar-btn" onclick="goFullscreen()">
+            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            Fullscreen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Play next -->
+    <div class="play-next">
+      <div class="pn-title">Play next</div>
+      <div class="pn-card">
+        <div class="pn-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">🏎️
+          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
+        </div>
+        <div class="pn-info">
+          <div class="pn-name">Bonker Racer</div>
+          <div class="pn-meta">Racing · Multiplayer</div>
+        </div>
+      </div>
+      <div class="pn-card">
+        <div class="pn-thumb" style="background:linear-gradient(135deg,#0f2a1a,#1a3a2a);">🧩
+          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
+        </div>
+        <div class="pn-info">
+          <div class="pn-name">Block Bonker</div>
+          <div class="pn-meta">Puzzle · Solo</div>
+        </div>
+      </div>
+      <div class="pn-card">
+        <div class="pn-thumb" style="background:linear-gradient(135deg,#2a1010,#3a1a1a);">🗡️
+          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
+        </div>
+        <div class="pn-info">
+          <div class="pn-name">Bonker Arena</div>
+          <div class="pn-meta">Fighting · Multiplayer</div>
+        </div>
+      </div>
+      <div class="pn-card">
+        <div class="pn-thumb" style="background:linear-gradient(135deg,#0a0a2a,#1a1a3a);">🌌
+          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
+        </div>
+        <div class="pn-info">
+          <div class="pn-name">Space Bonker</div>
+          <div class="pn-meta">Shooting · Multiplayer</div>
+        </div>
+      </div>
+      <div class="pn-card">
+        <div class="pn-thumb" style="background:linear-gradient(135deg,#1a1a10,#2a2a18);">⚽
+          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
+        </div>
+        <div class="pn-info">
+          <div class="pn-name">Bonker Ball</div>
+          <div class="pn-meta">Sports · Multiplayer</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let liked = false, disliked = false, faved = false;
+
+function toggleLike() {
+  liked = !liked;
+  if (liked) disliked = false;
+  document.getElementById('likeBtn').style.color = liked ? '#4ade80' : '';
+  document.getElementById('dislikeBtn').style.color = '';
+}
+function toggleDislike() {
+  disliked = !disliked;
+  if (disliked) liked = false;
+  document.getElementById('dislikeBtn').style.color = disliked ? '#f87171' : '';
+  document.getElementById('likeBtn').style.color = '';
+}
+function toggleFav() {
+  faved = !faved;
+  document.getElementById('favBtn').style.color = faved ? '#ff4d6d' : '';
+  document.getElementById('favBtn').style.background = faved ? 'rgba(255,77,109,0.1)' : '';
+}
+function goFullscreen() {
+  const wrap = document.getElementById('gameWrap');
+  if (wrap.requestFullscreen) wrap.requestFullscreen();
+  else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+  else if (wrap.mozRequestFullScreen) wrap.mozRequestFullScreen();
+}
+</script>
+</body>
+</html>
