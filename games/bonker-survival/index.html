@@ -839,6 +839,7 @@ let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={}, lastDCUpdate=0;
+const projectiles=[];
 let wolfSyncLast=0; const remoteWolves={};
 let regenTimer=0;
 let isDead=false, deathCause='', deathX=0, deathY=0;
@@ -985,6 +986,8 @@ class Game extends Phaser.Scene {
     this.pbody=this.physics.add.image(state.x,state.y,'body');
     this.pbody.setAlpha(0.001).setCollideWorldBounds(true);
     this.pgfx=this.add.graphics();
+    this.wgfx=this.add.graphics();
+    this.projGfx=this.add.graphics().setDepth(50001);
     this.nameTag=this.add.text(0,0,PNAME,{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(99000);
     this.myChatBubble=null;
     this.redrawMe();
@@ -1046,118 +1049,118 @@ class Game extends Phaser.Scene {
   }
 
   redrawMe(){
-    const g=this.pgfx; g.clear();
+    const g=this.pgfx; g.clear(); g.setRotation(0);
     const ang=Math.atan2(state.dirY,state.dirX);
-    // Rotate entire graphics so we only draw one direction (facing "up" in local space)
-    g.setRotation(ang+Math.PI/2);
+    const fX=Math.cos(ang),fY=Math.sin(ang);
+    const pX=-Math.sin(ang),pY=Math.cos(ang); // right-perpendicular to facing
     const tool=getActiveTool()||inv[selectedSlot]?.type||null;
     const held=!!tool;
-    const SK=0xf5c89a, SKO=0xb08050;
-    // Shadow
-    g.fillStyle(0x000000,0.22).fillEllipse(2,18,34,12);
-    // Arms (drawn behind vest)
+    const SK=0xf5c89a,SKO=0xb08050;
+    // Shadow (fixed offset, never rotates)
+    g.fillStyle(0x000000,0.2).fillEllipse(4,5,32,12);
+    // Feet (behind body)
+    g.fillStyle(0x2a1a0a,1);
+    g.fillEllipse(-fX*9+pX*4,-fY*9+pY*4,9,6);
+    g.fillEllipse(-fX*9-pX*4,-fY*9-pY*4,9,6);
+    // Arm endpoints
+    const lsx=pX*9,lsy=pY*9,rsx=-pX*9,rsy=-pY*9;
+    let lhx,lhy,rhx,rhy;
+    if(held){
+      lhx=fX*13+pX*7;lhy=fY*13+pY*7;
+      rhx=fX*13-pX*7;rhy=fY*13-pY*7;
+    }else{
+      lhx=-fX*4+pX*14;lhy=-fY*4+pY*14;
+      rhx=-fX*4-pX*14;rhy=-fY*4-pY*14;
+    }
     g.lineStyle(6,SK,1);
-    if(held){
-      g.beginPath();g.moveTo(-9,-3);g.lineTo(-12,-14);g.strokePath();
-      g.beginPath();g.moveTo(9,-3);g.lineTo(12,-14);g.strokePath();
-    } else {
-      g.beginPath();g.moveTo(-11,-2);g.lineTo(-16,8);g.strokePath();
-      g.beginPath();g.moveTo(11,-2);g.lineTo(16,8);g.strokePath();
-    }
-    g.lineStyle(1.5,SKO,1);
-    if(held){
-      g.beginPath();g.moveTo(-9,-3);g.lineTo(-12,-14);g.strokePath();
-      g.beginPath();g.moveTo(9,-3);g.lineTo(12,-14);g.strokePath();
-    } else {
-      g.beginPath();g.moveTo(-11,-2);g.lineTo(-16,8);g.strokePath();
-      g.beginPath();g.moveTo(11,-2);g.lineTo(16,8);g.strokePath();
-    }
-    // Vest body + shoulders (player identity color)
-    g.fillStyle(MY_COLOR,1).fillRoundedRect(-11,-13,22,26,5);
-    g.fillStyle(MY_COLOR,1).fillEllipse(-15,-7,11,15);
-    g.fillStyle(MY_COLOR,1).fillEllipse(15,-7,11,15);
-    // Vest detail overlays
-    g.fillStyle(0x000000,0.13).fillRoundedRect(-10,-1,20,15,4); // darker lower half
-    g.fillStyle(0x000000,0.20).fillRect(-2,-11,4,22);            // centre chest strap
-    g.fillStyle(0x000000,0.28).fillEllipse(0,-10,13,9);          // collar shadow
-    // Vest outlines
-    g.lineStyle(2.5,0x000000,1);
-    g.strokeRoundedRect(-11,-13,22,26,5);
-    g.strokeEllipse(-15,-7,11,15);
-    g.strokeEllipse(15,-7,11,15);
-    // Team ring (circle = rotation invariant)
-    if(state.teamId){ g.lineStyle(3,teamColor(state.teamId),0.9).strokeCircle(0,0,21); }
+    g.beginPath();g.moveTo(lsx,lsy);g.lineTo(lhx,lhy);g.strokePath();
+    g.beginPath();g.moveTo(rsx,rsy);g.lineTo(rhx,rhy);g.strokePath();
+    g.lineStyle(1.5,SKO,0.7);
+    g.beginPath();g.moveTo(lsx,lsy);g.lineTo(lhx,lhy);g.strokePath();
+    g.beginPath();g.moveTo(rsx,rsy);g.lineTo(rhx,rhy);g.strokePath();
+    // Body (player color oval, always centered)
+    g.fillStyle(MY_COLOR,1).fillEllipse(0,0,22,24);
+    g.fillStyle(0x000000,0.13).fillRect(-2,-10,4,20);
+    g.fillStyle(0x000000,0.12).fillEllipse(0,3,18,12);
+    g.lineStyle(2.5,0x000000,0.85).strokeEllipse(0,0,22,24);
+    // Team / armor rings
+    if(state.teamId){g.lineStyle(3,teamColor(state.teamId),0.9).strokeCircle(0,0,16);}
     const armorCnt=(state.armor.head?1:0)+(state.armor.chest?1:0)+(state.armor.legs?1:0);
-    if(armorCnt>0){ g.lineStyle(armorCnt,0x90b8e0,0.7).strokeCircle(0,0,21+(state.teamId?5:0)); }
+    if(armorCnt>0){g.lineStyle(armorCnt,0x90b8e0,0.7).strokeCircle(0,0,16+(state.teamId?5:0));}
     // Hands
-    g.fillStyle(SK,1);
-    if(held){ g.fillCircle(-12,-14,5);g.fillCircle(12,-14,5); }
-    else     { g.fillCircle(-16,8,5); g.fillCircle(16,8,5); }
-    g.lineStyle(1.5,SKO,1);
-    if(held){ g.strokeCircle(-12,-14,5);g.strokeCircle(12,-14,5); }
-    else     { g.strokeCircle(-16,8,5); g.strokeCircle(16,8,5); }
-    // Head
-    g.fillStyle(0xf5d5a5,1).fillCircle(0,-22,8);
-    g.lineStyle(2,0x000000,1).strokeCircle(0,-22,8);
-    g.fillStyle(0x222222,1).fillCircle(-3,-25,2);g.fillCircle(3,-25,2);
-    // Held item (drawn in local rotated space — appears in facing direction)
-    if(tool) drawHeldItem(g,0,-19,ang,tool);
+    g.fillStyle(SK,1).fillCircle(lhx,lhy,4);g.fillCircle(rhx,rhy,4);
+    g.lineStyle(1.5,SKO,1).strokeCircle(lhx,lhy,4);g.strokeCircle(rhx,rhy,4);
+    // Head (offset in facing direction)
+    const hx=fX*13,hy=fY*13;
+    g.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,8);
+    g.lineStyle(2,0x000000,1).strokeCircle(hx,hy,8);
+    g.fillStyle(0x222222,1);
+    g.fillCircle(hx+pX*3+fX*2,hy+pY*3+fY*2,2);
+    g.fillCircle(hx-pX*3+fX*2,hy-pY*3+fY*2,2);
+    // Weapon on separate rotated graphics
+    this.wgfx.clear();
+    if(tool){this.wgfx.setRotation(ang+Math.PI/2);drawHeldItem(this.wgfx,0,-14,ang,tool);}
   }
 
-  drawOther(gfx,d){
+  drawOther(gfx,wg,d){
     gfx.clear();
-    const {x,y,color,teamId:tid}=d, c=color||0xe07020;
-    // Switch to local coords so rotation works the same as redrawMe
-    gfx.setPosition(x,y);
+    if(wg)wg.clear();
+    const{x,y,color,teamId:tid}=d,c=color||0xe07020;
+    gfx.setPosition(x,y).setRotation(0);
+    if(wg)wg.setPosition(x,y);
     const ang=Math.atan2(d.dirY??-1,d.dirX??0);
-    gfx.setRotation(ang+Math.PI/2);
-    const friendly=state.teamId&&tid===state.teamId, enemy=tid&&tid!==state.teamId;
+    const fX=Math.cos(ang),fY=Math.sin(ang);
+    const pX=-Math.sin(ang),pY=Math.cos(ang);
+    const friendly=state.teamId&&tid===state.teamId,enemy=tid&&tid!==state.teamId;
     const held=!!d.held;
-    const SK=0xf5c89a, SKO=0xb08050;
-    gfx.fillStyle(0x000000,0.22).fillEllipse(2,18,34,12);
+    const SK=0xf5c89a,SKO=0xb08050;
+    // Shadow
+    gfx.fillStyle(0x000000,0.2).fillEllipse(4,5,32,12);
+    // Feet
+    gfx.fillStyle(0x2a1a0a,1);
+    gfx.fillEllipse(-fX*9+pX*4,-fY*9+pY*4,9,6);
+    gfx.fillEllipse(-fX*9-pX*4,-fY*9-pY*4,9,6);
+    // Arms
+    const lsx=pX*9,lsy=pY*9,rsx=-pX*9,rsy=-pY*9;
+    let lhx,lhy,rhx,rhy;
+    if(held){
+      lhx=fX*13+pX*7;lhy=fY*13+pY*7;
+      rhx=fX*13-pX*7;rhy=fY*13-pY*7;
+    }else{
+      lhx=-fX*4+pX*14;lhy=-fY*4+pY*14;
+      rhx=-fX*4-pX*14;rhy=-fY*4-pY*14;
+    }
     gfx.lineStyle(6,SK,1);
-    if(held){
-      gfx.beginPath();gfx.moveTo(-9,-3);gfx.lineTo(-12,-14);gfx.strokePath();
-      gfx.beginPath();gfx.moveTo(9,-3);gfx.lineTo(12,-14);gfx.strokePath();
-    } else {
-      gfx.beginPath();gfx.moveTo(-11,-2);gfx.lineTo(-16,8);gfx.strokePath();
-      gfx.beginPath();gfx.moveTo(11,-2);gfx.lineTo(16,8);gfx.strokePath();
-    }
-    gfx.lineStyle(1.5,SKO,1);
-    if(held){
-      gfx.beginPath();gfx.moveTo(-9,-3);gfx.lineTo(-12,-14);gfx.strokePath();
-      gfx.beginPath();gfx.moveTo(9,-3);gfx.lineTo(12,-14);gfx.strokePath();
-    } else {
-      gfx.beginPath();gfx.moveTo(-11,-2);gfx.lineTo(-16,8);gfx.strokePath();
-      gfx.beginPath();gfx.moveTo(11,-2);gfx.lineTo(16,8);gfx.strokePath();
-    }
-    gfx.fillStyle(c,1).fillRoundedRect(-11,-13,22,26,5);
-    gfx.fillStyle(c,1).fillEllipse(-15,-7,11,15);
-    gfx.fillStyle(c,1).fillEllipse(15,-7,11,15);
-    gfx.fillStyle(0x000000,0.13).fillRoundedRect(-10,-1,20,15,4);
-    gfx.fillStyle(0x000000,0.20).fillRect(-2,-11,4,22);
-    gfx.fillStyle(0x000000,0.28).fillEllipse(0,-10,13,9);
-    gfx.lineStyle(2.5,0x000000,1);
-    gfx.strokeRoundedRect(-11,-13,22,26,5);
-    gfx.strokeEllipse(-15,-7,11,15);
-    gfx.strokeEllipse(15,-7,11,15);
-    if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.9).strokeCircle(0,0,21); }
-    gfx.fillStyle(SK,1);
-    if(held){ gfx.fillCircle(-12,-14,5);gfx.fillCircle(12,-14,5); }
-    else     { gfx.fillCircle(-16,8,5); gfx.fillCircle(16,8,5); }
-    gfx.lineStyle(1.5,SKO,1);
-    if(held){ gfx.strokeCircle(-12,-14,5);gfx.strokeCircle(12,-14,5); }
-    else     { gfx.strokeCircle(-16,8,5); gfx.strokeCircle(16,8,5); }
-    gfx.fillStyle(0xf5d5a5,1).fillCircle(0,-22,8);
-    gfx.lineStyle(2,0x000000,1).strokeCircle(0,-22,8);
-    if(d.held) drawHeldItem(gfx,0,-19,ang,d.held);
-    // HP bar: reset rotation so bar stays horizontal in world space
+    gfx.beginPath();gfx.moveTo(lsx,lsy);gfx.lineTo(lhx,lhy);gfx.strokePath();
+    gfx.beginPath();gfx.moveTo(rsx,rsy);gfx.lineTo(rhx,rhy);gfx.strokePath();
+    gfx.lineStyle(1.5,SKO,0.7);
+    gfx.beginPath();gfx.moveTo(lsx,lsy);gfx.lineTo(lhx,lhy);gfx.strokePath();
+    gfx.beginPath();gfx.moveTo(rsx,rsy);gfx.lineTo(rhx,rhy);gfx.strokePath();
+    // Body
+    gfx.fillStyle(c,1).fillEllipse(0,0,22,24);
+    gfx.fillStyle(0x000000,0.13).fillRect(-2,-10,4,20);
+    gfx.fillStyle(0x000000,0.12).fillEllipse(0,3,18,12);
+    gfx.lineStyle(2.5,0x000000,0.85).strokeEllipse(0,0,22,24);
+    // Team ring
+    if(tid){const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid));gfx.lineStyle(3,ring,0.9).strokeCircle(0,0,16);}
+    // Hands
+    gfx.fillStyle(SK,1).fillCircle(lhx,lhy,4);gfx.fillCircle(rhx,rhy,4);
+    gfx.lineStyle(1.5,SKO,1).strokeCircle(lhx,lhy,4);gfx.strokeCircle(rhx,rhy,4);
+    // Head
+    const hx=fX*13,hy=fY*13;
+    gfx.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,8);
+    gfx.lineStyle(2,0x000000,1).strokeCircle(hx,hy,8);
+    gfx.fillStyle(0x222222,1);
+    gfx.fillCircle(hx+pX*3+fX*2,hy+pY*3+fY*2,2);
+    gfx.fillCircle(hx-pX*3+fX*2,hy-pY*3+fY*2,2);
+    // HP bar
     if(d.hp<MAX_HP){
       const hpr=Math.max(0,d.hp/MAX_HP);
-      gfx.setRotation(0);
       gfx.fillStyle(0x27ae60,1).fillRect(-16,-P_RAD-12,32*hpr,4);
       gfx.fillStyle(0xc0392b,1).fillRect(-16+32*hpr,-P_RAD-12,32*(1-hpr),4);
     }
+    // Weapon on separate rotated graphics
+    if(wg&&d.held){wg.setRotation(ang+Math.PI/2);drawHeldItem(wg,0,-14,ang,d.held);}
   }
 
   mkSleeping(id,d){
@@ -1442,10 +1445,12 @@ class Game extends Phaser.Scene {
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
   rxRes(id,d){ if(!resSpr[id])return; resSpr[id]._d=d; this.drawRes(resSpr[id],d); }
   mkOther(id,d){
-    const g=this.add.graphics().setDepth(d.y); this.drawOther(g,d);
+    const g=this.add.graphics().setDepth(d.y);
+    const wg=this.add.graphics().setDepth(d.y+0.5);
+    this.drawOther(g,wg,d);
     const l=this.add.text(d.x,d.y-P_RAD-15,d.name||id.substr(-4).toUpperCase(),{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(d.y+1);
     const chat=this.add.text(d.x,d.y-P_RAD-30,'',{fontSize:'12px',color:'#ffe',stroke:'#222',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.55)',padding:{x:4,y:2}}).setOrigin(0.5).setDepth(d.y+2).setVisible(false);
-    others[id]={g,l,chat,rx:d.x,ry:d.y}; playerData[id]=d;
+    others[id]={g,wg,l,chat,rx:d.x,ry:d.y}; playerData[id]=d;
   }
   mvOther(id,d){
     playerData[id]=d;
@@ -1505,7 +1510,7 @@ class Game extends Phaser.Scene {
     onChildAdded(sref('players'),  s=>{if(s.key!==PID&&s.val())sc.mkOther(s.key,s.val());});
     onChildChanged(sref('players'),s=>{if(s.key!==PID&&s.val())sc.mvOther(s.key,s.val());});
     onChildRemoved(sref('players'),s=>{
-      if(others[s.key]){others[s.key].g.destroy();others[s.key].l.destroy();others[s.key].chat.destroy();delete others[s.key];}
+      if(others[s.key]){others[s.key].g.destroy();others[s.key].wg?.destroy();others[s.key].l.destroy();others[s.key].chat.destroy();delete others[s.key];}
       delete playerData[s.key]; sc.updateScoreboard();
     });
     onChildAdded(sref('buildings'),  s=>{if(s.val()&&!bldgSpr[s.key])sc.mkBldg(s.key,s.val());});
@@ -1570,6 +1575,7 @@ class Game extends Phaser.Scene {
   handleClick(ptr){
     if(buildMode){this.placeBuilding(ptr);return;}
     if(this.tryLootBag(ptr))return;
+    if(this.tryFireProjectile(ptr))return;
     if(this.tryAtkWolf(ptr))return;
     if(this.tryHammerBldg(ptr))return;
     if(this.tryAtkPlayer(ptr))return;
@@ -1702,53 +1708,44 @@ class Game extends Phaser.Scene {
   tryAtkPlayer(ptr){
     const now=Date.now();
     if(now-lastAtkTime<380)return false;
-    const px=this.pbody.x, py=this.pbody.y;
+    const px=this.pbody.x,py=this.pbody.y;
     const tool=getActiveTool();
-    const isBow=tool==='bow', isCrossbow=tool==='crossbow';
-    const range=isBow?BOW_RNG:isCrossbow?CROSSBOW_RNG:ATK_RNG;
-    const clickRange=isBow||isCrossbow?range:P_RAD*3+10;
-    for(const [id,od] of Object.entries(playerData)){
+    if(tool==='bow'||tool==='crossbow')return false; // handled by tryFireProjectile
+    for(const[id,od] of Object.entries(playerData)){
       if(state.teamId&&od.teamId===state.teamId)continue;
-      const o=others[id]; if(!o)continue;
-      const rx=o.rx??od.x, ry=o.ry??od.y;
-      if(dist2(rx,ry,px,py)>range+20)continue;
-      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>clickRange)continue;
-      // Ranged weapons need ammo
-      if(isBow){ if(!invCount('arrow')){this.pop(state.x,state.y-30,'No arrows!','#e74c3c');return false;} invRemove('arrow',1); }
-      if(isCrossbow){ if(!invCount('bolt')){this.pop(state.x,state.y-30,'No bolts!','#e74c3c');return false;} invRemove('bolt',1); }
-      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:isBow?BOW_DMG:isCrossbow?CROSSBOW_DMG:FIST_DMG;
+      const o=others[id];if(!o)continue;
+      const rx=o.rx??od.x,ry=o.ry??od.y;
+      if(dist2(rx,ry,px,py)>ATK_RNG+20)continue;
+      if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD*3+10)continue;
+      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       lastAtkTime=now;
       set(sref('players/'+id+'/hits/'+now),{dmg,from:PID});
-      state.score+=5; this.updateHUD();
+      state.score+=5;this.updateHUD();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
     }
     // Attack sleeping (offline) players — hammer opens loot panel instead
-    for(const [id,d] of Object.entries(sleepingData)){
+    for(const[id,d] of Object.entries(sleepingData)){
       if(state.teamId&&d.teamId===state.teamId)continue;
-      const sx=d.x, sy=d.y;
-      if(dist2(sx,sy,px,py)>range+20)continue;
-      if(dist2(ptr.worldX,ptr.worldY,sx,sy)>clickRange)continue;
+      const sx=d.x,sy=d.y;
+      if(dist2(sx,sy,px,py)>ATK_RNG+20)continue;
+      if(dist2(ptr.worldX,ptr.worldY,sx,sy)>P_RAD*3+10)continue;
       if(tool==='hammer'){openSleepingLoot(id);return true;}
-      if(isBow){if(!invCount('arrow')){this.pop(state.x,state.y-30,'No arrows!','#e74c3c');return false;}invRemove('arrow',1);refreshHotbar();}
-      if(isCrossbow){if(!invCount('bolt')){this.pop(state.x,state.y-30,'No bolts!','#e74c3c');return false;}invRemove('bolt',1);refreshHotbar();}
-      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:isBow?BOW_DMG:isCrossbow?CROSSBOW_DMG:FIST_DMG;
+      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       lastAtkTime=now;
-      state.score+=5; this.updateHUD();
+      state.score+=5;this.updateHUD();
       const newHp=Math.max(0,(d.hp!==undefined?d.hp:MAX_HP)-dmg);
       this.pop(sx,sy-24,'-'+dmg,'#e74c3c');
       if(newHp<=0){
-        const bag={x:sx,y:sy+10}; let hasDrop=false;
+        const bag={x:sx,y:sy+10};let hasDrop=false;
         if(d.armor){for(const slot of ['head','chest','legs']){if(d.armor[slot]){bag['armor_'+slot]=(bag['armor_'+slot]||0)+1;hasDrop=true;}}}
         const items=d.inv?(Array.isArray(d.inv)?d.inv:Object.values(d.inv)):[];
         for(const it of items){if(it?.type){bag[it.type]=(bag[it.type]||0)+it.count;hasDrop=true;}}
         if(hasDrop)set(sref('loot/sleep_'+id+'_'+Date.now()),bag);
         remove(sref('sleeping/'+id));
-        state.score+=50; this.updateHUD();
+        state.score+=50;this.updateHUD();
         this.pop(sx,sy-36,'💀 Killed sleeping!','#f0c040');
-      } else {
-        update(sref('sleeping/'+id),{hp:newHp});
-      }
+      }else{update(sref('sleeping/'+id),{hp:newHp});}
       return true;
     }
     return false;
@@ -2008,6 +2005,109 @@ class Game extends Phaser.Scene {
     return false;
   }
 
+  tryFireProjectile(ptr){
+    const tool=getActiveTool();
+    if(tool!=='bow'&&tool!=='crossbow')return false;
+    const now=Date.now();
+    if(now-lastAtkTime<500)return false;
+    const isCrossbow=tool==='crossbow';
+    if(isCrossbow){
+      if(!invCount('bolt')){this.pop(state.x,state.y-30,'No bolts!','#e74c3c');return true;}
+      invRemove('bolt',1);
+    }else{
+      if(!invCount('arrow')){this.pop(state.x,state.y-30,'No arrows!','#e74c3c');return true;}
+      invRemove('arrow',1);
+    }
+    lastAtkTime=now;
+    refreshHotbar();
+    const px=state.x,py=state.y;
+    let dx=ptr.worldX-px,dy=ptr.worldY-py;
+    const dlen=Math.sqrt(dx*dx+dy*dy);
+    if(dlen<1){dx=state.dirX;dy=state.dirY;}else{dx/=dlen;dy/=dlen;}
+    projectiles.push({x:px,y:py,dirX:dx,dirY:dy,
+      speed:isCrossbow?360:280,
+      maxDist:isCrossbow?CROSSBOW_RNG*1.4:BOW_RNG*1.4,
+      dist:0,dmg:isCrossbow?CROSSBOW_DMG:BOW_DMG,isCrossbow});
+    return true;
+  }
+
+  updateProjectiles(delta){
+    const g=this.projGfx;g.clear();
+    const dt=delta/1000;
+    for(let i=projectiles.length-1;i>=0;i--){
+      const p=projectiles[i];
+      const move=p.speed*dt;
+      p.x+=p.dirX*move;p.y+=p.dirY*move;p.dist+=move;
+      if(p.dist>=p.maxDist){projectiles.splice(i,1);continue;}
+      let removed=false;
+      // Buildings
+      for(const[,bg] of Object.entries(bldgSpr)){
+        const d=bg._d;
+        if(!['wall','door','chest','tc','workbench','furnace','monument'].includes(d.type))continue;
+        let hit=false;
+        if(d.type==='wall'||d.type==='door'){
+          const hw=d.rotated?4:30,hh=d.rotated?30:4;
+          hit=Math.abs(p.x-d.x)<hw+3&&Math.abs(p.y-d.y)<hh+3;
+        }else{
+          hit=dist2(p.x,p.y,d.x,d.y)<400;
+        }
+        if(hit){projectiles.splice(i,1);removed=true;break;}
+      }
+      if(removed)continue;
+      // Resources
+      for(const[,rg] of Object.entries(resSpr)){
+        const d=rg._d;if(!d)continue;
+        const r=d.type==='tree'?18:d.type==='rock'?14:12;
+        if(dist2(p.x,p.y,d.x,d.y)<r*r){projectiles.splice(i,1);removed=true;break;}
+      }
+      if(removed)continue;
+      // Online players
+      for(const[id,o] of Object.entries(others)){
+        if(dist2(p.x,p.y,o.rx,o.ry)<P_RAD*P_RAD){
+          const now=Date.now();
+          set(sref('players/'+id+'/hits/'+now),{dmg:p.dmg,from:PID});
+          state.score+=5;this.updateHUD();
+          this.pop(o.rx,o.ry-24,'-'+p.dmg,'#e74c3c');
+          projectiles.splice(i,1);removed=true;break;
+        }
+      }
+      if(removed)continue;
+      // Sleeping players
+      for(const[id,sd] of Object.entries(sleepingData)){
+        if(state.teamId&&sd.teamId===state.teamId)continue;
+        if(dist2(p.x,p.y,sd.x,sd.y)<P_RAD*P_RAD){
+          const newHp=Math.max(0,(sd.hp??MAX_HP)-p.dmg);
+          this.pop(sd.x,sd.y-24,'-'+p.dmg,'#e74c3c');
+          state.score+=5;this.updateHUD();
+          if(newHp<=0){remove(sref('sleeping/'+id));state.score+=45;this.updateHUD();this.pop(sd.x,sd.y-36,'💀 Killed sleeping!','#f0c040');}
+          else update(sref('sleeping/'+id),{hp:newHp});
+          projectiles.splice(i,1);removed=true;break;
+        }
+      }
+      if(removed)continue;
+      // Wolves
+      for(const w of wolves){
+        if(!w.alive)continue;
+        if(dist2(p.x,p.y,w.x,w.y)<14*14){
+          w.hp-=p.dmg;
+          this.pop(w.x,w.y-22,'-'+p.dmg,'#f0c040');
+          if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
+          projectiles.splice(i,1);removed=true;break;
+        }
+      }
+      if(removed)continue;
+      // Draw projectile
+      const tx=p.x-p.dirX*7,ty=p.y-p.dirY*7;
+      if(p.isCrossbow){
+        g.lineStyle(3,0xd4a820,1);g.beginPath();g.moveTo(tx,ty);g.lineTo(p.x,p.y);g.strokePath();
+        g.fillStyle(0xd4c060,1).fillCircle(p.x,p.y,2.5);
+      }else{
+        g.lineStyle(2,0x8b7450,1);g.beginPath();g.moveTo(tx,ty);g.lineTo(p.x,p.y);g.strokePath();
+        g.fillStyle(0xa0b0b8,1).fillCircle(p.x,p.y,2);
+      }
+    }
+  }
+
   startMyChatBubble(msg){
     if(this.myChatBubble){this.myChatBubble.destroy();this.myChatBubble=null;}
     this.myChatBubble=this.add.text(state.x,state.y-P_RAD-32,msg,{
@@ -2074,6 +2174,7 @@ class Game extends Phaser.Scene {
     for(const[,rg] of Object.entries(roofSpr)){const rd=rg._d;rg.setAlpha(rd&&_visFPos.has(`${Math.round(rd.x)},${Math.round(rd.y)}`)?0:0.93);}
     const depth=state.y;
     this.pgfx.setPosition(state.x,state.y).setDepth(depth);
+    this.wgfx.setPosition(state.x,state.y).setDepth(depth+0.5);
     this.nameTag.setPosition(state.x,state.y-P_RAD-15).setDepth(depth+1);
 
     // Chat bubble follows player
@@ -2227,6 +2328,7 @@ class Game extends Phaser.Scene {
     if(phase>0.55&&phase<0.95&&!wolvesSpawned)this.spawnWolves();
     if((phase<=0.55||phase>=0.95)&&wolvesSpawned)this.despawnWolves();
     if(wolvesSpawned){this.updateWolves(delta);this.drawWolves();}
+    this.updateProjectiles(delta);
 
     // Monument hold
     let nearMon=false, nearMonId=null;
@@ -2251,7 +2353,8 @@ class Game extends Phaser.Scene {
       if(tdist>250){o.rx=d.x;o.ry=d.y;} // snap if too far (teleport/reconnect)
       else if(tdist>0.4){const m=Math.min(tdist,maxMove);o.rx+=tdx/tdist*m;o.ry+=tdy/tdist*m;}
       if(tdist>0.4||d!==o._lastData){
-        o.g.setDepth(o.ry); this.drawOther(o.g,{...d,x:o.rx,y:o.ry}); o._lastData=d;
+        o.g.setDepth(o.ry);o.wg?.setDepth(o.ry+0.5);
+        this.drawOther(o.g,o.wg,{...d,x:o.rx,y:o.ry}); o._lastData=d;
       }
       o.l.setPosition(o.rx,o.ry-P_RAD-15).setDepth(o.ry+1);
       o.chat.setPosition(o.rx,o.ry-P_RAD-30).setDepth(o.ry+2);
