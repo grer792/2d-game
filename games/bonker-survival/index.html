@@ -256,6 +256,7 @@
     .inv-slot-big.hotbar-slot { background:#252520; border-color:#666; }
     .inv-slot-big.drag-src { border-color:#f0c040; background:#2a2010; }
     .inv-slot-big.drag-over { border-color:#3498db; background:#101828; }
+    .inv-slot-big.picked { border-color:#f0c040; background:#2a2010; box-shadow:0 0 6px rgba(240,192,64,0.5); }
     .inv-slot-big .ic { font-size:9px; color:#aaa; line-height:1; }
     /* ── Furnace Panel ── */
     #furnace-panel {
@@ -966,7 +967,7 @@ document.getElementById('chat-input').addEventListener('keydown',e=>{
   if(e.key==='Escape'){e.preventDefault();closeChat();}
 });
 document.addEventListener('keydown',e=>{
-  if(e.key==='Tab'){ e.preventDefault(); } // prevent focus ring tab
+  if(e.key==='Tab'){ e.preventDefault(); if(!chatOpen) toggleInvPanel(); }
 });
 
 // ── Phaser Scene ───────────────────────────────────────────────────────────────
@@ -2165,12 +2166,17 @@ class Game extends Phaser.Scene {
       monHoldStart=null;monHoldId=null;
     }
 
-    // Interpolate other players toward their target positions
-    const lf=Math.min(1,delta*0.018);
+    // Interpolate other players at fixed speed (prevents jitter from variable delta)
+    const dt=Math.min(delta,50); // cap to avoid huge jumps on tab-switch
+    const maxMove=SPEED*1.6*(dt/1000);
     for(const [id,o] of Object.entries(others)){
       const d=playerData[id]; if(!d)continue;
-      o.rx+=(d.x-o.rx)*lf; o.ry+=(d.y-o.ry)*lf;
-      o.g.setDepth(o.ry); this.drawOther(o.g,{...d,x:o.rx,y:o.ry});
+      const tdx=d.x-o.rx, tdy=d.y-o.ry, tdist=Math.sqrt(tdx*tdx+tdy*tdy);
+      if(tdist>250){o.rx=d.x;o.ry=d.y;} // snap if too far (teleport/reconnect)
+      else if(tdist>0.4){const m=Math.min(tdist,maxMove);o.rx+=tdx/tdist*m;o.ry+=tdy/tdist*m;}
+      if(tdist>0.4||d!==o._lastData){
+        o.g.setDepth(o.ry); this.drawOther(o.g,{...d,x:o.rx,y:o.ry}); o._lastData=d;
+      }
       o.l.setPosition(o.rx,o.ry-P_RAD-15).setDepth(o.ry+1);
       o.chat.setPosition(o.rx,o.ry-P_RAD-30).setDepth(o.ry+2);
     }
@@ -2286,7 +2292,7 @@ function drawHeldItem(g,tx,ty,ang,tool){
 // ── Inventory Panel ──────────────────────────────────────────────────────────
 window.toggleInvPanel=function(){
   const p=document.getElementById('inv-panel');
-  if(p.style.display==='block'){ p.style.display='none'; return; }
+  if(p.style.display==='block'){ invPickedSlot=null; p.style.display='none'; return; }
   renderInvPanel(); p.style.display='block';
 };
 function toggleInvPanel(){ window.toggleInvPanel(); }
@@ -2294,10 +2300,11 @@ function renderInvPanel(){
   function slotHtml(item,i,cls){
     const icon=item?(ITEM_ICON[item.type]||'?'):'';
     const cnt=item&&item.count>1?item.count:'';
-    return`<div class="${cls}" draggable="${item?'true':'false'}"
+    const picked=i===invPickedSlot?' picked':'';
+    return`<div class="${cls}${picked}" draggable="${item?'true':'false'}"
       ondragstart="invDragStart(event,'inv',${i})" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
       ondrop="invDrop(event,'inv',${i})" ondragend="invDragEnd()"
-      onclick="invSlotClick(${i})">
+      onclick="invSlotClick(${i},event)">
       <span style="font-size:17px">${icon}</span><span class="ic">${cnt}</span>
     </div>`;
   }
@@ -2308,16 +2315,39 @@ function renderInvPanel(){
   document.getElementById('inv-pack-grid').innerHTML=packHtml;
   refreshArmorHUD();
 }
-window.invSlotClick=function(i){
-  const item=inv[i]; if(!item)return;
-  // If armor item, equip it
-  if(item.type==='armor_head'||item.type==='armor_chest'||item.type==='armor_legs'){
-    const slot=item.type.replace('armor_','');
-    if(state.armor[slot]){ window._scene&&window._scene.pop(state.x,state.y-30,'Armor slot already equipped!','#e74c3c'); return; }
-    state.armor[slot]=true; invRemove(item.type,1); refreshArmorHUD(); renderInvPanel();
-    window._scene&&window._scene.pop(state.x,state.y-30,item.type+' equipped! -'+(ARMOR_REDUCE[slot]*100)+'% dmg','#2ecc71');
+window.invSlotClick=function(i,e){
+  // Shift+click: quick-move
+  if(e&&e.shiftKey){
+    const item=inv[i]; if(!item)return;
+    if(activeChestId&&document.getElementById('chest-panel').style.display==='block'){
+      const d=bldgSpr[activeChestId]?._d; if(!d)return;
+      const cur=(d.storage||{})[item.type]||0;
+      update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
+      inv[i]=null; refreshHotbar(); renderInvPanel(); setTimeout(renderChestPanel,150);
+      window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#3498db');
+    } else {
+      // Move between hotbar ↔ backpack
+      const isHotbar=i<HOTBAR_SIZE;
+      let moved=false;
+      if(isHotbar){ for(let j=HOTBAR_SIZE;j<INV_SIZE;j++){if(!inv[j]){inv[j]=inv[i];inv[i]=null;moved=true;break;}} }
+      else { for(let j=0;j<HOTBAR_SIZE;j++){if(!inv[j]){inv[j]=inv[i];inv[i]=null;moved=true;break;}} }
+      if(moved){refreshHotbar();renderInvPanel();}
+    }
     return;
   }
+  // Click-to-move: if something is picked, place/swap it
+  if(invPickedSlot!==null){
+    if(invPickedSlot!==i){const tmp=inv[invPickedSlot];inv[invPickedSlot]=inv[i];inv[i]=tmp;refreshHotbar();}
+    invPickedSlot=null; renderInvPanel(); return;
+  }
+  const item=inv[i]; if(!item)return;
+  // Armor equip on click
+  if(item.type.startsWith('armor_')){
+    const slot=item.type.replace('armor_','');
+    if(!state.armor[slot]){state.armor[slot]=true;invRemove(item.type,1);refreshArmorHUD();renderInvPanel();window._scene&&window._scene.pop(state.x,state.y-30,(ITEM_ICON[item.type]||item.type)+' equipped!','#2ecc71');return;}
+  }
+  // Pick up item
+  invPickedSlot=i; renderInvPanel();
 };
 window.invArmorSlotClick=function(slot){
   if(!state.armor[slot])return;
@@ -2443,7 +2473,7 @@ window.craftWB=function(id){
 };
 
 // ── Sleeping Loot Panel ───────────────────────────────────────────────────────
-let activeSleepingLootId=null;
+let activeSleepingLootId=null, invPickedSlot=null;
 function openSleepingLoot(id){
   const d=sleepingData[id]; if(!d)return;
   activeSleepingLootId=id;
