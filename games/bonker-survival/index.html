@@ -1048,72 +1048,116 @@ class Game extends Phaser.Scene {
   redrawMe(){
     const g=this.pgfx; g.clear();
     const ang=Math.atan2(state.dirY,state.dirX);
-    const V=17; // visual half-size (larger than physics P_RAD)
-    const hx=Math.cos(ang)*V, hy=Math.sin(ang)*V;
-    // Shadow
-    g.fillStyle(0x000000,0.22).fillEllipse(4,V+8,V*2.2,12);
-    // Orange body oval (player identity color)
-    g.fillStyle(MY_COLOR,1).fillEllipse(0,0,V*2,V*2.1);
-    g.lineStyle(3,0x000000,1).strokeEllipse(0,0,V*2,V*2.1);
-    // Backpack — rounded rect so it reads as a pack, not a circle
-    g.fillStyle(0x3d4f28,1).fillRoundedRect(-V+2,-V+1,V*2-4,V*2-2,6);
-    // Highlight strip on upper part of pack
-    g.fillStyle(0x566c38,0.6).fillRoundedRect(-V+6,-V+3,V*2-14,8,3);
-    // MOLLE webbing stripes
-    g.lineStyle(1.5,0x232e16,1);
-    g.beginPath(); g.moveTo(-V+5,-5); g.lineTo(V-5,-5); g.strokePath();
-    g.beginPath(); g.moveTo(-V+5, 1); g.lineTo(V-5, 1); g.strokePath();
-    g.beginPath(); g.moveTo(-V+5, 7); g.lineTo(V-5, 7); g.strokePath();
-    // Centre patch
-    g.fillStyle(0x1a2810,1).fillRoundedRect(-7,-3,14,8,2);
-    g.lineStyle(1,0x4a6030,1).strokeRoundedRect(-7,-3,14,8,2);
-    // Pack outline
-    g.lineStyle(3,0x101808,1).strokeRoundedRect(-V+2,-V+1,V*2-4,V*2-2,6);
-    // Side buckle clips (player color — identity visible on sides)
-    g.fillStyle(MY_COLOR,1).fillRect(-V-3,-5,5,10); g.fillRect(V-2,-5,5,10);
-    g.lineStyle(2,0x000000,1).strokeRect(-V-3,-5,5,10); g.strokeRect(V-2,-5,5,10);
-    // Team / armor rings
-    if(state.teamId){ g.lineStyle(3,teamColor(state.teamId),0.9).strokeEllipse(0,0,V*2+10,V*2.1+10); }
-    const armorCount=(state.armor.head?1:0)+(state.armor.chest?1:0)+(state.armor.legs?1:0);
-    if(armorCount>0){ g.lineStyle(armorCount,0x90b8e0,0.65).strokeEllipse(0,0,V*2+(state.teamId?20:10),V*2.1+(state.teamId?20:10)); }
-    // Head — large peach circle peeking out in facing direction
-    g.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,9);
-    g.lineStyle(2.5,0x000000,1).strokeCircle(hx,hy,9);
-    const e1=ang+0.5, e2=ang-0.5;
-    g.fillStyle(0x222222,1);
-    g.fillCircle(hx+Math.cos(e1)*4,hy+Math.sin(e1)*4,2);
-    g.fillCircle(hx+Math.cos(e2)*4,hy+Math.sin(e2)*4,2);
-    const tx=Math.cos(ang)*(V+10), ty=Math.sin(ang)*(V+10);
+    // Rotate entire graphics so we only draw one direction (facing "up" in local space)
+    g.setRotation(ang+Math.PI/2);
     const tool=getActiveTool()||inv[selectedSlot]?.type||null;
-    if(tool) drawHeldItem(g,tx,ty,ang,tool);
+    const held=!!tool;
+    const SK=0xf5c89a, SKO=0xb08050;
+    // Shadow
+    g.fillStyle(0x000000,0.22).fillEllipse(2,18,34,12);
+    // Arms (drawn behind vest)
+    g.lineStyle(6,SK,1);
+    if(held){
+      g.beginPath();g.moveTo(-9,-3);g.lineTo(-12,-14);g.strokePath();
+      g.beginPath();g.moveTo(9,-3);g.lineTo(12,-14);g.strokePath();
+    } else {
+      g.beginPath();g.moveTo(-11,-2);g.lineTo(-16,8);g.strokePath();
+      g.beginPath();g.moveTo(11,-2);g.lineTo(16,8);g.strokePath();
+    }
+    g.lineStyle(1.5,SKO,1);
+    if(held){
+      g.beginPath();g.moveTo(-9,-3);g.lineTo(-12,-14);g.strokePath();
+      g.beginPath();g.moveTo(9,-3);g.lineTo(12,-14);g.strokePath();
+    } else {
+      g.beginPath();g.moveTo(-11,-2);g.lineTo(-16,8);g.strokePath();
+      g.beginPath();g.moveTo(11,-2);g.lineTo(16,8);g.strokePath();
+    }
+    // Vest body + shoulders (player identity color)
+    g.fillStyle(MY_COLOR,1).fillRoundedRect(-11,-13,22,26,5);
+    g.fillStyle(MY_COLOR,1).fillEllipse(-15,-7,11,15);
+    g.fillStyle(MY_COLOR,1).fillEllipse(15,-7,11,15);
+    // Vest detail overlays
+    g.fillStyle(0x000000,0.13).fillRoundedRect(-10,-1,20,15,4); // darker lower half
+    g.fillStyle(0x000000,0.20).fillRect(-2,-11,4,22);            // centre chest strap
+    g.fillStyle(0x000000,0.28).fillEllipse(0,-10,13,9);          // collar shadow
+    // Vest outlines
+    g.lineStyle(2.5,0x000000,1);
+    g.strokeRoundedRect(-11,-13,22,26,5);
+    g.strokeEllipse(-15,-7,11,15);
+    g.strokeEllipse(15,-7,11,15);
+    // Team ring (circle = rotation invariant)
+    if(state.teamId){ g.lineStyle(3,teamColor(state.teamId),0.9).strokeCircle(0,0,21); }
+    const armorCnt=(state.armor.head?1:0)+(state.armor.chest?1:0)+(state.armor.legs?1:0);
+    if(armorCnt>0){ g.lineStyle(armorCnt,0x90b8e0,0.7).strokeCircle(0,0,21+(state.teamId?5:0)); }
+    // Hands
+    g.fillStyle(SK,1);
+    if(held){ g.fillCircle(-12,-14,5);g.fillCircle(12,-14,5); }
+    else     { g.fillCircle(-16,8,5); g.fillCircle(16,8,5); }
+    g.lineStyle(1.5,SKO,1);
+    if(held){ g.strokeCircle(-12,-14,5);g.strokeCircle(12,-14,5); }
+    else     { g.strokeCircle(-16,8,5); g.strokeCircle(16,8,5); }
+    // Head
+    g.fillStyle(0xf5d5a5,1).fillCircle(0,-22,8);
+    g.lineStyle(2,0x000000,1).strokeCircle(0,-22,8);
+    g.fillStyle(0x222222,1).fillCircle(-3,-25,2);g.fillCircle(3,-25,2);
+    // Held item (drawn in local rotated space — appears in facing direction)
+    if(tool) drawHeldItem(g,0,-19,ang,tool);
   }
 
   drawOther(gfx,d){
     gfx.clear();
     const {x,y,color,teamId:tid}=d, c=color||0xe07020;
-    const friendly=state.teamId&&tid===state.teamId, enemy=tid&&tid!==state.teamId;
+    // Switch to local coords so rotation works the same as redrawMe
+    gfx.setPosition(x,y);
     const ang=Math.atan2(d.dirY??-1,d.dirX??0);
-    const V=17;
-    const hx=x+Math.cos(ang)*V, hy=y+Math.sin(ang)*V;
-    gfx.fillStyle(0x000000,0.22).fillEllipse(x+4,y+V+8,V*2.2,12);
-    gfx.fillStyle(c,1).fillEllipse(x,y,V*2,V*2.1);
-    gfx.lineStyle(3,0x000000,1).strokeEllipse(x,y,V*2,V*2.1);
-    gfx.fillStyle(0x3d4f28,1).fillRoundedRect(x-V+2,y-V+1,V*2-4,V*2-2,6);
-    gfx.fillStyle(0x566c38,0.6).fillRoundedRect(x-V+6,y-V+3,V*2-14,8,3);
-    gfx.lineStyle(1.5,0x232e16,1);
-    gfx.beginPath(); gfx.moveTo(x-V+5,y-5); gfx.lineTo(x+V-5,y-5); gfx.strokePath();
-    gfx.beginPath(); gfx.moveTo(x-V+5,y+1); gfx.lineTo(x+V-5,y+1); gfx.strokePath();
-    gfx.beginPath(); gfx.moveTo(x-V+5,y+7); gfx.lineTo(x+V-5,y+7); gfx.strokePath();
-    gfx.fillStyle(0x1a2810,1).fillRoundedRect(x-7,y-3,14,8,2);
-    gfx.lineStyle(1,0x4a6030,1).strokeRoundedRect(x-7,y-3,14,8,2);
-    gfx.lineStyle(3,0x101808,1).strokeRoundedRect(x-V+2,y-V+1,V*2-4,V*2-2,6);
-    gfx.fillStyle(c,1).fillRect(x-V-3,y-5,5,10); gfx.fillRect(x+V-2,y-5,5,10);
-    gfx.lineStyle(2,0x000000,1).strokeRect(x-V-3,y-5,5,10); gfx.strokeRect(x+V-2,y-5,5,10);
-    if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.9).strokeEllipse(x,y,V*2+10,V*2.1+10); }
-    gfx.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,9);
-    gfx.lineStyle(2.5,0x000000,1).strokeCircle(hx,hy,9);
-    if(d.held){ const tx=x+Math.cos(ang)*(V+10), ty=y+Math.sin(ang)*(V+10); drawHeldItem(gfx,tx,ty,ang,d.held); }
-    if(d.hp<MAX_HP){ const hpr=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-V-10,32*hpr,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*hpr,y-V-10,32*(1-hpr),4); }
+    gfx.setRotation(ang+Math.PI/2);
+    const friendly=state.teamId&&tid===state.teamId, enemy=tid&&tid!==state.teamId;
+    const held=!!d.held;
+    const SK=0xf5c89a, SKO=0xb08050;
+    gfx.fillStyle(0x000000,0.22).fillEllipse(2,18,34,12);
+    gfx.lineStyle(6,SK,1);
+    if(held){
+      gfx.beginPath();gfx.moveTo(-9,-3);gfx.lineTo(-12,-14);gfx.strokePath();
+      gfx.beginPath();gfx.moveTo(9,-3);gfx.lineTo(12,-14);gfx.strokePath();
+    } else {
+      gfx.beginPath();gfx.moveTo(-11,-2);gfx.lineTo(-16,8);gfx.strokePath();
+      gfx.beginPath();gfx.moveTo(11,-2);gfx.lineTo(16,8);gfx.strokePath();
+    }
+    gfx.lineStyle(1.5,SKO,1);
+    if(held){
+      gfx.beginPath();gfx.moveTo(-9,-3);gfx.lineTo(-12,-14);gfx.strokePath();
+      gfx.beginPath();gfx.moveTo(9,-3);gfx.lineTo(12,-14);gfx.strokePath();
+    } else {
+      gfx.beginPath();gfx.moveTo(-11,-2);gfx.lineTo(-16,8);gfx.strokePath();
+      gfx.beginPath();gfx.moveTo(11,-2);gfx.lineTo(16,8);gfx.strokePath();
+    }
+    gfx.fillStyle(c,1).fillRoundedRect(-11,-13,22,26,5);
+    gfx.fillStyle(c,1).fillEllipse(-15,-7,11,15);
+    gfx.fillStyle(c,1).fillEllipse(15,-7,11,15);
+    gfx.fillStyle(0x000000,0.13).fillRoundedRect(-10,-1,20,15,4);
+    gfx.fillStyle(0x000000,0.20).fillRect(-2,-11,4,22);
+    gfx.fillStyle(0x000000,0.28).fillEllipse(0,-10,13,9);
+    gfx.lineStyle(2.5,0x000000,1);
+    gfx.strokeRoundedRect(-11,-13,22,26,5);
+    gfx.strokeEllipse(-15,-7,11,15);
+    gfx.strokeEllipse(15,-7,11,15);
+    if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.9).strokeCircle(0,0,21); }
+    gfx.fillStyle(SK,1);
+    if(held){ gfx.fillCircle(-12,-14,5);gfx.fillCircle(12,-14,5); }
+    else     { gfx.fillCircle(-16,8,5); gfx.fillCircle(16,8,5); }
+    gfx.lineStyle(1.5,SKO,1);
+    if(held){ gfx.strokeCircle(-12,-14,5);gfx.strokeCircle(12,-14,5); }
+    else     { gfx.strokeCircle(-16,8,5); gfx.strokeCircle(16,8,5); }
+    gfx.fillStyle(0xf5d5a5,1).fillCircle(0,-22,8);
+    gfx.lineStyle(2,0x000000,1).strokeCircle(0,-22,8);
+    if(d.held) drawHeldItem(gfx,0,-19,ang,d.held);
+    // HP bar: reset rotation so bar stays horizontal in world space
+    if(d.hp<MAX_HP){
+      const hpr=Math.max(0,d.hp/MAX_HP);
+      gfx.setRotation(0);
+      gfx.fillStyle(0x27ae60,1).fillRect(-16,-P_RAD-12,32*hpr,4);
+      gfx.fillStyle(0xc0392b,1).fillRect(-16+32*hpr,-P_RAD-12,32*(1-hpr),4);
+    }
   }
 
   mkSleeping(id,d){
