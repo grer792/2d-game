@@ -457,6 +457,13 @@
   </div>
 </div>
 
+<div id="sleeping-panel" class="panel" style="display:none;min-width:300px">
+  <button class="close-btn" onclick="document.getElementById('sleeping-panel').style.display='none'">✕</button>
+  <h3>💤 Looting <span id="sleeping-panel-name"></span></h3>
+  <div id="sleeping-panel-items" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:40px"></div>
+  <div style="margin-top:8px;font-size:10px;color:#666">Click item to take • Attack to kill & loot all</div>
+</div>
+
 <div id="inv-panel">
   <button class="close-btn" onclick="document.getElementById('inv-panel').style.display='none'">✕</button>
   <h3>🎒 INVENTORY</h3>
@@ -1006,7 +1013,7 @@ class Game extends Phaser.Scene {
     this.setupFirebase();
     window.addEventListener('beforeunload',()=>{
       if(!isDead){
-        try{set(sref('sleeping/'+PID),{x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now()});}catch(e){}
+        try{const si=inv.filter(x=>x).map(x=>({type:x.type,count:x.count}));set(sref('sleeping/'+PID),{x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now(),inv:si});}catch(e){}
       }
       remove(sref('players/'+PID));remove(sref('wolves/'+PID));
     });
@@ -1085,6 +1092,7 @@ class Game extends Phaser.Scene {
     sleepingData[id]=d;
     if(!sleepingSpr[id]){this.mkSleeping(id,d);return;}
     this.drawSleeping(sleepingSpr[id].g,d);
+    if(activeSleepingLootId===id)renderSleepingPanel();
   }
   drawSleeping(g,d){
     const {x,y,color}=d, c=color||0x888888;
@@ -1468,11 +1476,13 @@ class Game extends Phaser.Scene {
     onChildRemoved(sref('sleeping'),s=>{
       if(sleepingSpr[s.key]){sleepingSpr[s.key].g.destroy();sleepingSpr[s.key].l.destroy();delete sleepingSpr[s.key];}
       delete sleepingData[s.key];
+      if(activeSleepingLootId===s.key){activeSleepingLootId=null;document.getElementById('sleeping-panel').style.display='none';}
     });
     // Register onDisconnect to persist sleeping state when connection drops
     const registerDisconnect=()=>{
       if(isDead)return;
-      onDisconnect(sref('sleeping/'+PID)).set({x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now()});
+      const si=inv.filter(x=>x).map(x=>({type:x.type,count:x.count}));
+      onDisconnect(sref('sleeping/'+PID)).set({x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now(),inv:si});
       onDisconnect(sref('players/'+PID)).remove();
       onDisconnect(sref('wolves/'+PID)).remove();
     };
@@ -1636,12 +1646,13 @@ class Game extends Phaser.Scene {
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
     }
-    // Attack sleeping (offline) players
+    // Attack sleeping (offline) players — hammer opens loot panel instead
     for(const [id,d] of Object.entries(sleepingData)){
       if(state.teamId&&d.teamId===state.teamId)continue;
       const sx=d.x, sy=d.y;
       if(dist2(sx,sy,px,py)>range+20)continue;
       if(dist2(ptr.worldX,ptr.worldY,sx,sy)>clickRange)continue;
+      if(tool==='hammer'){openSleepingLoot(id);return true;}
       if(isBow){if(!invCount('arrow')){this.pop(state.x,state.y-30,'No arrows!','#e74c3c');return false;}invRemove('arrow',1);refreshHotbar();}
       if(isCrossbow){if(!invCount('bolt')){this.pop(state.x,state.y-30,'No bolts!','#e74c3c');return false;}invRemove('bolt',1);refreshHotbar();}
       const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:isBow?BOW_DMG:isCrossbow?CROSSBOW_DMG:FIST_DMG;
@@ -1652,6 +1663,8 @@ class Game extends Phaser.Scene {
       if(newHp<=0){
         const bag={x:sx,y:sy+10}; let hasDrop=false;
         if(d.armor){for(const slot of ['head','chest','legs']){if(d.armor[slot]){bag['armor_'+slot]=(bag['armor_'+slot]||0)+1;hasDrop=true;}}}
+        const items=d.inv?(Array.isArray(d.inv)?d.inv:Object.values(d.inv)):[];
+        for(const it of items){if(it?.type){bag[it.type]=(bag[it.type]||0)+it.count;hasDrop=true;}}
         if(hasDrop)set(sref('loot/sleep_'+id+'_'+Date.now()),bag);
         remove(sref('sleeping/'+id));
         state.score+=50; this.updateHUD();
@@ -1811,7 +1824,7 @@ class Game extends Phaser.Scene {
     state.armor={head:false,chest:false,legs:false}; refreshArmorHUD();
     refreshHotbar();
     // Close any open panels
-    ['chest-panel','craft-panel','team-panel','inv-panel','furnace-panel','workbench-panel'].forEach(id=>document.getElementById(id).style.display='none');
+    ['chest-panel','craft-panel','team-panel','inv-panel','furnace-panel','workbench-panel','sleeping-panel'].forEach(id=>document.getElementById(id).style.display='none');
     closeFurnace();
     respawnAllowedAt=Date.now()+RESPAWN_DELAY;
     showDeathScreen();
@@ -2242,7 +2255,7 @@ function drawHeldItem(g,tx,ty,ang,tool){
     g.fillStyle(0xf0c040,1).fillCircle(tx-2,ty-14,2);
   } else if(tool==='bow'){
     g.lineStyle(3,0x8b5e3c,1);
-    g.beginPath();g.moveTo(tx-8,ty-10);g.quadraticCurveTo(tx+6,ty-2,tx-8,ty+10);g.strokePath();
+    g.beginPath();g.moveTo(tx-8,ty-10);g.lineTo(tx+1,ty-6);g.lineTo(tx+5,ty);g.lineTo(tx+1,ty+6);g.lineTo(tx-8,ty+10);g.strokePath();
     g.fillStyle(0x8b5e3c,1).fillRect(tx-3,ty-12,4,22);
     g.lineStyle(1,0xeee8aa,0.9);g.beginPath();g.moveTo(tx-8,ty-10);g.lineTo(tx-8,ty+10);g.strokePath();
   } else if(tool==='crossbow'){
@@ -2427,6 +2440,50 @@ window.craftWB=function(id){
   invAdd(id2,cnt);
   window._scene&&window._scene.pop(state.x,state.y-34,(ITEM_ICON[id2]||id2)+' crafted!','#3498db');
   renderWorkbenchPanel();
+};
+
+// ── Sleeping Loot Panel ───────────────────────────────────────────────────────
+let activeSleepingLootId=null;
+function openSleepingLoot(id){
+  const d=sleepingData[id]; if(!d)return;
+  activeSleepingLootId=id;
+  document.getElementById('sleeping-panel-name').textContent=d.name||id.substr(-4).toUpperCase();
+  renderSleepingPanel();
+  document.getElementById('sleeping-panel').style.display='block';
+}
+function renderSleepingPanel(){
+  const d=sleepingData[activeSleepingLootId]; if(!d){document.getElementById('sleeping-panel').style.display='none';return;}
+  const items=d.inv?(Array.isArray(d.inv)?d.inv:Object.values(d.inv)):[];
+  const armor=d.armor||{};
+  const allItems=[
+    ...items.filter(x=>x?.type),
+    ...['head','chest','legs'].filter(s=>armor[s]).map(s=>({type:'armor_'+s,count:1}))
+  ];
+  document.getElementById('sleeping-panel-items').innerHTML=allItems.length
+    ? allItems.map(it=>`<div class="furn-slot" style="cursor:pointer;min-width:52px" onclick="takeSleepingItem('${it.type}')">
+        <div style="font-size:18px">${ITEM_ICON[it.type]||'?'}</div>
+        <div style="font-size:10px;color:#ccc">${it.type.slice(0,6)}</div>
+        <div style="font-size:10px;color:#f0c040">${it.count>1?'x'+it.count:''}</div>
+      </div>`).join('')
+    : '<div style="color:#555;font-size:12px;padding:8px">Empty</div>';
+}
+window.takeSleepingItem=function(type){
+  const id=activeSleepingLootId; const d=sleepingData[id]; if(!d)return;
+  // Take armor piece
+  if(type.startsWith('armor_')){
+    const slot=type.replace('armor_','');
+    if(!d.armor||!d.armor[slot])return;
+    if(!invAdd(type,1)){window._scene&&window._scene.pop(state.x,state.y-30,'Inventory full!','#e74c3c');return;}
+    update(sref('sleeping/'+id+'/armor'),{[slot]:false});
+    return;
+  }
+  // Take inventory item
+  const items=d.inv?(Array.isArray(d.inv)?d.inv:Object.values(d.inv)):[];
+  const idx=items.findIndex(x=>x?.type===type); if(idx<0)return;
+  const it=items[idx];
+  if(!invAdd(it.type,it.count)){window._scene&&window._scene.pop(state.x,state.y-30,'Inventory full!','#e74c3c');return;}
+  items.splice(idx,1);
+  update(sref('sleeping/'+id),{inv:items});
 };
 
 // ── Death Screen ─────────────────────────────────────────────────────────────
