@@ -1048,40 +1048,66 @@ class Game extends Phaser.Scene {
   redrawMe(){
     const g=this.pgfx; g.clear();
     const ang=Math.atan2(state.dirY,state.dirX);
-    const hx=Math.cos(ang)*(P_RAD-1), hy=Math.sin(ang)*(P_RAD-1);
-    g.fillStyle(0x000000,0.18).fillEllipse(2,P_RAD+5,P_RAD*2.4,8);
-    g.fillStyle(MY_COLOR,1).fillCircle(0,0,P_RAD);
-    g.fillStyle(lerpColor(MY_COLOR,0xffffff,0.35),0.5).fillCircle(-3,-3,P_RAD*0.55);
-    g.lineStyle(2.5,0x000000,0.85).strokeCircle(0,0,P_RAD);
-    if(state.teamId){ g.lineStyle(3,teamColor(state.teamId),0.85).strokeCircle(0,0,P_RAD+4); }
+    const hx=Math.cos(ang)*(P_RAD+3), hy=Math.sin(ang)*(P_RAD+3);
+    const r=P_RAD;
+    // Ground shadow
+    g.fillStyle(0x000000,0.20).fillEllipse(3,r+7,r*2.8,10);
+    // Body oval — player identity color
+    g.fillStyle(MY_COLOR,1).fillEllipse(0,1,r*2.2,r*2.3);
+    g.lineStyle(2.5,0x000000,0.85).strokeEllipse(0,1,r*2.2,r*2.3);
+    // Backpack
+    g.fillStyle(0x3d4f28,1).fillEllipse(0,0,r*1.85,r*1.85);
+    g.fillStyle(0x566c38,0.55).fillEllipse(-1,-4,r*1.4,r*0.75);
+    g.lineStyle(1,0x252f18,0.9);
+    g.beginPath(); g.moveTo(-9,-5); g.lineTo(9,-5); g.strokePath();
+    g.beginPath(); g.moveTo(-9,-1); g.lineTo(9,-1); g.strokePath();
+    g.beginPath(); g.moveTo(-9, 3); g.lineTo(9, 3); g.strokePath();
+    g.fillStyle(0x1e2c10,1).fillRect(-5,-4,10,5);
+    g.lineStyle(0.8,0x4a6030,1).strokeRect(-5,-4,10,5);
+    g.lineStyle(2,0x1a2210,1).strokeEllipse(0,0,r*1.85,r*1.85);
+    // Side buckles
+    g.fillStyle(0xc07018,1).fillRect(-r-1,-2,3,5); g.fillRect(r-2,-2,3,5);
+    // Team / armor rings
+    if(state.teamId){ g.lineStyle(3,teamColor(state.teamId),0.9).strokeEllipse(0,1,r*2.6,r*2.7); }
     const armorCount=(state.armor.head?1:0)+(state.armor.chest?1:0)+(state.armor.legs?1:0);
-    if(armorCount>0){ g.lineStyle(armorCount,0x90b8e0,0.65).strokeCircle(0,0,P_RAD+(state.teamId?8:5)); }
+    if(armorCount>0){ g.lineStyle(armorCount,0x90b8e0,0.65).strokeEllipse(0,1,r*2.6+(state.teamId?6:0),r*2.7+(state.teamId?6:0)); }
+    // Head
     g.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,7);
-    g.lineStyle(1.5,0xc49060,0.9).strokeCircle(hx,hy,7);
-    const r1=ang+0.55, r2=ang-0.55;
+    g.lineStyle(2,0xb88050,1).strokeCircle(hx,hy,7);
+    const e1=ang+0.55, e2=ang-0.55;
     g.fillStyle(0x222222,1);
-    g.fillCircle(hx+Math.cos(r1)*3.2,hy+Math.sin(r1)*3.2,1.6);
-    g.fillCircle(hx+Math.cos(r2)*3.2,hy+Math.sin(r2)*3.2,1.6);
-    const tx=Math.cos(ang)*(P_RAD+10), ty=Math.sin(ang)*(P_RAD+10);
+    g.fillCircle(hx+Math.cos(e1)*3,hy+Math.sin(e1)*3,1.5);
+    g.fillCircle(hx+Math.cos(e2)*3,hy+Math.sin(e2)*3,1.5);
+    const tx=Math.cos(ang)*(r+12), ty=Math.sin(ang)*(r+12);
     const tool=getActiveTool()||inv[selectedSlot]?.type||null;
     if(tool) drawHeldItem(g,tx,ty,ang,tool);
   }
 
   drawOther(gfx,d){
     gfx.clear();
-    const {x,y,color,teamId:tid}=d, c=color||0x888888;
+    const {x,y,color,teamId:tid}=d, c=color||0xe07020;
     const friendly=state.teamId&&tid===state.teamId, enemy=tid&&tid!==state.teamId;
     const ang=Math.atan2(d.dirY??-1,d.dirX??0);
-    const hx=x+Math.cos(ang)*(P_RAD-1), hy=y+Math.sin(ang)*(P_RAD-1);
-    gfx.fillStyle(0x000000,0.15).fillEllipse(x+2,y+P_RAD+5,P_RAD*2.4,8);
-    gfx.fillStyle(c,1).fillCircle(x,y,P_RAD);
-    gfx.fillStyle(lerpColor(c,0xffffff,0.35),0.5).fillCircle(x-3,y-3,P_RAD*0.55);
-    gfx.lineStyle(2.5,0x000000,0.85).strokeCircle(x,y,P_RAD);
-    if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.85).strokeCircle(x,y,P_RAD+4); }
-    gfx.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,6);
-    gfx.lineStyle(1,0xc49060,0.7).strokeCircle(hx,hy,6);
-    if(d.held){ const tx=x+Math.cos(ang)*(P_RAD+10), ty=y+Math.sin(ang)*(P_RAD+10); drawHeldItem(gfx,tx,ty,ang,d.held); }
-    if(d.hp<MAX_HP){ const r=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-P_RAD-8,32*r,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*r,y-P_RAD-8,32*(1-r),4); }
+    const hx=x+Math.cos(ang)*(P_RAD+3), hy=y+Math.sin(ang)*(P_RAD+3);
+    const r=P_RAD;
+    gfx.fillStyle(0x000000,0.20).fillEllipse(x+3,y+r+7,r*2.8,10);
+    gfx.fillStyle(c,1).fillEllipse(x,y+1,r*2.2,r*2.3);
+    gfx.lineStyle(2.5,0x000000,0.85).strokeEllipse(x,y+1,r*2.2,r*2.3);
+    gfx.fillStyle(0x3d4f28,1).fillEllipse(x,y,r*1.85,r*1.85);
+    gfx.fillStyle(0x566c38,0.55).fillEllipse(x-1,y-4,r*1.4,r*0.75);
+    gfx.lineStyle(1,0x252f18,0.9);
+    gfx.beginPath(); gfx.moveTo(x-9,y-5); gfx.lineTo(x+9,y-5); gfx.strokePath();
+    gfx.beginPath(); gfx.moveTo(x-9,y-1); gfx.lineTo(x+9,y-1); gfx.strokePath();
+    gfx.beginPath(); gfx.moveTo(x-9,y+3); gfx.lineTo(x+9,y+3); gfx.strokePath();
+    gfx.fillStyle(0x1e2c10,1).fillRect(x-5,y-4,10,5);
+    gfx.lineStyle(0.8,0x4a6030,1).strokeRect(x-5,y-4,10,5);
+    gfx.lineStyle(2,0x1a2210,1).strokeEllipse(x,y,r*1.85,r*1.85);
+    gfx.fillStyle(0xc07018,1).fillRect(x-r-1,y-2,3,5); gfx.fillRect(x+r-2,y-2,3,5);
+    if(tid){ const ring=friendly?0x2ecc71:(enemy?0xe74c3c:teamColor(tid)); gfx.lineStyle(3,ring,0.9).strokeEllipse(x,y+1,r*2.6,r*2.7); }
+    gfx.fillStyle(0xf5d5a5,1).fillCircle(hx,hy,7);
+    gfx.lineStyle(2,0xb88050,1).strokeCircle(hx,hy,7);
+    if(d.held){ const tx=x+Math.cos(ang)*(r+12), ty=y+Math.sin(ang)*(r+12); drawHeldItem(gfx,tx,ty,ang,d.held); }
+    if(d.hp<MAX_HP){ const hpr=Math.max(0,d.hp/MAX_HP); gfx.fillStyle(0x27ae60,1).fillRect(x-16,y-r-8,32*hpr,4); gfx.fillStyle(0xc0392b,1).fillRect(x-16+32*hpr,y-r-8,32*(1-hpr),4); }
   }
 
   mkSleeping(id,d){
