@@ -702,6 +702,26 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 </div>
 
 <script>
+  // Panel open/close — lives outside Firebase module so button always works
+  function openAuthPanel(){
+    document.getElementById('auth-overlay').classList.add('open');
+    document.getElementById('auth-panel').classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeAuthPanel(){
+    document.getElementById('auth-overlay').classList.remove('open');
+    document.getElementById('auth-panel').classList.remove('open');
+    document.body.style.overflow='';
+    document.getElementById('auth-step-1').style.display='';
+    document.getElementById('auth-step-2').style.display='none';
+    document.getElementById('auth-email-input').value='';
+    document.getElementById('auth-email-continue').disabled=true;
+    document.getElementById('auth-err').textContent='';
+  }
+  window._openAuthPanel=openAuthPanel;
+  window._closeAuthPanel=closeAuthPanel;
+</script>
+<script>
   function cookieAccept() {
     localStorage.setItem('cookieConsent', '1');
     document.getElementById('cookieOverlay').style.display = 'none';
@@ -760,27 +780,8 @@ const app = getApps().length ? getApps()[0] : initializeApp({
 });
 const auth = getAuth(app);
 let _authTab = 'signin';
-
-function openPanel(){
-  document.getElementById('auth-overlay').classList.add('open');
-  document.getElementById('auth-panel').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closePanel(){
-  document.getElementById('auth-overlay').classList.remove('open');
-  document.getElementById('auth-panel').classList.remove('open');
-  document.body.style.overflow='';
-  resetPanel();
-}
-function resetPanel(){
-  document.getElementById('auth-step-1').style.display='';
-  document.getElementById('auth-step-2').style.display='none';
-  document.getElementById('auth-email-input').value='';
-  document.getElementById('auth-email-continue').disabled=true;
-  document.getElementById('auth-err').textContent='';
-}
-window._openAuthPanel=openPanel;
-window._closeAuthPanel=closePanel;
+const openPanel=window._openAuthPanel;
+const closePanel=window._closeAuthPanel;
 
 onAuthStateChanged(auth, user=>{
   const loginBtn=document.getElementById('btn-header-login');
