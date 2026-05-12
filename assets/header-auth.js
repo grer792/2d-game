@@ -315,7 +315,7 @@ window._doSignOut=async()=>{ await signOut(auth); closeProfilePanel(); };
 // ── Profile ──
 const ADJS=['Shadow','Neon','Ghost','Cyber','Storm','Dark','Blaze','Frost','Steel','Thunder','Savage','Swift','Toxic','Hyper','Alpha','Stealth','Rogue','Venom'];
 const NOUNS=['Wolf','Bonker','Hunter','Raider','Knight','Blade','Fox','Hawk','Viper','Tiger','Ranger','Ninja','Sniper','Reaper','Phantom'];
-function genUsername(){ const a=ADJS[Math.floor(Math.random()*ADJS.length)]; const n=NOUNS[Math.floor(Math.random()*NOUNS.length)]; const s=Math.random().toString(36).slice(2,6).toUpperCase(); return `${a}${n}.${s}`; }
+function genUsername(){ const a=ADJS[Math.floor(Math.random()*ADJS.length)]; const n=NOUNS[Math.floor(Math.random()*NOUNS.length)]; const s=Math.floor(Math.random()*9000)+1000; return `${a}${n}${s}`; }
 let _currentUsername='';
 let _currentAvatar=0;
 
@@ -395,19 +395,27 @@ window._saveUsername=async()=>{
   const newName=document.getElementById('prof-uname-input').value.trim();
   const errEl=document.getElementById('prof-uname-err'); errEl.textContent='';
   if(!newName||newName.length<3){errEl.textContent='At least 3 characters.';return;}
-  if(!/^[a-zA-Z0-9_.]+$/.test(newName)){errEl.textContent='Letters, numbers, _ and . only.';return;}
+  if(newName.length>20){errEl.textContent='Max 20 characters.';return;}
+  if(!/^[a-zA-Z0-9_]+$/.test(newName)){errEl.textContent='Letters, numbers and _ only.';return;}
   if(newName===_currentUsername){cancelUsernameEdit();return;}
   const uid=auth.currentUser?.uid; if(!uid)return;
+  const saveBtn=document.querySelector('.prof-save');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving...';}
   try{
     const snap=await get(ref(db,`usernames/${newName}`));
-    if(snap.exists()){errEl.textContent='Username already taken.';return;}
-    await remove(ref(db,`usernames/${_currentUsername}`));
+    if(snap.exists()&&snap.val()!==uid){errEl.textContent='Username already taken.';return;}
+    // Claim new name first, then update profile
     await set(ref(db,`usernames/${newName}`),uid);
     await set(ref(db,`profiles/${uid}/username`),newName);
+    // Clean up old key — non-fatal if rules block it
+    if(_currentUsername&&_currentUsername!==newName){
+      try{ await remove(ref(db,`usernames/${_currentUsername}`)); }catch(e){}
+    }
     _currentUsername=newName;
     localStorage.setItem(`bg_profile_${uid}`,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
     updateProfileUI(auth.currentUser); cancelUsernameEdit();
   }catch(e){ errEl.textContent='Error saving. Try again.'; }
+  finally{ if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save';} }
 };
 
 // ── Favorites ──
