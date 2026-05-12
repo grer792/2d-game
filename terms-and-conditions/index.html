@@ -327,7 +327,11 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
     </button>
     <div class="header-divider"></div>
-    <button class="btn-login">Log in</button>
+    <button class="btn-login" id="btn-header-login" onclick="window._openAuthPanel&&window._openAuthPanel()">Log in</button>
+    <div class="user-badge" id="user-badge" style="display:none" onclick="window._openProfilePanel&&window._openProfilePanel()">
+      <div class="u-avatar" id="u-avatar">?</div>
+      <span class="u-name" id="u-name"></span>
+    </div>
   </div>
 </header>
 
@@ -574,6 +578,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
   </main>
 </div>
 
+<script type="module" src="/assets/header-auth.js"></script>
 <script>
   const sidebar = document.getElementById('sidebar');
   const btn = document.getElementById('sidebarToggle');
