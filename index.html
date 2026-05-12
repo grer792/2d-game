@@ -332,24 +332,29 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 /* ── FAV PANEL ── */
 #fav-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:298;backdrop-filter:blur(3px);}
 #fav-overlay.open{display:block;}
-#fav-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:320px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+#fav-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
 #fav-panel.open{transform:translateX(0);}
-.fav-panel-head{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 14px;flex-shrink:0;}
-.fav-panel-title{font-size:1rem;font-weight:800;}
-.fav-panel-close{background:transparent;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;}
+.fav-panel-head{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;padding:18px 16px 0;flex-shrink:0;}
+.fav-panel-title{font-size:1rem;font-weight:800;text-align:center;}
+.fav-panel-close{background:transparent;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;justify-self:end;}
 .fav-panel-close:hover{background:var(--bg3);color:var(--text);}
-.fav-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:0 8px 16px;}
+.fav-tabs{display:flex;border-bottom:1px solid var(--border);margin:14px 0 0;flex-shrink:0;}
+.fav-tab{flex:1;background:transparent;border:none;color:var(--text2);font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:600;padding:10px 0 12px;cursor:pointer;position:relative;transition:color .15s;}
+.fav-tab:hover{color:var(--text);}
+.fav-tab.active{color:var(--text);}
+.fav-tab.active::after{content:'';position:absolute;bottom:-1px;left:16%;right:16%;height:2px;background:var(--accent);border-radius:2px;}
+.fav-scroll{flex:1;overflow-y:auto;}
+.fav-thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:10px 10px 16px;}
 .fav-thumb-item{position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg3);}
 .fav-thumb-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s;}
 .fav-thumb-item:hover img{transform:scale(1.05);}
 .fav-thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;}
 .fav-thumb-item:hover .fav-thumb-overlay{opacity:1;}
 .fav-thumb-name{color:#fff;font-size:0.72rem;font-weight:700;}
-.fav-thumb-rm{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#ff4d6d;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .15s;}
-.fav-thumb-rm svg{width:13px;height:13px;fill:currentColor;}
+.fav-thumb-rm{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;background:var(--red);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+.fav-thumb-rm svg{width:12px;height:12px;fill:currentColor;}
 .fav-thumb-item:hover .fav-thumb-rm{opacity:1;}
-.fav-thumb-rm:hover{background:rgba(255,77,109,.25);}
-.fav-empty{padding:48px 24px;text-align:center;color:var(--text2);font-size:0.85rem;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+.fav-empty{padding:48px 24px;text-align:center;color:var(--text2);font-size:0.85rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
 .fav-empty svg{width:38px;height:38px;fill:var(--bg4);}
 
 /* ── SECTION ── */
@@ -691,11 +696,19 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 <div id="fav-overlay" onclick="window._closeFavPanel&&window._closeFavPanel()"></div>
 <div id="fav-panel">
   <div class="fav-panel-head">
-    <span class="fav-panel-title" id="fav-panel-title">Favorites</span>
+    <span></span>
+    <span class="fav-panel-title">My games</span>
     <button class="fav-panel-close" onclick="window._closeFavPanel&&window._closeFavPanel()">✕</button>
   </div>
-  <div class="fav-thumb-grid" id="fav-thumb-grid"></div>
-  <div class="fav-empty" id="fav-empty" style="display:none"></div>
+  <div class="fav-tabs">
+    <button class="fav-tab active" id="fav-tab-recent" onclick="window._setFavTab&&window._setFavTab('recent')">Recent</button>
+    <button class="fav-tab" id="fav-tab-favorites" onclick="window._setFavTab&&window._setFavTab('favorites')">Favorites</button>
+    <button class="fav-tab" id="fav-tab-liked" onclick="window._setFavTab&&window._setFavTab('liked')">Liked</button>
+  </div>
+  <div class="fav-scroll">
+    <div class="fav-thumb-grid" id="fav-thumb-grid"></div>
+    <div class="fav-empty" id="fav-empty" style="display:none"></div>
+  </div>
 </div>
 
 <!-- PROFILE PANEL -->
@@ -921,6 +934,7 @@ onAuthStateChanged(auth, user=>{
     badge.style.display='none';
     _currentUsername='';
     _favs=new Set();
+    _liked=new Set();
     updateFavBtns();
   }
 });
@@ -1122,6 +1136,8 @@ const GAMES_MAP={
   'bonker-chess':{id:'bonker-chess',name:'Bonker Chess',url:'/game/bonker-chess',thumb:'/games/bonker-chess/thumb.svg'},
 };
 let _favs=new Set();
+let _liked=new Set();
+let _favTab='recent';
 
 function openFavPanel(){
   document.getElementById('fav-overlay').classList.add('open');
@@ -1136,6 +1152,13 @@ function closeFavPanel(){
 }
 window._openFavPanel=openFavPanel;
 window._closeFavPanel=closeFavPanel;
+window._setFavTab=function(tab){
+  _favTab=tab;
+  ['recent','favorites','liked'].forEach(t=>{
+    document.getElementById(`fav-tab-${t}`).classList.toggle('active',t===tab);
+  });
+  renderFavPanel();
+};
 
 window._trackRecent=function(id){
   try{
@@ -1145,39 +1168,65 @@ window._trackRecent=function(id){
   }catch(e){}
 };
 
+const X_ICO='<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
 function renderFavPanel(){
   const user=auth.currentUser;
-  document.getElementById('fav-panel-title').textContent=user?'Favorites':'Recently played';
   const gridEl=document.getElementById('fav-thumb-grid');
   const emptyEl=document.getElementById('fav-empty');
-  let ids=user?[..._favs]:[];
-  if(!user){try{ids=JSON.parse(localStorage.getItem('bg_recent')||'[]');}catch(e){}}
+  let ids=[];
+  let removeFn=null;
+  let emptyMsg='Nothing here yet.';
+  if(_favTab==='recent'){
+    try{ids=JSON.parse(localStorage.getItem('bg_recent')||'[]');}catch(e){}
+    emptyMsg='No games played yet.';
+  } else if(_favTab==='favorites'){
+    ids=user?[..._favs]:[];
+    removeFn=user?id=>`window._toggleFav('${id}')`:null;
+    emptyMsg=user?'Heart a game to save it here.':'Sign in to save favorites.';
+  } else if(_favTab==='liked'){
+    ids=user?[..._liked]:[];
+    removeFn=user?id=>`window._toggleLiked('${id}')`:null;
+    emptyMsg=user?'No liked games yet.':'Sign in to like games.';
+  }
   const games=ids.map(id=>GAMES_MAP[id]).filter(Boolean);
   if(!games.length){
     gridEl.innerHTML='';
     emptyEl.style.display='';
-    emptyEl.innerHTML=user?
-      '<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>Heart a game to save it here.</span>':
-      '<svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zm-1 5h2v6h-2zm0 8h2v2h-2z"/></svg><span>No games played yet.</span>';
+    emptyEl.innerHTML=`<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>${emptyMsg}</span>`;
     return;
   }
   emptyEl.style.display='none';
-  const HEART='<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
   gridEl.innerHTML=games.map(g=>`
     <div class="fav-thumb-item" onclick="window._trackRecent&&window._trackRecent('${g.id}');window.location.href='${g.url}'">
       <img src="${g.thumb}" alt="${g.name}">
       <div class="fav-thumb-overlay"><span class="fav-thumb-name">${g.name}</span></div>
-      ${user?`<button class="fav-thumb-rm" onclick="event.stopPropagation();window._toggleFav('${g.id}')" title="Remove">${HEART}</button>`:''}
+      ${removeFn?`<button class="fav-thumb-rm" onclick="event.stopPropagation();${removeFn(g.id)}" title="Remove">${X_ICO}</button>`:''}
     </div>`).join('');
 }
 
 async function loadFavs(uid){
   try{
-    const snap=await get(ref(db,`favorites/${uid}`));
-    _favs=new Set(snap.exists()?Object.keys(snap.val()):[]);
-  }catch(e){ _favs=new Set(); }
+    const [snapF,snapL]=await Promise.all([
+      get(ref(db,`favorites/${uid}`)),
+      get(ref(db,`liked/${uid}`))
+    ]);
+    _favs=new Set(snapF.exists()?Object.keys(snapF.val()):[]);
+    _liked=new Set(snapL.exists()?Object.keys(snapL.val()):[]);
+  }catch(e){ _favs=new Set(); _liked=new Set(); }
   updateFavBtns();
 }
+window._toggleLiked=async(id)=>{
+  const uid=auth.currentUser?.uid;
+  if(!uid){ window._openAuthPanel&&window._openAuthPanel(); return; }
+  if(_liked.has(id)){
+    _liked.delete(id);
+    try{ await remove(ref(db,`liked/${uid}/${id}`)); }catch(e){}
+  } else {
+    _liked.add(id);
+    try{ await set(ref(db,`liked/${uid}/${id}`),true); }catch(e){}
+  }
+  if(document.getElementById('fav-panel').classList.contains('open')) renderFavPanel();
+};
 
 function updateFavBtns(){
   document.querySelectorAll('[data-fav-game]').forEach(btn=>{
