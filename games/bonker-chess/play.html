@@ -280,14 +280,15 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
       <span class="notif-dot"></span>
     </button>
-    <button class="icon-btn">
+    <button class="icon-btn" title="Favorites" onclick="window._openFavPanel&&window._openFavPanel()">
       <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
     </button>
-    <button class="icon-btn">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-    </button>
     <div class="header-divider"></div>
-    <button class="btn-login">Log in</button>
+    <button class="btn-login" id="btn-header-login" onclick="window._openAuthPanel&&window._openAuthPanel()">Log in</button>
+    <div class="user-badge" id="user-badge" style="display:none" onclick="window._openProfilePanel&&window._openProfilePanel()">
+      <div class="u-avatar" id="u-avatar"></div>
+      <span class="u-name" id="u-name"></span>
+    </div>
   </div>
 </header>
 
@@ -351,7 +352,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           <span class="bar-game-title">Bonker Chess</span>
         </div>
         <div class="game-bar-actions">
-          <button class="bar-btn" id="likeBtn" onclick="toggleLike()">
+          <button class="bar-btn" id="likeBtn" onclick="window._toggleLiked?window._toggleLiked('bonker-chess'):toggleLike()">
             <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
             12K
           </button>
@@ -359,7 +360,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
           </button>
           <div class="bar-sep"></div>
-          <button class="bar-btn" id="favBtn" onclick="toggleFav()">
+          <button class="bar-btn" id="favBtn" onclick="window._toggleFav?window._toggleFav('bonker-chess'):toggleFav()">
             <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             Favorite
           </button>
@@ -425,6 +426,13 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
   </main>
 </div>
 
+<script>
+window.CURRENT_GAME_ID='bonker-chess';
+function openAuthPanel(){const p=document.getElementById('auth-panel');const o=document.getElementById('auth-overlay');if(p){o.classList.add('open');p.classList.add('open');document.body.style.overflow='hidden';}}
+function closeAuthPanel(){const p=document.getElementById('auth-panel');const o=document.getElementById('auth-overlay');if(p){o.classList.remove('open');p.classList.remove('open');document.body.style.overflow='';}}
+window._openAuthPanel=openAuthPanel;window._closeAuthPanel=closeAuthPanel;
+</script>
+<script type="module" src="/assets/header-auth.js"></script>
 <script>
 let liked = false, disliked = false, faved = false;
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -36,7 +36,7 @@ body {
 }
 a { text-decoration: none; color: inherit; }
 
-/* ── HEADER ── */
+/* â”€â”€ HEADER â”€â”€ */
 .header {
   position: fixed; top: 0; left: 0; right: 0;
   height: var(--header-h);
@@ -124,10 +124,10 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-login:hover { background: var(--accent-h); }
 
-/* ── LAYOUT ── */
+/* â”€â”€ LAYOUT â”€â”€ */
 .layout { display: flex; margin-top: var(--header-h); flex: 1; }
 
-/* ── SIDEBAR ── (2 states: hidden or icon; hover expands) */
+/* â”€â”€ SIDEBAR â”€â”€ (2 states: hidden or icon; hover expands) */
 body.sidebar-off .sidebar  { width: 0; border-right: none; }
 body.sidebar-on  .sidebar  { width: var(--sw-icon); }
 
@@ -185,7 +185,7 @@ body.sidebar-on .sidebar:hover .sidebar-label { opacity: 1; }
 .sidebar-item .label { opacity: 0; transition: opacity var(--ease); pointer-events: none; }
 body.sidebar-on .sidebar:hover .sidebar-item .label { opacity: 1; }
 
-/* ── SIDEBAR BOTTOM ── */
+/* â”€â”€ SIDEBAR BOTTOM â”€â”€ */
 .sidebar-bottom {
   border-top: 1px solid var(--border);
   padding: 8px 7px 10px; display: flex; flex-direction: column; gap: 2px;
@@ -259,7 +259,7 @@ body.sidebar-on .sidebar:hover .sb-links { opacity: 1; }
 body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .sb-copy span { font-size: 0.72rem; color: var(--text2); white-space: nowrap; }
 
-/* ── MAIN ── */
+/* â”€â”€ MAIN â”€â”€ */
 .main { flex: 1; padding: 24px; min-width: 0; transition: margin-left var(--ease); }
 
 .cat-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
@@ -271,7 +271,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 }
 .cat-chip:hover, .cat-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
 
-/* ── HERO ── */
+/* â”€â”€ HERO â”€â”€ */
 .hero-card {
   border-radius: 16px; overflow: hidden;
   background: var(--bg2); border: 1px solid var(--border);
@@ -329,7 +329,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .card-fav-btn:hover,.card-fav-btn.liked{color:#ff4d6d;}
 .card-fav-btn.liked{opacity:1;}
 .game-card:hover .card-fav-btn{opacity:1;}
-/* ── FAV PANEL ── */
+/* â”€â”€ FAV PANEL â”€â”€ */
 #fav-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:298;backdrop-filter:blur(3px);}
 #fav-overlay.open{display:block;}
 #fav-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
@@ -357,7 +357,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .fav-empty{padding:48px 24px;text-align:center;color:var(--text2);font-size:0.85rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
 .fav-empty svg{width:38px;height:38px;fill:var(--bg4);}
 
-/* ── SECTION ── */
+/* â”€â”€ SECTION â”€â”€ */
 .section { margin-bottom: 32px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .section-title { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 7px; }
@@ -390,7 +390,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .card-meta { font-size: 0.7rem; color: var(--text2); display: flex; align-items: center; gap: 5px; }
 .card-dot { width: 2px; height: 2px; background: var(--text2); border-radius: 50%; flex-shrink: 0; }
 
-/* ── AUTH PANEL ── */
+/* â”€â”€ AUTH PANEL â”€â”€ */
 #auth-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:298;backdrop-filter:blur(3px);}
 #auth-overlay.open{display:block;}
 #auth-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:390px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column;}
@@ -438,7 +438,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .u-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0;overflow:hidden;}
 .u-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .u-name{font-size:.85rem;font-weight:600;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* ── PROFILE PANEL ── */
+/* â”€â”€ PROFILE PANEL â”€â”€ */
 #profile-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:298;backdrop-filter:blur(3px);}
 #profile-overlay.open{display:block;}
 #profile-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column;}
@@ -598,7 +598,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="sb-links">
         <a href="#">About</a><a href="/terms-and-conditions">Privacy</a><a href="/terms-and-conditions">Terms</a><a href="#">Contact</a>
       </div>
-      <div class="sb-copy"><span>© 2025 BonkerGames</span></div>
+      <div class="sb-copy"><span>Â© 2025 BonkerGames</span></div>
     </div>
   </aside>
 
@@ -619,10 +619,10 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
         <div class="hero-fade"></div>
       </div>
       <div class="hero-info">
-        <div class="hero-tag">🔥 Featured</div>
+        <div class="hero-tag">ðŸ”¥ Featured</div>
         <div class="hero-title">Bonker Survival</div>
-        <div class="hero-stars">★★★★★</div>
-        <div class="hero-desc">Build your base, gather resources, and raid enemies. Survive long enough to reach the top. Free multiplayer — play with friends right now.</div>
+        <div class="hero-stars">â˜…â˜…â˜…â˜…â˜…</div>
+        <div class="hero-desc">Build your base, gather resources, and raid enemies. Survive long enough to reach the top. Free multiplayer â€” play with friends right now.</div>
         <div class="hero-tags">
           <span class="game-tag">Survival</span>
           <span class="game-tag">Multiplayer</span>
@@ -658,31 +658,31 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           <div class="card-info"><div class="card-name">Bonker Chess</div><div class="card-meta">Strategy <span class="card-dot"></span> 2 Player</div></div>
         </div>
         <div class="game-card">
-          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">🏎️
+          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">ðŸŽï¸
             <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
           </div>
           <div class="card-info"><div class="card-name">Bonker Racer</div><div class="card-meta">Racing <span class="card-dot"></span> Multiplayer</div></div>
         </div>
         <div class="game-card">
-          <div class="card-thumb" style="background:linear-gradient(135deg,#0f2a1a,#1a3a2a);">🧩
+          <div class="card-thumb" style="background:linear-gradient(135deg,#0f2a1a,#1a3a2a);">ðŸ§©
             <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
           </div>
           <div class="card-info"><div class="card-name">Block Bonker</div><div class="card-meta">Puzzle <span class="card-dot"></span> Solo</div></div>
         </div>
         <div class="game-card">
-          <div class="card-thumb" style="background:linear-gradient(135deg,#2a1010,#3a1a1a);">🗡️
+          <div class="card-thumb" style="background:linear-gradient(135deg,#2a1010,#3a1a1a);">ðŸ—¡ï¸
             <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
           </div>
           <div class="card-info"><div class="card-name">Bonker Arena</div><div class="card-meta">Fighting <span class="card-dot"></span> Multiplayer</div></div>
         </div>
         <div class="game-card">
-          <div class="card-thumb" style="background:linear-gradient(135deg,#0a0a2a,#1a1a3a);">🌌
+          <div class="card-thumb" style="background:linear-gradient(135deg,#0a0a2a,#1a1a3a);">ðŸŒŒ
             <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
           </div>
           <div class="card-info"><div class="card-name">Space Bonker</div><div class="card-meta">Shooting <span class="card-dot"></span> Multiplayer</div></div>
         </div>
         <div class="game-card">
-          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1a10,#2a2a18);">⚽
+          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1a10,#2a2a18);">âš½
             <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
           </div>
           <div class="card-info"><div class="card-name">Bonker Ball</div><div class="card-meta">Sports <span class="card-dot"></span> Multiplayer</div></div>
@@ -698,7 +698,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
   <div class="fav-panel-head">
     <span></span>
     <span class="fav-panel-title">My games</span>
-    <button class="fav-panel-close" onclick="window._closeFavPanel&&window._closeFavPanel()">✕</button>
+    <button class="fav-panel-close" onclick="window._closeFavPanel&&window._closeFavPanel()">âœ•</button>
   </div>
   <div class="fav-tabs">
     <button class="fav-tab active" id="fav-tab-recent" onclick="window._setFavTab&&window._setFavTab('recent')">Recent</button>
@@ -714,7 +714,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 <!-- PROFILE PANEL -->
 <div id="profile-overlay" onclick="window._closeProfilePanel&&window._closeProfilePanel()"></div>
 <div id="profile-panel">
-  <button class="prof-close" onclick="window._closeProfilePanel&&window._closeProfilePanel()">✕</button>
+  <button class="prof-close" onclick="window._closeProfilePanel&&window._closeProfilePanel()">âœ•</button>
   <div class="prof-inner">
     <div class="prof-avatar" id="prof-avatar"></div>
     <div class="prof-username-row">
@@ -764,7 +764,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 <!-- AUTH PANEL -->
 <div id="auth-overlay" onclick="window._closeAuthPanel&&window._closeAuthPanel()"></div>
 <div id="auth-panel">
-  <button class="auth-close" onclick="window._closeAuthPanel&&window._closeAuthPanel()">✕</button>
+  <button class="auth-close" onclick="window._closeAuthPanel&&window._closeAuthPanel()">âœ•</button>
   <div class="auth-inner">
     <div class="auth-title">Log in or sign up</div>
 
@@ -781,7 +781,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 
     <!-- Step 2: password -->
     <div id="auth-step-2" style="display:none">
-      <button class="auth-back" onclick="window._authBack&&window._authBack()">← Back</button>
+      <button class="auth-back" onclick="window._authBack&&window._authBack()">â† Back</button>
       <div class="auth-email-shown" id="auth-step2-email"></div>
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-signin" onclick="window._authSetTab&&window._authSetTab('signin')">Sign in</button>
@@ -836,7 +836,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 </div>
 
 <script>
-  // Panel open/close — lives outside Firebase module so button always works
+  // Panel open/close â€” lives outside Firebase module so button always works
   function openAuthPanel(){
     document.getElementById('auth-overlay').classList.add('open');
     document.getElementById('auth-panel').classList.add('open');
@@ -902,372 +902,6 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
     this.style.borderColor = favved ? 'rgba(255,77,109,0.3)' : '';
   });
 </script>
-<script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
-import { getDatabase, ref, get, set, remove } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
-
-const app = getApps().length ? getApps()[0] : initializeApp({
-  apiKey:'AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU',
-  authDomain:'d-game-b50ef.firebaseapp.com',
-  projectId:'d-game-b50ef',
-  appId:'1:80712714092:web:4b15f70196f05942905549',
-  databaseURL:'https://d-game-b50ef-default-rtdb.firebaseio.com'
-});
-const db = getDatabase(app);
-const auth = getAuth(app);
-let _authTab = 'signin';
-const openPanel=window._openAuthPanel;
-const closePanel=window._closeAuthPanel;
-
-onAuthStateChanged(auth, user=>{
-  const loginBtn=document.getElementById('btn-header-login');
-  const badge=document.getElementById('user-badge');
-  if(user){
-    loginBtn.style.display='none';
-    badge.style.display='flex';
-    closePanel();
-    loadOrInitUsername(user.uid);
-    loadFavs(user.uid);
-  } else {
-    loginBtn.style.display='';
-    badge.style.display='none';
-    _currentUsername='';
-    _favs=new Set();
-    _liked=new Set();
-    updateFavBtns();
-  }
-});
-
-window._authGoogle=async()=>{
-  document.getElementById('auth-err').textContent='';
-  try{ await signInWithPopup(auth,new GoogleAuthProvider()); }
-  catch(e){ if(e.code!=='auth/popup-closed-by-user'&&e.code!=='auth/cancelled-popup-request') document.getElementById('auth-err').textContent=e.message; }
-};
-window._authFacebook=async()=>{
-  document.getElementById('auth-err').textContent='';
-  try{ await signInWithPopup(auth,new FacebookAuthProvider()); }
-  catch(e){ document.getElementById('auth-err').textContent=e.code==='auth/operation-not-supported-in-this-environment'||e.code==='auth/invalid-api-key'?'Facebook login needs setup in Firebase Console.':e.message; }
-};
-window._authApple=async()=>{
-  document.getElementById('auth-err').textContent='';
-  try{
-    const p=new OAuthProvider('apple.com');
-    p.addScope('name');p.addScope('email');
-    await signInWithPopup(auth,p);
-  }catch(e){ document.getElementById('auth-err').textContent=e.code==='auth/operation-not-supported-in-this-environment'?'Apple login needs setup in Firebase Console.':e.message; }
-};
-
-window._authEmailInput=()=>{
-  const v=document.getElementById('auth-email-input').value.trim();
-  document.getElementById('auth-email-continue').disabled=!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-};
-window._authEmailNext=()=>{
-  const email=document.getElementById('auth-email-input').value.trim();
-  document.getElementById('auth-step2-email').textContent=email;
-  document.getElementById('auth-step-1').style.display='none';
-  document.getElementById('auth-step-2').style.display='';
-  document.getElementById('auth-pw-input').value='';
-  document.getElementById('auth-pw-btn').disabled=true;
-  document.getElementById('auth-err').textContent='';
-  setTab('signin');
-};
-window._authBack=()=>{
-  document.getElementById('auth-step-1').style.display='';
-  document.getElementById('auth-step-2').style.display='none';
-  document.getElementById('auth-err').textContent='';
-};
-
-function setTab(t){
-  _authTab=t;
-  document.getElementById('tab-signin').classList.toggle('active',t==='signin');
-  document.getElementById('tab-create').classList.toggle('active',t==='create');
-  document.getElementById('auth-name-row').style.display=t==='create'?'':'none';
-  document.getElementById('auth-pw-btn').textContent=t==='signin'?'Sign in':'Create account';
-  document.getElementById('auth-err').textContent='';
-}
-window._authSetTab=setTab;
-
-window._authPwInput=()=>{
-  document.getElementById('auth-pw-btn').disabled=document.getElementById('auth-pw-input').value.length<6;
-};
-
-const ERR={
-  'auth/wrong-password':'Incorrect password.',
-  'auth/invalid-credential':'Incorrect email or password.',
-  'auth/user-not-found':'No account found — switch to Create account.',
-  'auth/email-already-in-use':'Email already in use — use Sign in.',
-  'auth/weak-password':'Password must be at least 6 characters.',
-  'auth/invalid-email':'Invalid email address.',
-  'auth/too-many-requests':'Too many attempts. Try again later.'
-};
-window._authSubmit=async()=>{
-  const email=document.getElementById('auth-step2-email').textContent;
-  const pw=document.getElementById('auth-pw-input').value;
-  const errEl=document.getElementById('auth-err');
-  errEl.textContent='';
-  try{
-    if(_authTab==='signin'){
-      await signInWithEmailAndPassword(auth,email,pw);
-    } else {
-      const cred=await createUserWithEmailAndPassword(auth,email,pw);
-      const name=document.getElementById('auth-name-input').value.trim();
-      if(name) await updateProfile(cred.user,{displayName:name});
-    }
-  }catch(e){ errEl.textContent=ERR[e.code]||'An error occurred. Please try again.'; }
-};
-
-window._doSignOut=async()=>{
-  await signOut(auth);
-  closeProfilePanel();
-};
-
-// ── Profile panel ──
-function openProfilePanel(){
-  document.getElementById('profile-overlay').classList.add('open');
-  document.getElementById('profile-panel').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeProfilePanel(){
-  document.getElementById('profile-overlay').classList.remove('open');
-  document.getElementById('profile-panel').classList.remove('open');
-  document.body.style.overflow='';
-  cancelUsernameEdit();
-}
-window._openProfilePanel=openProfilePanel;
-window._closeProfilePanel=closeProfilePanel;
-
-// ── Username system ──
-const ADJS=['Shadow','Neon','Ghost','Cyber','Storm','Dark','Blaze','Frost','Steel','Thunder','Savage','Swift','Toxic','Hyper','Alpha','Stealth','Rogue','Venom'];
-const NOUNS=['Wolf','Bonker','Hunter','Raider','Knight','Blade','Fox','Hawk','Viper','Tiger','Ranger','Ninja','Sniper','Reaper','Phantom'];
-function genUsername(){
-  const a=ADJS[Math.floor(Math.random()*ADJS.length)];
-  const n=NOUNS[Math.floor(Math.random()*NOUNS.length)];
-  const s=Math.random().toString(36).slice(2,6).toUpperCase();
-  return `${a}${n}.${s}`;
-}
-
-let _currentUsername='';
-let _currentAvatar=0;
-
-async function loadOrInitUsername(uid){
-  const cacheKey=`bg_profile_${uid}`;
-  const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
-  if(cached){
-    _currentUsername=cached.username||'';
-    _currentAvatar=cached.avatar||0;
-    updateProfileUI(auth.currentUser);
-  }
-  try{
-    const [snapU,snapA]=await Promise.all([
-      get(ref(db,`profiles/${uid}/username`)),
-      get(ref(db,`profiles/${uid}/avatar`))
-    ]);
-    if(snapU.exists()){
-      _currentUsername=snapU.val();
-    } else {
-      let name,tries=0;
-      do{ name=genUsername(); tries++; }
-      while(tries<10&&(await get(ref(db,`usernames/${name}`))).exists());
-      await set(ref(db,`profiles/${uid}/username`),name);
-      await set(ref(db,`usernames/${name}`),uid);
-      _currentUsername=name;
-    }
-    if(snapA.exists()){
-      _currentAvatar=snapA.val();
-    } else {
-      _currentAvatar=Math.floor(Math.random()*8)+1;
-      await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar);
-    }
-    localStorage.setItem(cacheKey,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
-    updateProfileUI(auth.currentUser);
-  }catch(e){
-    if(!_currentUsername){
-      _currentUsername=cached?.username||genUsername();
-      _currentAvatar=cached?.avatar||_currentAvatar||0;
-    }
-    updateProfileUI(auth.currentUser);
-  }
-}
-
-function updateProfileUI(user){
-  if(!user)return;
-  const imgSrc=_currentAvatar?`/assets/avatars/avatar${_currentAvatar}.png`:null;
-  const initials=(_currentUsername[0]||'?').toUpperCase();
-  const imgTag=imgSrc?`<img src="${imgSrc}" alt="">`:initials;
-  document.getElementById('prof-avatar').innerHTML=imgTag;
-  for(let i=1;i<=8;i++){
-    const el=document.getElementById(`av-opt-${i}`);
-    if(el) el.classList.toggle('selected',i===_currentAvatar);
-  }
-  document.getElementById('prof-uname').textContent='@'+_currentUsername;
-  document.getElementById('prof-email-lbl').textContent=user.email||'';
-  document.getElementById('u-avatar').innerHTML=imgTag;
-  document.getElementById('u-name').textContent='@'+_currentUsername;
-}
-
-window._selectAvatar=async(idx)=>{
-  const uid=auth.currentUser?.uid; if(!uid)return;
-  _currentAvatar=idx;
-  updateProfileUI(auth.currentUser);
-  try{
-    await set(ref(db,`profiles/${uid}/avatar`),idx);
-    localStorage.setItem(`bg_profile_${uid}`,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
-  }catch(e){}
-};
-
-window._editUsername=()=>{
-  document.getElementById('prof-edit-wrap').style.display='';
-  document.getElementById('prof-edit-btn').style.display='none';
-  const input=document.getElementById('prof-uname-input');
-  input.value=_currentUsername;
-  input.focus();
-  document.getElementById('prof-uname-err').textContent='';
-};
-function cancelUsernameEdit(){
-  document.getElementById('prof-edit-wrap').style.display='none';
-  document.getElementById('prof-edit-btn').style.display='';
-}
-window._cancelUsernameEdit=cancelUsernameEdit;
-
-// ── Favorites & Recent ──
-const GAMES_MAP={
-  'bonker-survival':{id:'bonker-survival',name:'Bonker Survival',url:'/game/bonker-survival',thumb:'/games/bonker-survival/thumb.png'},
-  'bonker-chess':{id:'bonker-chess',name:'Bonker Chess',url:'/game/bonker-chess',thumb:'/games/bonker-chess/thumb.svg'},
-};
-let _favs=new Set();
-let _liked=new Set();
-let _favTab='recent';
-
-function openFavPanel(){
-  document.getElementById('fav-overlay').classList.add('open');
-  document.getElementById('fav-panel').classList.add('open');
-  document.body.style.overflow='hidden';
-  renderFavPanel();
-}
-function closeFavPanel(){
-  document.getElementById('fav-overlay').classList.remove('open');
-  document.getElementById('fav-panel').classList.remove('open');
-  document.body.style.overflow='';
-}
-window._openFavPanel=openFavPanel;
-window._closeFavPanel=closeFavPanel;
-window._setFavTab=function(tab){
-  _favTab=tab;
-  ['recent','favorites','liked'].forEach(t=>{
-    document.getElementById(`fav-tab-${t}`).classList.toggle('active',t===tab);
-  });
-  renderFavPanel();
-};
-
-window._trackRecent=function(id){
-  try{
-    const r=JSON.parse(localStorage.getItem('bg_recent')||'[]').filter(x=>x!==id);
-    r.unshift(id);
-    localStorage.setItem('bg_recent',JSON.stringify(r.slice(0,10)));
-  }catch(e){}
-};
-
-const X_ICO='<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-function renderFavPanel(){
-  const user=auth.currentUser;
-  const gridEl=document.getElementById('fav-thumb-grid');
-  const emptyEl=document.getElementById('fav-empty');
-  let ids=[];
-  let removeFn=null;
-  let emptyMsg='Nothing here yet.';
-  if(_favTab==='recent'){
-    try{ids=JSON.parse(localStorage.getItem('bg_recent')||'[]');}catch(e){}
-    emptyMsg='No games played yet.';
-  } else if(_favTab==='favorites'){
-    ids=user?[..._favs]:[];
-    removeFn=user?id=>`window._toggleFav('${id}')`:null;
-    emptyMsg=user?'Heart a game to save it here.':'Sign in to save favorites.';
-  } else if(_favTab==='liked'){
-    ids=user?[..._liked]:[];
-    removeFn=user?id=>`window._toggleLiked('${id}')`:null;
-    emptyMsg=user?'No liked games yet.':'Sign in to like games.';
-  }
-  const games=ids.map(id=>GAMES_MAP[id]).filter(Boolean);
-  if(!games.length){
-    gridEl.innerHTML='';
-    emptyEl.style.display='';
-    emptyEl.innerHTML=`<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>${emptyMsg}</span>`;
-    return;
-  }
-  emptyEl.style.display='none';
-  gridEl.innerHTML=games.map(g=>`
-    <div class="fav-thumb-item" onclick="window._trackRecent&&window._trackRecent('${g.id}');window.location.href='${g.url}'">
-      <img src="${g.thumb}" alt="${g.name}">
-      <div class="fav-thumb-overlay"><span class="fav-thumb-name">${g.name}</span></div>
-      ${removeFn?`<button class="fav-thumb-rm" onclick="event.stopPropagation();${removeFn(g.id)}" title="Remove">${X_ICO}</button>`:''}
-    </div>`).join('');
-}
-
-async function loadFavs(uid){
-  try{
-    const [snapF,snapL]=await Promise.all([
-      get(ref(db,`favorites/${uid}`)),
-      get(ref(db,`liked/${uid}`))
-    ]);
-    _favs=new Set(snapF.exists()?Object.keys(snapF.val()):[]);
-    _liked=new Set(snapL.exists()?Object.keys(snapL.val()):[]);
-  }catch(e){ _favs=new Set(); _liked=new Set(); }
-  updateFavBtns();
-}
-window._toggleLiked=async(id)=>{
-  const uid=auth.currentUser?.uid;
-  if(!uid){ window._openAuthPanel&&window._openAuthPanel(); return; }
-  if(_liked.has(id)){
-    _liked.delete(id);
-    try{ await remove(ref(db,`liked/${uid}/${id}`)); }catch(e){}
-  } else {
-    _liked.add(id);
-    try{ await set(ref(db,`liked/${uid}/${id}`),true); }catch(e){}
-  }
-  if(document.getElementById('fav-panel').classList.contains('open')) renderFavPanel();
-};
-
-function updateFavBtns(){
-  document.querySelectorAll('[data-fav-game]').forEach(btn=>{
-    btn.classList.toggle('liked',_favs.has(btn.dataset.favGame));
-  });
-}
-
-window._toggleFav=async(id)=>{
-  const uid=auth.currentUser?.uid;
-  if(!uid){ window._openAuthPanel&&window._openAuthPanel(); return; }
-  if(_favs.has(id)){
-    _favs.delete(id);
-    try{ await remove(ref(db,`favorites/${uid}/${id}`)); }catch(e){}
-  } else {
-    _favs.add(id);
-    try{ await set(ref(db,`favorites/${uid}/${id}`),true); }catch(e){}
-  }
-  updateFavBtns();
-  if(document.getElementById('fav-panel').classList.contains('open')) renderFavPanel();
-};
-
-window._saveUsername=async()=>{
-  const newName=document.getElementById('prof-uname-input').value.trim();
-  const errEl=document.getElementById('prof-uname-err');
-  errEl.textContent='';
-  if(!newName||newName.length<3){errEl.textContent='At least 3 characters.';return;}
-  if(!/^[a-zA-Z0-9_.]+$/.test(newName)){errEl.textContent='Letters, numbers, _ and . only.';return;}
-  if(newName===_currentUsername){cancelUsernameEdit();return;}
-  const uid=auth.currentUser?.uid; if(!uid)return;
-  try{
-    const snap=await get(ref(db,`usernames/${newName}`));
-    if(snap.exists()){errEl.textContent='Username already taken.';return;}
-    await remove(ref(db,`usernames/${_currentUsername}`));
-    await set(ref(db,`usernames/${newName}`),uid);
-    await set(ref(db,`profiles/${uid}/username`),newName);
-    _currentUsername=newName;
-    localStorage.setItem(`bg_profile_${uid}`,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
-    updateProfileUI(auth.currentUser);
-    cancelUsernameEdit();
-  }catch(e){console.error('saveUsername error:',e);errEl.textContent='Error saving. Try again.';}
-};
-</script>
+<script type="module" src="/assets/header-auth.js"></script>
 </body>
 </html>
