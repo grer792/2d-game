@@ -855,15 +855,10 @@ const app = getApps().length ? getApps()[0] : initializeApp({
   apiKey:'AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU',
   authDomain:'d-game-b50ef.firebaseapp.com',
   projectId:'d-game-b50ef',
-  appId:'1:80712714092:web:4b15f70196f05942905549'
+  appId:'1:80712714092:web:4b15f70196f05942905549',
+  databaseURL:'https://d-game-b50ef-default-rtdb.firebaseio.com'
 });
-const dbApp = getApps().find(a=>a.name==='db') || initializeApp({
-  apiKey:'AIzaSyDMXDsBJLqHCNqLKr6hMH2yVs37UgZHOHw',
-  databaseURL:'https://bonkergames-26c93-default-rtdb.europe-west1.firebasedatabase.app',
-  projectId:'bonkergames-26c93',
-  appId:'1:80712714092:web:4b15f70196f05942905549'
-},'db');
-const db = getDatabase(dbApp);
+const db = getDatabase(app);
 const auth = getAuth(app);
 let _authTab = 'signin';
 const openPanel=window._openAuthPanel;
