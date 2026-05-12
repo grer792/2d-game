@@ -1499,7 +1499,16 @@ class Game extends Phaser.Scene {
       const maxHp=RES_DEF[type].maxHp, n=counts[type]||RES_N;
       for(let i=0;i<n;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
     });
-    set(sref('resources'),batch);
+    set(sref('resources'),batch)
+      .then(()=>console.log('[seedMap] wrote',Object.keys(batch).length,'resources'))
+      .catch(e=>{
+        console.error('[seedMap] FAILED:',e);
+        const d=document.createElement('div');
+        d.style.cssText='position:fixed;top:40%;left:50%;transform:translateX(-50%);background:#c00;color:#fff;padding:16px 24px;font-size:16px;z-index:99999;border-radius:8px;';
+        d.textContent='Firebase error: '+e.message+' — check console (F12)';
+        document.body.appendChild(d);
+        setTimeout(()=>d.remove(),12000);
+      });
   }
 
   setupFirebase(){
@@ -1512,11 +1521,15 @@ class Game extends Phaser.Scene {
     const checkResources=()=>{
       get(sref('resources')).then(snap=>{
         const val=snap.val(), keys=val?Object.keys(val):[];
+        console.log('[checkResources] keys found:',keys.length);
         const hasTree=keys.some(k=>k.startsWith('tree_'));
         const hasRock=keys.some(k=>k.startsWith('rock_'));
         const hasIron=keys.some(k=>k.startsWith('iron_'));
-        if(!hasIron||!hasTree||!hasRock||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
-      });
+        if(!hasIron||!hasTree||!hasRock||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)){
+          console.log('[checkResources] reseeding...');
+          remove(sref('resources')).then(()=>sc.seedMap()).catch(e=>console.error('[checkResources] remove failed:',e));
+        }
+      }).catch(e=>console.error('[checkResources] read failed:',e));
     };
     checkResources();
     // Second check after 4 s in case Firebase was slow to respond
