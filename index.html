@@ -1018,7 +1018,7 @@ async function loadOrInitUsername(uid){
 
 function updateProfileUI(user){
   if(!user)return;
-  const imgSrc=_currentAvatar?`/assets/avatars/avatar${_currentAvatar}.png`:user.photoURL||null;
+  const imgSrc=_currentAvatar?`/assets/avatars/avatar${_currentAvatar}.png`:null;
   const initials=(_currentUsername[0]||'?').toUpperCase();
   const imgTag=imgSrc?`<img src="${imgSrc}" alt="">`:initials;
   document.getElementById('prof-avatar').innerHTML=imgTag;
