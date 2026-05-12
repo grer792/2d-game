@@ -1018,7 +1018,7 @@ async function loadOrInitUsername(uid){
       try{ await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar); }catch(e){}
     }
     updateProfileUI(auth.currentUser);
-  }catch(e){ _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
+  }catch(e){ console.error('loadOrInitUsername error:',e); _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
 }
 
 function updateProfileUI(user){
@@ -1075,7 +1075,7 @@ window._saveUsername=async()=>{
     _currentUsername=newName;
     updateProfileUI(auth.currentUser);
     cancelUsernameEdit();
-  }catch(e){errEl.textContent='Error saving. Try again.';}
+  }catch(e){console.error('saveUsername error:',e);errEl.textContent='Error saving. Try again.';}
 };
 </script>
 </body>
