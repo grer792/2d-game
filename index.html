@@ -991,33 +991,43 @@ let _currentUsername='';
 let _currentAvatar=0;
 
 async function loadOrInitUsername(uid){
+  const cacheKey=`bg_profile_${uid}`;
+  const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
+  if(cached){
+    _currentUsername=cached.username||'';
+    _currentAvatar=cached.avatar||0;
+    updateProfileUI(auth.currentUser);
+  }
   try{
-    console.log('[profile] loading uid:', uid);
     const [snapU,snapA]=await Promise.all([
       get(ref(db,`profiles/${uid}/username`)),
       get(ref(db,`profiles/${uid}/avatar`))
     ]);
     if(snapU.exists()){
       _currentUsername=snapU.val();
-      console.log('[profile] loaded username:', _currentUsername);
     } else {
-      console.log('[profile] no username found, generating...');
       let name,tries=0;
       do{ name=genUsername(); tries++; }
       while(tries<10&&(await get(ref(db,`usernames/${name}`))).exists());
       await set(ref(db,`profiles/${uid}/username`),name);
       await set(ref(db,`usernames/${name}`),uid);
       _currentUsername=name;
-      console.log('[profile] saved new username:', name);
     }
     if(snapA.exists()){
       _currentAvatar=snapA.val();
     } else {
       _currentAvatar=Math.floor(Math.random()*8)+1;
-      try{ await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar); }catch(e){}
+      await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar);
+    }
+    localStorage.setItem(cacheKey,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
+    updateProfileUI(auth.currentUser);
+  }catch(e){
+    if(!_currentUsername){
+      _currentUsername=cached?.username||genUsername();
+      _currentAvatar=cached?.avatar||_currentAvatar||0;
     }
     updateProfileUI(auth.currentUser);
-  }catch(e){ console.error('[profile] error:', e); _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
+  }
 }
 
 function updateProfileUI(user){
@@ -1040,7 +1050,10 @@ window._selectAvatar=async(idx)=>{
   const uid=auth.currentUser?.uid; if(!uid)return;
   _currentAvatar=idx;
   updateProfileUI(auth.currentUser);
-  try{ await set(ref(db,`profiles/${uid}/avatar`),idx); }catch(e){}
+  try{
+    await set(ref(db,`profiles/${uid}/avatar`),idx);
+    localStorage.setItem(`bg_profile_${uid}`,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
+  }catch(e){}
 };
 
 window._editUsername=()=>{
@@ -1072,6 +1085,7 @@ window._saveUsername=async()=>{
     await set(ref(db,`usernames/${newName}`),uid);
     await set(ref(db,`profiles/${uid}/username`),newName);
     _currentUsername=newName;
+    localStorage.setItem(`bg_profile_${uid}`,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
     updateProfileUI(auth.currentUser);
     cancelUsernameEdit();
   }catch(e){console.error('saveUsername error:',e);errEl.textContent='Error saving. Try again.';}
