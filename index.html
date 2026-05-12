@@ -433,6 +433,12 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .prof-signout:hover{background:var(--bg3);color:var(--text);}
 .prof-signout svg{width:18px;height:18px;fill:currentColor;flex-shrink:0;}
 .prof-footer{padding:20px 24px 24px;border-top:1px solid var(--border);}
+.prof-av-sec-title{font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;width:100%;}
+.avatar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;margin-bottom:8px;}
+.avatar-opt{aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;transition:border-color .15s,transform .12s;background:var(--bg3);}
+.avatar-opt:hover{transform:scale(1.06);}
+.avatar-opt.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+.avatar-opt img{width:100%;height:100%;object-fit:cover;display:block;}
 </style>
 </head>
 <body class="sidebar-on">
@@ -670,6 +676,17 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="prof-uname-err" id="prof-uname-err"></div>
     </div>
     <div class="prof-email-lbl" id="prof-email-lbl"></div>
+    <div class="prof-av-sec-title">Profile photo</div>
+    <div class="avatar-grid" id="avatar-grid">
+      <div class="avatar-opt" id="av-opt-1" onclick="window._selectAvatar&&window._selectAvatar(1)"><img src="/assets/avatars/avatar1.png" alt="Raccoon"></div>
+      <div class="avatar-opt" id="av-opt-2" onclick="window._selectAvatar&&window._selectAvatar(2)"><img src="/assets/avatars/avatar2.png" alt="Fox"></div>
+      <div class="avatar-opt" id="av-opt-3" onclick="window._selectAvatar&&window._selectAvatar(3)"><img src="/assets/avatars/avatar3.png" alt="Frog"></div>
+      <div class="avatar-opt" id="av-opt-4" onclick="window._selectAvatar&&window._selectAvatar(4)"><img src="/assets/avatars/avatar4.png" alt="Gorilla"></div>
+      <div class="avatar-opt" id="av-opt-5" onclick="window._selectAvatar&&window._selectAvatar(5)"><img src="/assets/avatars/avatar5.png" alt="Shark"></div>
+      <div class="avatar-opt" id="av-opt-6" onclick="window._selectAvatar&&window._selectAvatar(6)"><img src="/assets/avatars/avatar6.png" alt="Owl"></div>
+      <div class="avatar-opt" id="av-opt-7" onclick="window._selectAvatar&&window._selectAvatar(7)"><img src="/assets/avatars/avatar7.png" alt="Axolotl"></div>
+      <div class="avatar-opt" id="av-opt-8" onclick="window._selectAvatar&&window._selectAvatar(8)"><img src="/assets/avatars/avatar8.png" alt="Meteor"></div>
+    </div>
     <div class="prof-divider"></div>
     <button class="prof-signout" onclick="window._doSignOut&&window._doSignOut()">
       <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
@@ -976,12 +993,16 @@ function genUsername(){
 }
 
 let _currentUsername='';
+let _currentAvatar=0;
 
 async function loadOrInitUsername(uid){
   try{
-    const snap=await get(ref(db,`profiles/${uid}/username`));
-    if(snap.exists()){
-      _currentUsername=snap.val();
+    const [snapU,snapA]=await Promise.all([
+      get(ref(db,`profiles/${uid}/username`)),
+      get(ref(db,`profiles/${uid}/avatar`))
+    ]);
+    if(snapU.exists()){
+      _currentUsername=snapU.val();
     } else {
       let name,tries=0;
       do{ name=genUsername(); tries++; }
@@ -990,21 +1011,33 @@ async function loadOrInitUsername(uid){
       await set(ref(db,`usernames/${name}`),uid);
       _currentUsername=name;
     }
+    _currentAvatar=snapA.exists()?snapA.val():0;
     updateProfileUI(auth.currentUser);
   }catch(e){ _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
 }
 
 function updateProfileUI(user){
   if(!user)return;
-  const av=document.getElementById('prof-avatar');
-  av.innerHTML=user.photoURL?`<img src="${user.photoURL}" alt="">`:(_currentUsername[0]||'?').toUpperCase();
+  const imgSrc=_currentAvatar?`/assets/avatars/avatar${_currentAvatar}.png`:user.photoURL||null;
+  const initials=(_currentUsername[0]||'?').toUpperCase();
+  const imgTag=imgSrc?`<img src="${imgSrc}" alt="">`:initials;
+  document.getElementById('prof-avatar').innerHTML=imgTag;
+  for(let i=1;i<=8;i++){
+    const el=document.getElementById(`av-opt-${i}`);
+    if(el) el.classList.toggle('selected',i===_currentAvatar);
+  }
   document.getElementById('prof-uname').textContent='@'+_currentUsername;
   document.getElementById('prof-email-lbl').textContent=user.email||'';
-  // Also update header badge
-  const hav=document.getElementById('u-avatar');
-  hav.innerHTML=user.photoURL?`<img src="${user.photoURL}" alt="">`:(_currentUsername[0]||'?').toUpperCase();
+  document.getElementById('u-avatar').innerHTML=imgTag;
   document.getElementById('u-name').textContent='@'+_currentUsername;
 }
+
+window._selectAvatar=async(idx)=>{
+  const uid=auth.currentUser?.uid; if(!uid)return;
+  _currentAvatar=idx;
+  updateProfileUI(auth.currentUser);
+  try{ await set(ref(db,`profiles/${uid}/avatar`),idx); }catch(e){}
+};
 
 window._editUsername=()=>{
   document.getElementById('prof-edit-wrap').style.display='';
