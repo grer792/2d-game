@@ -961,10 +961,13 @@ function closeChat(){ chatOpen=false; document.getElementById('chat-wrap').style
 function sendChat(){
   const msg=document.getElementById('chat-input').value.trim(); closeChat(); if(!msg)return;
   if(msg==='/reset'){
-    if(confirm('Reset the world? All buildings, resources and sleeping players will be wiped.')){
-      Promise.all(['resources','buildings','loot','sleeping','wolves','monument_hold'].map(p=>remove(sref(p)))).then(()=>{window._scene&&window._scene.seedMap();});
-      window._scene&&window._scene.pop(window._scene.pbody.x,window._scene.pbody.y-50,'🌍 World Reset!','#f0c040');
-    }
+    Promise.all(['resources','buildings','loot','sleeping','wolves','monument_hold'].map(p=>remove(sref(p)))).then(()=>{window._scene&&window._scene.seedMap();});
+    window._scene&&window._scene.pop(window._scene.pbody.x,window._scene.pbody.y-50,'🌍 World Reset!','#f0c040');
+    return;
+  }
+  if(msg==='/reseed'){
+    remove(sref('resources')).then(()=>{window._scene&&window._scene.seedMap();});
+    window._scene&&window._scene.pop(window._scene.pbody.x,window._scene.pbody.y-50,'🌱 Map Reseeded!','#2ecc71');
     return;
   }
   update(sref('players/'+PID),{chat:msg,chatT:Date.now()});
@@ -2375,6 +2378,15 @@ class Game extends Phaser.Scene {
       update(sref('players/'+PID),{x:Math.round(state.x),y:Math.round(state.y),color:MY_COLOR,hp:state.hp,score:state.score,name:PNAME,teamId:state.teamId||null,dirX:Math.round(state.dirX*100)/100,dirY:Math.round(state.dirY*100)/100,held:getActiveTool()||inv[selectedSlot]?.type||null});
     }
     if(time-lastDCUpdate>8000){lastDCUpdate=time;this.registerDisconnect?.();}
+    // Periodic resource health check — auto-reseed if trees or rocks are gone
+    if(!this._resCheck)this._resCheck=0;
+    if(time-this._resCheck>30000){
+      this._resCheck=time;
+      const keys=Object.keys(resSpr);
+      const hasTree=keys.some(k=>k.startsWith('tree_'));
+      const hasRock=keys.some(k=>k.startsWith('rock_'));
+      if(!hasTree||!hasRock){remove(sref('resources')).then(()=>this.seedMap());}
+    }
   }
 }
 
