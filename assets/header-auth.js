@@ -322,16 +322,46 @@ let _currentAvatar=0;
 async function loadOrInitUsername(uid){
   const cacheKey=`bg_profile_${uid}`;
   const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
-  if(cached){ _currentUsername=cached.username||''; _currentAvatar=cached.avatar||0; updateProfileUI(auth.currentUser); }
+  // Show cached instantly while Firebase loads
+  if(cached?.username){ _currentUsername=cached.username; _currentAvatar=cached.avatar||1; updateProfileUI(auth.currentUser); }
   try{
-    const [snapU,snapA]=await Promise.all([get(ref(db,`profiles/${uid}/username`)),get(ref(db,`profiles/${uid}/avatar`))]);
-    if(snapU.exists()) _currentUsername=snapU.val();
-    else{ let name,tries=0; do{ name=genUsername(); tries++; }while(tries<10&&(await get(ref(db,`usernames/${name}`))).exists()); await set(ref(db,`profiles/${uid}/username`),name); await set(ref(db,`usernames/${name}`),uid); _currentUsername=name; }
-    if(snapA.exists()) _currentAvatar=snapA.val();
-    else{ _currentAvatar=Math.floor(Math.random()*8)+1; await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar); }
+    const [snapU,snapA]=await Promise.all([
+      get(ref(db,`profiles/${uid}/username`)),
+      get(ref(db,`profiles/${uid}/avatar`))
+    ]);
+    // Username: Firebase → cache restore → generate (only if truly new)
+    if(snapU.exists()){
+      _currentUsername=snapU.val();
+    } else if(cached?.username){
+      // Firebase lost it but we have it locally — restore
+      await set(ref(db,`profiles/${uid}/username`),cached.username);
+      try{ await set(ref(db,`usernames/${cached.username}`),uid); }catch(e){}
+      _currentUsername=cached.username;
+    } else {
+      // Brand new user — generate once
+      let name,tries=0;
+      do{ name=genUsername(); tries++; }while(tries<10&&(await get(ref(db,`usernames/${name}`))).exists());
+      await set(ref(db,`profiles/${uid}/username`),name);
+      await set(ref(db,`usernames/${name}`),uid);
+      _currentUsername=name;
+    }
+    // Avatar: Firebase → cache restore → assign random (only if truly new)
+    if(snapA.exists()){
+      _currentAvatar=snapA.val();
+    } else if(cached?.avatar){
+      _currentAvatar=cached.avatar;
+      await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar);
+    } else {
+      _currentAvatar=Math.floor(Math.random()*8)+1;
+      await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar);
+    }
     localStorage.setItem(cacheKey,JSON.stringify({username:_currentUsername,avatar:_currentAvatar}));
     updateProfileUI(auth.currentUser);
-  }catch(e){ if(!_currentUsername){ _currentUsername=cached?.username||genUsername(); _currentAvatar=cached?.avatar||_currentAvatar||0; } updateProfileUI(auth.currentUser); }
+  }catch(e){
+    // On error: use cache — NEVER generate a new username
+    if(cached?.username){ _currentUsername=cached.username; _currentAvatar=cached.avatar||_currentAvatar||1; }
+    updateProfileUI(auth.currentUser);
+  }
 }
 
 function updateProfileUI(user){
