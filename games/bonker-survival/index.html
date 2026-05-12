@@ -1003,6 +1003,7 @@ class Game extends Phaser.Scene {
     this.myChatBubble=null;
     this.redrawMe();
     this.cameras.main.startFollow(this.pbody,true,0.08,0.08);
+    this.cameras.main.centerOn(state.x,state.y);
     this.cameras.main.setZoom(2.5);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
     this.hammerGfx=this.add.graphics().setDepth(98001);
@@ -1886,29 +1887,43 @@ class Game extends Phaser.Scene {
 
   resolveWalls(){
     let px=this.pbody.x, py=this.pbody.y;
+    let vx=this.pbody.body.velocity.x, vy=this.pbody.body.velocity.y;
     for(const g of Object.values(bldgSpr)){
-      const d=g._d;
+      const d=g._d; if(!d)continue;
       if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
       if(d.type==='door'&&(d.open||d.ownerId===PID||(state.teamId&&d.teamId===state.teamId)))continue;
       const rot=d.rot||0;
       const hw=d.type==='wall'?(rot?4:30):(rot?20:30), hh=d.type==='wall'?(rot?30:4):(rot?30:20);
       const nearX=Math.max(d.x-hw,Math.min(px,d.x+hw)), nearY=Math.max(d.y-hh,Math.min(py,d.y+hh));
       const dx=px-nearX, dy=py-nearY, dst=Math.sqrt(dx*dx+dy*dy);
-      if(dst<P_RAD&&dst>0.01){const push=P_RAD-dst; px+=(dx/dst)*push; py+=(dy/dst)*push;}
+      if(dst<P_RAD&&dst>0.01){
+        const push=P_RAD-dst, nx=dx/dst, ny=dy/dst;
+        px+=nx*push; py+=ny*push;
+        // cancel velocity into the wall so sliding feels smooth
+        const dot=vx*nx+vy*ny;
+        if(dot<0){vx-=dot*nx; vy-=dot*ny;}
+      }
     }
     for(const g of Object.values(resSpr)){
-      const d=g._d; let cx,cy,colR;
+      const d=g._d; if(!d)continue;
+      let cx,cy,colR;
       if(d.type==='tree'){cx=d.x;cy=d.y+12;colR=9;}
       else if(d.type==='rock'){cx=d.x-2;cy=d.y;colR=15;}
       else if(d.type==='ore'||d.type==='iron'||d.type==='coal'||d.type==='sulfur'){cx=d.x-2;cy=d.y;colR=14;}
       else if(d.type==='bush'){cx=d.x;cy=d.y-4;colR=10;}
       else continue;
       const dx=px-cx,dy=py-cy,dst=Math.sqrt(dx*dx+dy*dy),minD=P_RAD+colR;
-      if(dst<minD&&dst>0.01){const push=minD-dst;px+=(dx/dst)*push;py+=(dy/dst)*push;}
+      if(dst<minD&&dst>0.01){
+        const push=minD-dst, nx=dx/dst, ny=dy/dst;
+        px+=nx*push; py+=ny*push;
+        const dot=vx*nx+vy*ny;
+        if(dot<0){vx-=dot*nx; vy-=dot*ny;}
+      }
     }
     px=Math.max(P_RAD,Math.min(MAP_W-P_RAD,px));
     py=Math.max(P_RAD,Math.min(MAP_H-P_RAD,py));
     this.pbody.setPosition(px,py);
+    this.pbody.setVelocity(vx,vy);
   }
 
   handleDeath(cause='Unknown cause'){
