@@ -1011,7 +1011,12 @@ async function loadOrInitUsername(uid){
       await set(ref(db,`usernames/${name}`),uid);
       _currentUsername=name;
     }
-    _currentAvatar=snapA.exists()?snapA.val():0;
+    if(snapA.exists()){
+      _currentAvatar=snapA.val();
+    } else {
+      _currentAvatar=Math.floor(Math.random()*8)+1;
+      try{ await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar); }catch(e){}
+    }
     updateProfileUI(auth.currentUser);
   }catch(e){ _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
 }
