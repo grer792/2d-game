@@ -65,14 +65,14 @@ a { text-decoration: none; color: inherit; }
 .header-logo {
   display: flex; align-items: center;
   flex-shrink: 0; cursor: pointer; user-select: none;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 10px; transition: background 0.15s;
   text-decoration: none; color: inherit;
-  background: white;
 }
-.header-logo:hover { background: #f0f0f0; }
+.header-logo:hover { background: var(--bg3); }
 .logo-img {
-  height: 48px; width: auto;
+  height: 56px; width: auto;
+  mix-blend-mode: screen;
   display: block;
 }
 
@@ -304,7 +304,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
     </button>
     <a class="header-logo" href="/">
-      <img src="../assets/logobonker.png" alt="BonkerGames" class="logo-img">
+      <img src="../assets/logo.png" alt="BonkerGames" class="logo-img">
     </a>
   </div>
 
