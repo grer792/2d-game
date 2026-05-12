@@ -1508,8 +1508,10 @@ class Game extends Phaser.Scene {
     });
     get(sref('resources')).then(snap=>{
       const val=snap.val(), keys=val?Object.keys(val):[];
+      const hasTree=keys.some(k=>k.startsWith('tree_'));
+      const hasRock=keys.some(k=>k.startsWith('rock_'));
       const hasIron=keys.some(k=>k.startsWith('iron_'));
-      if(!hasIron||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
+      if(!hasIron||!hasTree||!hasRock||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
     });
     onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
     onChildChanged(sref('resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
