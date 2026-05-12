@@ -992,19 +992,23 @@ let _currentAvatar=0;
 
 async function loadOrInitUsername(uid){
   try{
+    console.log('[profile] loading uid:', uid);
     const [snapU,snapA]=await Promise.all([
       get(ref(db,`profiles/${uid}/username`)),
       get(ref(db,`profiles/${uid}/avatar`))
     ]);
     if(snapU.exists()){
       _currentUsername=snapU.val();
+      console.log('[profile] loaded username:', _currentUsername);
     } else {
+      console.log('[profile] no username found, generating...');
       let name,tries=0;
       do{ name=genUsername(); tries++; }
       while(tries<10&&(await get(ref(db,`usernames/${name}`))).exists());
       await set(ref(db,`profiles/${uid}/username`),name);
       await set(ref(db,`usernames/${name}`),uid);
       _currentUsername=name;
+      console.log('[profile] saved new username:', name);
     }
     if(snapA.exists()){
       _currentAvatar=snapA.val();
@@ -1013,7 +1017,7 @@ async function loadOrInitUsername(uid){
       try{ await set(ref(db,`profiles/${uid}/avatar`),_currentAvatar); }catch(e){}
     }
     updateProfileUI(auth.currentUser);
-  }catch(e){ console.error('loadOrInitUsername error:',e); _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
+  }catch(e){ console.error('[profile] error:', e); _currentUsername=genUsername(); updateProfileUI(auth.currentUser); }
 }
 
 function updateProfileUI(user){
