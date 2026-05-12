@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service – BonkerGames</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --header-h: 64px;
+  --bg: #13131f;
+  --bg2: #1c1c2e;
+  --bg3: #252538;
+  --bg4: #2e2e45;
+  --accent: #7c5cfc;
+  --accent-h: #6a4de0;
+  --text: #ffffff;
+  --text2: #9898b8;
+  --border: rgba(255,255,255,0.07);
+  --ease: 0.22s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+a { text-decoration: none; color: inherit; }
+
+/* HEADER */
+.header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 0;
+  z-index: 300;
+}
+.header-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.header-logo {
+  display: flex; align-items: center;
+  flex-shrink: 0; cursor: pointer; user-select: none;
+  padding: 4px 8px; border-radius: 10px;
+  transition: background 0.15s; text-decoration: none; color: inherit;
+}
+.header-logo:hover { background: var(--bg3); }
+.logo-img { height: 56px; width: auto; mix-blend-mode: screen; display: block; }
+.header-right { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
+.btn-login {
+  background: var(--accent); border: none; color: white;
+  padding: 10px 22px; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: background 0.2s; margin-left: 4px;
+}
+.btn-login:hover { background: var(--accent-h); }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2);
+  background: transparent; border: none;
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn:hover { background: var(--bg3); color: var(--text); }
+.icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
+.header-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+
+/* LAYOUT */
+.layout { display: flex; margin-top: var(--header-h); flex: 1; }
+
+/* CONTENT */
+.content-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+  flex: 1;
+}
+
+.page-title {
+  font-size: 2rem; font-weight: 800; margin-bottom: 6px;
+  letter-spacing: -0.4px;
+}
+.last-updated {
+  font-size: 0.82rem; color: var(--text2); margin-bottom: 40px;
+}
+
+.section-block { margin-bottom: 36px; }
+
+.section-block h2 {
+  font-size: 1.15rem; font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-block p {
+  font-size: 0.875rem; color: var(--text2);
+  line-height: 1.75; margin-bottom: 10px;
+}
+.section-block p:last-child { margin-bottom: 0; }
+
+.section-block ul {
+  list-style: disc; padding-left: 22px;
+  margin-bottom: 10px;
+}
+.section-block ul li {
+  font-size: 0.875rem; color: var(--text2);
+  line-height: 1.75; margin-bottom: 4px;
+}
+
+.section-block a { color: var(--accent); }
+.section-block a:hover { color: #a78bfa; }
+
+.summary-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 0.8rem; color: var(--text2); line-height: 1.6;
+  font-style: italic;
+}
+.summary-box strong { color: var(--text); font-style: normal; }
+
+.caps { font-size: 0.82rem; font-weight: 600; color: var(--text); line-height: 1.7; margin-bottom: 10px; }
+
+.toc {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px;
+  margin-bottom: 40px;
+}
+.toc-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); margin-bottom: 12px; }
+.toc ol { padding-left: 20px; }
+.toc li { font-size: 0.85rem; color: var(--text2); line-height: 1.8; }
+.toc a { color: var(--accent); }
+.toc a:hover { color: #a78bfa; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <a class="header-logo" href="/">
+      <img src="../assets/logobonker.png" alt="BonkerGames" class="logo-img">
+    </a>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" title="Profile">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    </button>
+    <div class="header-divider"></div>
+    <button class="btn-login">Log in</button>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="content-wrap">
+    <h1 class="page-title">Terms of Service</h1>
+    <p class="last-updated">Last updated: May 2026</p>
+
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <ol>
+        <li><a href="#s1">Introduction</a></li>
+        <li><a href="#s2">User License and Gaming Content</a></li>
+        <li><a href="#s3">Access and Use</a></li>
+        <li><a href="#s4">Verification of Account Information</a></li>
+        <li><a href="#s5">Privacy</a></li>
+        <li><a href="#s6">Third Party Websites and Promotions</a></li>
+        <li><a href="#s7">Trademarks, Trade Names and Service Marks</a></li>
+        <li><a href="#s8">Embedding Games</a></li>
+        <li><a href="#s9">Warranties; Disclaimer</a></li>
+        <li><a href="#s10">Limitation of Liability</a></li>
+        <li><a href="#s11">Indemnification</a></li>
+        <li><a href="#s12">Termination or Deletion of Accounts</a></li>
+        <li><a href="#s13">Information, Complaints &amp; Copyright Claims</a></li>
+        <li><a href="#s14">Disputes</a></li>
+        <li><a href="#s15">Miscellaneous</a></li>
+      </ol>
+    </div>
+
+    <div class="section-block" id="s1">
+      <h2>1. Introduction</h2>
+      <p>Welcome to the BonkerGames website (the "Website"). These Terms of Service ("Terms") are between BonkerGames ("BonkerGames", "we", "us") and the User ("User", "you" or "your") (together, the "Parties"). BonkerGames provides a web-based gaming platform ("Platform"). A User is a person who visits the Website and/or the Platform, plays web games, registers via any form available on the Website and/or the Platform, creates a login, or otherwise uses the services.</p>
+      <p class="caps">THESE TERMS OUTLINE OUR RELATIONSHIP WITH YOU, AS SUPPLEMENTED BY OUR PRIVACY AND COOKIE POLICY. BY PLAYING WEB GAMES ON OUR PLATFORM OR OTHERWISE USING THE WEBSITE OR PLATFORM, YOU AGREE TO BE BOUND BY THE FOLLOWING TERMS AND CONDITIONS AND ALL APPLICABLE LAWS AND REGULATIONS.</p>
+      <p>The Platform is intended for visitors and users who are thirteen (13) years of age or older. If you are under thirteen (13) years of age, this Platform is not intended for you. We do not knowingly collect or solicit personal information from children under the age of thirteen (13) through our Platform.</p>
+      <p>Your use of the Website and/or the Platform means that you are aware of, and agree to, the most recent version of the Terms and our Privacy Policy as published on the Website. It is your sole responsibility to ensure that your use of any and all third party websites or content complies with all third party requirements.</p>
+      <p>We may modify these Terms from time to time. We will notify you of any material changes by email (if you are registered on our Platform via an account) or by notice on the Website, and will note the date of the last change. If you use the Website or Platform after these updates are posted, you will be deemed to accept these changes.</p>
+    </div>
+
+    <div class="section-block" id="s2">
+      <h2>2. User License and Gaming Content</h2>
+      <div class="summary-box"><strong>Summary:</strong> Our Platform (and all the available content) is licensed for your use, but its ownership remains with BonkerGames and its licensors. You may play games for personal, non-commercial use. You may stream or create videos of gameplay following our rules.</div>
+      <p>BonkerGames grants you a non-exclusive, limited, non-sublicensable and non-transferable right to use our Platform, subject to the limitations set forth in these Terms. Nothing in these Terms prohibits BonkerGames from providing our Platform to others.</p>
+      <p>Except for the limited rights expressly granted below, we reserve all right, title and interest in and to the Website and our Platform, including all associated intellectual property rights. Any games available through our Platform are owned by BonkerGames or its partners. You agree not to reproduce, duplicate, copy, sell, resell or exploit any part of the Website/Platform without our express written consent.</p>
+      <p>Users may create, upload, livestream and monetise videos on online platforms using gameplay and screenshots from games available on our Platform, subject to the following conditions: (i) BonkerGames' Platform and its logo will be clearly visible and not obscured; (ii) only monetise such videos in accordance with the monetisation methods available on such platforms; (iii) you do not imply that your content is officially affiliated with, sponsored, or approved by BonkerGames (except when we have entered into a partnership with you); and (iv) you are responsible for any third party content you use together with the gameplay.</p>
+    </div>
+
+    <div class="section-block" id="s3">
+      <h2>3. Access and Use</h2>
+      <div class="summary-box"><strong>Summary:</strong> You can access our Platform with or without an Account. Keep your credentials secure. All activity under your Account is your responsibility. You must be 13 or older. Don't do anything that might harm BonkerGames or other users.</div>
+      <p>You can access our Platform with or without an Account. In order to create your Account, you must be eligible and agree to the terms set forth below. In particular, you agree that:</p>
+      <ul>
+        <li>You are at least thirteen (13) years old or have the consent of your parent or legal guardian to access the Website.</li>
+        <li>All information you provide in your registration form will be true and correct and you will promptly notify us of any changes.</li>
+        <li>Your Account is solely for your use. You may not allow any third party to use your Account. You accept responsibility for all activities that occur under your Account.</li>
+        <li>You have verified that your use of the Website and Platform does not violate any law or regulation applicable to you.</li>
+        <li>You will not use the Website or the Platform for fraudulent or illegal purposes.</li>
+      </ul>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Sublicense, lease, rent, or otherwise transfer the Website and Platform to any third party.</li>
+        <li>Decompile, reverse engineer, or disassemble any portion of the Website or Platform.</li>
+        <li>Use the Website or the Platform to generate unsolicited email advertisements or spam.</li>
+        <li>Intentionally distribute worms, Trojan horses, corrupt files, or other items of a destructive or misleading nature.</li>
+        <li>Use any automated tools, scrapers, or bots to access, acquire, or monitor any portion of the Website without our prior written consent.</li>
+        <li>Remove or circumvent any technical protection measures on the Website or Platform.</li>
+      </ul>
+    </div>
+
+    <div class="section-block" id="s4">
+      <h2>4. Verification of Account Information</h2>
+      <div class="summary-box"><strong>Summary:</strong> We can check whether your information and use of the Platform complies with our rules at any time.</div>
+      <p>We reserve the right to conduct an audit at any time to validate your Account information and/or to ensure that your participation on the Website and use of the Platform does not violate these Terms and/or any applicable law. If you do not provide requested information within thirty (30) days, or if we are unable to verify the information, your account may be terminated.</p>
+      <p>BonkerGames reserves the right to remove a username linked to your Account if it does not comply with these Terms.</p>
+    </div>
+
+    <div class="section-block" id="s5">
+      <h2>5. Privacy</h2>
+      <p>BonkerGames's use of your personal data and our responsibilities in protecting your privacy are described in our Privacy Policy. By using our Platform, you consent to the collection and use of information as described in our Privacy Policy.</p>
+    </div>
+
+    <div class="section-block" id="s6">
+      <h2>6. Third Party Websites and Promotions</h2>
+      <div class="summary-box"><strong>Summary:</strong> We don't control third-party services and are not liable for them. Any promotions on our Platform may be subject to additional rules.</div>
+      <p>Our Website may contain links to other websites on the internet. BonkerGames is neither responsible for nor endorses the content, products, services or practices of third-party websites. Your use of third-party websites is at your own risk and subject to the terms of use of such websites.</p>
+      <p>IN THE EVENT THAT YOU CHOOSE TO PURCHASE A PRODUCT OR SERVICE FROM A THIRD PARTY, BONKERGAMES IS NOT RESPONSIBLE FOR SUCH PRODUCTS OR SERVICES AND IS NOT LIABLE FOR ANY DIRECT OR INDIRECT COSTS OR DAMAGES ARISING FROM ANY DISPUTE BETWEEN YOU AND SUCH THIRD PARTY.</p>
+      <p>Any promotions, contests, surveys, or similar activities made available through the Website may be governed by rules that are separate from these Terms. If you participate in any Promotions, please review the applicable rules as well as our Privacy Policy.</p>
+    </div>
+
+    <div class="section-block" id="s7">
+      <h2>7. Trademarks, Trade Names and Service Marks</h2>
+      <div class="summary-box"><strong>Summary:</strong> You are not allowed to misuse any logos or names available on the Website.</div>
+      <p>Unless otherwise indicated, all logos, names, and marks on the Website are trademarks or service marks owned or used under license by us or our business partners. The use or misuse of any of these marks is strictly prohibited.</p>
+    </div>
+
+    <div class="section-block" id="s8">
+      <h2>8. Embedding Games</h2>
+      <div class="summary-box"><strong>Summary:</strong> Other websites may embed our games only when we provide an embed option. We can withdraw this at any time.</div>
+      <p>BonkerGames allows other websites to iframe portions of the Website only where we provide an "embed" option with an iframe source code.</p>
+      <p>It is strictly forbidden when embedding to:</p>
+      <ul>
+        <li>Reproduce, modify, adapt, or create derivative works of any iframed portion of the Website.</li>
+        <li>Remove, hide, or hinder any copyright or trademark notices from the iframed portion.</li>
+        <li>Remove, block, or hinder the operation of advertising included in the iframed portion.</li>
+        <li>Add any layers above the iframed portion of the Website.</li>
+      </ul>
+      <p>BonkerGames reserves the right to discontinue an iframed portion of the Website at any time. If you have questions regarding embedding, please reach out to <a href="#">contact@bonkergames.com</a>.</p>
+    </div>
+
+    <div class="section-block" id="s9">
+      <h2>9. Warranties; Disclaimer</h2>
+      <div class="summary-box"><strong>Summary:</strong> We offer no warranties regarding our services or Platform, including regarding quality, reliability, security, or compatibility.</div>
+      <p>YOU WARRANT THAT YOU WILL ABIDE BY AND RESPECT THESE TERMS OF SERVICE AND ANY ADDITIONAL GUIDELINES OF OUR PLATFORM.</p>
+      <p class="caps">OUR SERVICES AND ALL MATERIALS ON THE WEBSITE AND PLATFORM ARE PROVIDED "AS IS" AND "AS AVAILABLE" AND WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. BONKERGAMES DOES NOT WARRANT THAT THE WEBSITE AND/OR OUR PLATFORM WILL BE AVAILABLE, UNINTERRUPTED, ERROR-FREE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.</p>
+    </div>
+
+    <div class="section-block" id="s10">
+      <h2>10. Limitation of Liability</h2>
+      <div class="summary-box"><strong>Summary:</strong> To the extent permitted by law, we are not liable for damages arising from use of our free Platform.</div>
+      <p class="caps">TO THE EXTENT PERMITTED BY APPLICABLE LAW, UNDER NO CIRCUMSTANCES WILL BONKERGAMES OR ITS DIRECTORS, EMPLOYEES, PARTNERS, LICENSORS, CONTRACTORS, AGENTS, SUPPLIERS OR AFFILIATES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOST PROFITS, LOSS OF DATA, USE, GOODWILL OR OTHER INTANGIBLE LOSSES, ARISING FROM (I) YOUR ACCESS TO OR USE OF OR INABILITY TO ACCESS OR USE THE PLATFORM; (II) ANY THIRD-PARTY CONDUCT OR CONTENT ON THE PLATFORM; (III) ANY CONTENT OBTAINED FROM THE PLATFORM; OR (IV) UNAUTHORIZED ACCESS, USE OR MODIFICATION OF YOUR TRANSMISSIONS OR CONTENT.</p>
+    </div>
+
+    <div class="section-block" id="s11">
+      <h2>11. Indemnification</h2>
+      <div class="summary-box"><strong>Summary:</strong> If BonkerGames is harmed because of something you did, you will bear the associated costs and damages.</div>
+      <p>You agree to defend, indemnify and hold harmless BonkerGames, its subsidiaries, affiliates, licensors, content providers, service providers, employees, agents, officers, directors and contractors from and against any and all liability, loss or damage, costs or expenses, including court costs and attorneys' fees, caused by, in connection with, or incidental to: (a) your use of our Platform; (b) the Website; or (c) other services offered through the Website.</p>
+    </div>
+
+    <div class="section-block" id="s12">
+      <h2>12. Termination or Deletion of Accounts</h2>
+      <div class="summary-box"><strong>Summary:</strong> You can delete your Account at any time. We can also terminate your access if you don't follow our rules.</div>
+      <p>BonkerGames reserves the right to terminate these Terms and end your access to the Website and/or Platform, or temporarily suspend all or part of your access, at any time and without prior notice if we have a reasonable belief that you have violated any term or provision outlined in these Terms, or if termination is required by applicable law.</p>
+      <p>You can delete your Account at any time by going to account settings and clicking "Delete your account", or by requesting us to delete your Account by email at <a href="#">contact@bonkergames.com</a>.</p>
+    </div>
+
+    <div class="section-block" id="s13">
+      <h2>13. Information, Complaints &amp; Copyright Claims</h2>
+      <div class="summary-box"><strong>Summary:</strong> If you have any concerns or complaints, please email us. When you provide us feedback, we are free to use it at our discretion.</div>
+      <p>If you have a question or complaint regarding the Platform or Website, please send an email to <a href="#">contact@bonkergames.com</a>.</p>
+      <p>If you provide us with feedback, including comments, suggestions, or ideas ("Feedback"), such Feedback will be treated as non-confidential and non-proprietary and may be used by us for any purpose, without compensation to you.</p>
+      <p>If you believe in good faith that materials available on the Website infringe your copyright, you may send us a written notice requesting that we remove such material or block access to it. Notices must be sent to <a href="#">contact@bonkergames.com</a>.</p>
+    </div>
+
+    <div class="section-block" id="s14">
+      <h2>14. Disputes</h2>
+      <div class="summary-box"><strong>Summary:</strong> We want to try to settle any disputes in good faith before escalating to legal proceedings.</div>
+      <p>In the event of any controversy, claim, or dispute arising out of or related to these Terms, the party asserting the dispute will first try in good faith to settle such dispute by providing written notice to the other party describing the facts and circumstances of the dispute and allowing the receiving party 30 days from the date of mailing to respond. Notice may be sent to <a href="#">contact@bonkergames.com</a>.</p>
+    </div>
+
+    <div class="section-block" id="s15">
+      <h2>15. Miscellaneous</h2>
+      <p>If any provision of these Terms is deemed invalid, illegal or unenforceable, such provision will be deemed amended to comply with applicable law and the remaining provisions will continue in full force and effect.</p>
+      <p>These Terms and our Privacy Policy represent the entire understanding and agreement between the parties with respect to the subject matter and supersede all prior communications.</p>
+      <p>Your use of the Website does not create an employment, partnership, joint venture or any other relationship beyond that of a website user governed by these Terms.</p>
+      <p>These Terms, and any rights and licenses granted hereunder, may not be transferred or assigned by you, but may be assigned by BonkerGames without restriction.</p>
+      <p>BonkerGames' waiver of any term in these Terms does not imply an ongoing or additional waiver of that term or any other term.</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
