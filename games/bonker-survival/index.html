@@ -258,6 +258,8 @@
     .inv-slot-big.drag-over { border-color:#3498db; background:#101828; }
     .inv-slot-big.picked { border-color:#f0c040; background:#2a2010; box-shadow:0 0 6px rgba(240,192,64,0.5); }
     .inv-slot-big .ic { font-size:9px; color:#aaa; line-height:1; }
+    .slot.picked-slot { border-color:#f0c040 !important; box-shadow:0 0 8px rgba(240,192,64,0.6) !important; }
+    .slot.drag-over { border-color:#3498db !important; background:rgba(10,24,40,0.92) !important; }
     /* ── Furnace Panel ── */
     #furnace-panel {
       display:none; position:fixed; top:50%; left:50%;
@@ -365,11 +367,11 @@
 </div>
 
 <div id="toolbar">
-  <div class="slot active" id="slot-0" onclick="selectSlot(0)"><span class="slot-num">1</span><div class="slot-icon" id="si-0"></div><div class="slot-count" id="sc-0"></div></div>
-  <div class="slot"        id="slot-1" onclick="selectSlot(1)"><span class="slot-num">2</span><div class="slot-icon" id="si-1"></div><div class="slot-count" id="sc-1"></div></div>
-  <div class="slot"        id="slot-2" onclick="selectSlot(2)"><span class="slot-num">3</span><div class="slot-icon" id="si-2"></div><div class="slot-count" id="sc-2"></div></div>
-  <div class="slot"        id="slot-3" onclick="selectSlot(3)"><span class="slot-num">4</span><div class="slot-icon" id="si-3"></div><div class="slot-count" id="sc-3"></div></div>
-  <div class="slot"        id="slot-4" onclick="selectSlot(4)"><span class="slot-num">5</span><div class="slot-icon" id="si-4"></div><div class="slot-count" id="sc-4"></div></div>
+  <div class="slot active" id="slot-0" onclick="toolbarSlotClick(0,event)"><span class="slot-num">1</span><div class="slot-icon" id="si-0"></div><div class="slot-count" id="sc-0"></div></div>
+  <div class="slot"        id="slot-1" onclick="toolbarSlotClick(1,event)"><span class="slot-num">2</span><div class="slot-icon" id="si-1"></div><div class="slot-count" id="sc-1"></div></div>
+  <div class="slot"        id="slot-2" onclick="toolbarSlotClick(2,event)"><span class="slot-num">3</span><div class="slot-icon" id="si-2"></div><div class="slot-count" id="sc-2"></div></div>
+  <div class="slot"        id="slot-3" onclick="toolbarSlotClick(3,event)"><span class="slot-num">4</span><div class="slot-icon" id="si-3"></div><div class="slot-count" id="sc-3"></div></div>
+  <div class="slot"        id="slot-4" onclick="toolbarSlotClick(4,event)"><span class="slot-num">5</span><div class="slot-icon" id="si-4"></div><div class="slot-count" id="sc-4"></div></div>
   <div class="slot"        id="slot-5" onclick="selectSlot(5)"><span class="slot-num">6</span><div class="slot-icon">📐</div><div class="slot-count">BUILD</div></div>
 </div>
 
@@ -466,10 +468,8 @@
 </div>
 
 <div id="inv-panel">
-  <button class="close-btn" onclick="document.getElementById('inv-panel').style.display='none'">✕</button>
+  <button class="close-btn" onclick="toggleInvPanel()">✕</button>
   <h3>🎒 INVENTORY</h3>
-  <div class="inv-section-lbl">Hotbar (1–5)</div>
-  <div class="inv-grid-big" id="inv-hotbar-grid"></div>
   <div class="inv-section-lbl">Backpack</div>
   <div class="inv-grid-big" id="inv-pack-grid"></div>
   <div class="inv-section-lbl" style="margin-top:10px">Armor</div>
@@ -528,7 +528,8 @@
 </div>
 
 <div id="hint">
-  WASD: move &nbsp; I: inventory &nbsp; C: basic craft &nbsp; G: map<br>
+  WASD: move &nbsp; Tab/I: inventory &nbsp; C: basic craft &nbsp; G: map<br>
+  E: eat food &nbsp; F: door / drink water &nbsp; Q: drop item<br>
   Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace<br>
   ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
   🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Explosive damages bases<br>
@@ -578,7 +579,7 @@ const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
 const MAP_W=3000, MAP_H=3000, SPEED=210, P_RAD=13;
-const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45, BLDG_DMG=15;
+const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45;
 const SYNC_MS=50, RES_N=55, HIT_CD=320;
 const FOOD_TICK=55000, THIRST_TICK=36000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
@@ -643,7 +644,7 @@ const _wr=seededRand(77777);
 const WATER_SRCS=Array.from({length:7},()=>({x:250+_wr()*(MAP_W-500),y:250+_wr()*(MAP_H-500)}));
 
 function teamColor(id){ const c=[0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6,0x1abc9c,0xe67e22]; let h=0; for(const ch of id) h=h*31+ch.charCodeAt(0); return c[Math.abs(h)%c.length]; }
-function lerpColor(a,b,t){ const ar=(a>>16)&0xff,ag=(a>>8)&0xff,ab=a&0xff,br=(b>>16)&0xff,bg=(b>>8)&0xff,bb=b&0xff; return ((ar+(br-ar)*t)<<16)|((ag+(bg-ag)*t)<<8)|(ab+(bb-ab)*t); }
+
 function dist2(ax,ay,bx,by){ const dx=ax-bx,dy=ay-by; return Math.sqrt(dx*dx+dy*dy); }
 function segIntersectsRect(ax,ay,bx,by,rx1,ry1,rx2,ry2){
   const dx=bx-ax,dy=by-ay; let tmin=0,tmax=1;
@@ -759,10 +760,16 @@ function getActiveTool(){
 }
 
 function refreshHotbar(){
+  const invOpen=document.getElementById('inv-panel')?.style.display==='block';
   for(let i=0;i<HOTBAR_SIZE;i++){
     const item=inv[i];
     document.getElementById('si-'+i).textContent=item?(ITEM_ICON[item.type]||'?'):'';
     document.getElementById('sc-'+i).textContent=item?(item.count>1?'x'+item.count:item.type.slice(0,4).toUpperCase()):'';
+    const slotEl=document.getElementById('slot-'+i);
+    if(slotEl){
+      slotEl.classList.toggle('picked-slot',typeof invPickedSlot!=='undefined'&&invPickedSlot===i);
+      if(invOpen)slotEl.setAttribute('draggable',item?'true':'false');
+    }
   }
   if(window._scene)window._scene.updateHUD();
   refreshArmorHUD();
@@ -793,7 +800,7 @@ let invDragSrc=null; // {from:'inv'|'chest', idx:number, res:string}
 window.invDragStart=function(e,from,idxOrRes){
   invDragSrc={from,idx:typeof idxOrRes==='number'?idxOrRes:null,res:typeof idxOrRes==='string'?idxOrRes:null};
   e.dataTransfer.effectAllowed='move';
-  setTimeout(()=>{ const el=e.target.closest('.cslot,.inv-slot-big'); if(el)el.classList.add('drag-src'); },0);
+  setTimeout(()=>{ const el=e.target.closest('.cslot,.inv-slot-big,.slot'); if(el)el.classList.add('drag-src'); },0);
 };
 window.invDragOver=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; e.currentTarget.classList.add('drag-over'); };
 window.invDragLeave=function(e){ e.currentTarget.classList.remove('drag-over'); };
@@ -968,7 +975,7 @@ document.getElementById('chat-input').addEventListener('keydown',e=>{
   if(e.key==='Escape'){e.preventDefault();closeChat();}
 });
 document.addEventListener('keydown',e=>{
-  if(e.key==='Tab'){ e.preventDefault(); if(!chatOpen) toggleInvPanel(); }
+  if(e.key==='Tab'){ e.preventDefault(); }
 });
 
 // ── Phaser Scene ───────────────────────────────────────────────────────────────
@@ -1896,7 +1903,7 @@ class Game extends Phaser.Scene {
     }
     if(hasDrop) set(sref('loot/bag_'+PID+'_'+Date.now()),bag);
     state.armor={head:false,chest:false,legs:false}; refreshArmorHUD();
-    refreshHotbar();
+    invPickedSlot=null; setToolbarInvMode(false); refreshHotbar();
     // Close any open panels
     ['chest-panel','craft-panel','team-panel','inv-panel','furnace-panel','workbench-panel','sleeping-panel'].forEach(id=>document.getElementById(id).style.display='none');
     closeFurnace();
@@ -2049,7 +2056,7 @@ class Game extends Phaser.Scene {
           const hw=d.rotated?4:30,hh=d.rotated?30:4;
           hit=Math.abs(p.x-d.x)<hw+3&&Math.abs(p.y-d.y)<hh+3;
         }else{
-          hit=dist2(p.x,p.y,d.x,d.y)<400;
+          hit=dist2(p.x,p.y,d.x,d.y)<20;
         }
         if(hit){projectiles.splice(i,1);removed=true;break;}
       }
@@ -2058,12 +2065,12 @@ class Game extends Phaser.Scene {
       for(const[,rg] of Object.entries(resSpr)){
         const d=rg._d;if(!d)continue;
         const r=d.type==='tree'?18:d.type==='rock'?14:12;
-        if(dist2(p.x,p.y,d.x,d.y)<r*r){projectiles.splice(i,1);removed=true;break;}
+        if(dist2(p.x,p.y,d.x,d.y)<r){projectiles.splice(i,1);removed=true;break;}
       }
       if(removed)continue;
       // Online players
       for(const[id,o] of Object.entries(others)){
-        if(dist2(p.x,p.y,o.rx,o.ry)<P_RAD*P_RAD){
+        if(dist2(p.x,p.y,o.rx,o.ry)<P_RAD+2){
           const now=Date.now();
           set(sref('players/'+id+'/hits/'+now),{dmg:p.dmg,from:PID});
           state.score+=5;this.updateHUD();
@@ -2075,7 +2082,7 @@ class Game extends Phaser.Scene {
       // Sleeping players
       for(const[id,sd] of Object.entries(sleepingData)){
         if(state.teamId&&sd.teamId===state.teamId)continue;
-        if(dist2(p.x,p.y,sd.x,sd.y)<P_RAD*P_RAD){
+        if(dist2(p.x,p.y,sd.x,sd.y)<P_RAD+2){
           const newHp=Math.max(0,(sd.hp??MAX_HP)-p.dmg);
           this.pop(sd.x,sd.y-24,'-'+p.dmg,'#e74c3c');
           state.score+=5;this.updateHUD();
@@ -2088,7 +2095,7 @@ class Game extends Phaser.Scene {
       // Wolves
       for(const w of wolves){
         if(!w.alive)continue;
-        if(dist2(p.x,p.y,w.x,w.y)<14*14){
+        if(dist2(p.x,p.y,w.x,w.y)<14){
           w.hp-=p.dmg;
           this.pop(w.x,w.y-22,'-'+p.dmg,'#f0c040');
           if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
@@ -2189,7 +2196,7 @@ class Game extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.esc)){if(buildMode)selectSlot(0);}
     if(Phaser.Input.Keyboard.JustDown(k.t)){const tp=document.getElementById('team-panel');tp.style.display=tp.style.display==='none'?'block':'none';if(tp.style.display==='block')document.getElementById('tp-current').textContent=state.teamId||'None';}
     if(Phaser.Input.Keyboard.JustDown(k.c)){const cp=document.getElementById('craft-panel');if(cp.style.display==='block'){cp.style.display='none';}else{window.openCraftPanel();}}
-    if(Phaser.Input.Keyboard.JustDown(k.i)||Phaser.Input.Keyboard.JustDown(k.tab)){toggleInvPanel();}
+    if(!chatOpen&&(Phaser.Input.Keyboard.JustDown(k.i)||Phaser.Input.Keyboard.JustDown(k.tab))){toggleInvPanel();}
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
     if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected();
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
@@ -2202,15 +2209,8 @@ class Game extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.k9)){selectSlot(5);window.setBuildType('workbench');}
     if(Phaser.Input.Keyboard.JustDown(k.k0)){selectSlot(5);window.setBuildType('furnace');}
 
-    // F = drink water
+    // F = open/close nearby door, or drink water
     if(Phaser.Input.Keyboard.JustDown(k.f)){
-      let drank=false;
-      for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
-      if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
-    }
-
-    // E = open/close nearby door, or eat food
-    if(Phaser.Input.Keyboard.JustDown(k.e)){
       let doorToggled=false;
       for(const[id,g] of Object.entries(bldgSpr)){
         const d=g._d; if(d.type!=='door')continue;
@@ -2221,12 +2221,19 @@ class Game extends Phaser.Scene {
         doorToggled=true; break;
       }
       if(!doorToggled){
-        const slot=inv[selectedSlot];
-        if(slot&&slot.type==='food'&&slot.count>0){
-          if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
-          else{invRemove('food',1);state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);this.updateHUD();this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');}
-        } else this.pop(state.x,state.y-30,'No food in slot!','#555');
+        let drank=false;
+        for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
+        if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
       }
+    }
+
+    // E = eat food
+    if(Phaser.Input.Keyboard.JustDown(k.e)){
+      const slot=inv[selectedSlot];
+      if(slot&&slot.type==='food'&&slot.count>0){
+        if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
+        else{invRemove('food',1);state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);this.updateHUD();this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');}
+      } else this.pop(state.x,state.y-30,'No food in slot!','#555');
     }
 
     // Build preview
@@ -2471,10 +2478,34 @@ function drawHeldItem(g,tx,ty,ang,tool){
 // ── Inventory Panel ──────────────────────────────────────────────────────────
 window.toggleInvPanel=function(){
   const p=document.getElementById('inv-panel');
-  if(p.style.display==='block'){ invPickedSlot=null; p.style.display='none'; return; }
-  renderInvPanel(); p.style.display='block';
+  if(p.style.display==='block'){invPickedSlot=null;p.style.display='none';setToolbarInvMode(false);refreshHotbar();return;}
+  renderInvPanel();p.style.display='block';setToolbarInvMode(true);
 };
 function toggleInvPanel(){ window.toggleInvPanel(); }
+
+function setToolbarInvMode(on){
+  for(let i=0;i<HOTBAR_SIZE;i++){
+    const el=document.getElementById('slot-'+i); if(!el)continue;
+    if(on){
+      el.setAttribute('draggable',inv[i]?'true':'false');
+      el.ondragstart=(e)=>window.invDragStart(e,'inv',i);
+      el.ondragover=window.invDragOver;
+      el.ondragleave=window.invDragLeave;
+      el.ondrop=(e)=>window.invDrop(e,'inv',i);
+      el.ondragend=window.invDragEnd;
+    }else{
+      el.removeAttribute('draggable');
+      el.ondragstart=el.ondragover=el.ondragleave=el.ondrop=el.ondragend=null;
+      el.classList.remove('drag-over','picked-slot');
+    }
+  }
+}
+window.toolbarSlotClick=function(n,e){
+  if(n<HOTBAR_SIZE&&document.getElementById('inv-panel').style.display==='block'){
+    window.invSlotClick(n,e);return;
+  }
+  selectSlot(n);
+};
 function renderInvPanel(){
   function slotHtml(item,i,cls){
     const icon=item?(ITEM_ICON[item.type]||'?'):'';
@@ -2487,10 +2518,8 @@ function renderInvPanel(){
       <span style="font-size:17px">${icon}</span><span class="ic">${cnt}</span>
     </div>`;
   }
-  let hotHtml='', packHtml='';
-  for(let i=0;i<HOTBAR_SIZE;i++) hotHtml+=slotHtml(inv[i],i,'inv-slot-big hotbar-slot');
+  let packHtml='';
   for(let i=HOTBAR_SIZE;i<INV_SIZE;i++) packHtml+=slotHtml(inv[i],i,'inv-slot-big');
-  document.getElementById('inv-hotbar-grid').innerHTML=hotHtml;
   document.getElementById('inv-pack-grid').innerHTML=packHtml;
   refreshArmorHUD();
 }
@@ -2517,7 +2546,7 @@ window.invSlotClick=function(i,e){
   // Click-to-move: if something is picked, place/swap it
   if(invPickedSlot!==null){
     if(invPickedSlot!==i){const tmp=inv[invPickedSlot];inv[invPickedSlot]=inv[i];inv[i]=tmp;refreshHotbar();}
-    invPickedSlot=null; renderInvPanel(); return;
+    invPickedSlot=null; refreshHotbar(); renderInvPanel(); return;
   }
   const item=inv[i]; if(!item)return;
   // Armor equip on click
@@ -2526,7 +2555,7 @@ window.invSlotClick=function(i,e){
     if(!state.armor[slot]){state.armor[slot]=true;invRemove(item.type,1);refreshArmorHUD();renderInvPanel();window._scene&&window._scene.pop(state.x,state.y-30,(ITEM_ICON[item.type]||item.type)+' equipped!','#2ecc71');return;}
   }
   // Pick up item
-  invPickedSlot=i; renderInvPanel();
+  invPickedSlot=i; refreshHotbar(); renderInvPanel();
 };
 window.invArmorSlotClick=function(slot){
   if(!state.armor[slot])return;
