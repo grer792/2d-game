@@ -1,5 +1,10 @@
 {
   "buildCommand": null,
   "outputDirectory": ".",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    { "source": "/game/bonker-survival", "destination": "/games/bonker-survival/play.html" },
+    { "source": "/game/bonker-chess",    "destination": "/games/bonker-chess/play.html" },
+    { "source": "/game/tic-tac-toe",     "destination": "/games/tic-tac-toe-online/play.html" }
+  ]
 }
