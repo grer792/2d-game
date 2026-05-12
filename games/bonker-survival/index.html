@@ -1509,13 +1509,18 @@ class Game extends Phaser.Scene {
       if(!snap.val()) set(ref(db,'servers/'+SERVER_KEY+'/epoch'),Date.now()-DAY_CYCLE*0.2);
       onValue(ref(db,'servers/'+SERVER_KEY+'/epoch'),s=>{ if(s.val()) serverEpoch=s.val(); });
     });
-    get(sref('resources')).then(snap=>{
-      const val=snap.val(), keys=val?Object.keys(val):[];
-      const hasTree=keys.some(k=>k.startsWith('tree_'));
-      const hasRock=keys.some(k=>k.startsWith('rock_'));
-      const hasIron=keys.some(k=>k.startsWith('iron_'));
-      if(!hasIron||!hasTree||!hasRock||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
-    });
+    const checkResources=()=>{
+      get(sref('resources')).then(snap=>{
+        const val=snap.val(), keys=val?Object.keys(val):[];
+        const hasTree=keys.some(k=>k.startsWith('tree_'));
+        const hasRock=keys.some(k=>k.startsWith('rock_'));
+        const hasIron=keys.some(k=>k.startsWith('iron_'));
+        if(!hasIron||!hasTree||!hasRock||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)) remove(sref('resources')).then(()=>sc.seedMap());
+      });
+    };
+    checkResources();
+    // Second check after 4 s in case Firebase was slow to respond
+    setTimeout(()=>{ if(Object.keys(resSpr).length<10) checkResources(); }, 4000);
     onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
     onChildChanged(sref('resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
     onChildRemoved(sref('resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}});
