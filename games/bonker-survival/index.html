@@ -1888,6 +1888,7 @@ class Game extends Phaser.Scene {
   resolveWalls(){
     let px=this.pbody.x, py=this.pbody.y;
     let vx=this.pbody.body.velocity.x, vy=this.pbody.body.velocity.y;
+    const origSpd=Math.sqrt(vx*vx+vy*vy);
     for(const g of Object.values(bldgSpr)){
       const d=g._d; if(!d)continue;
       if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
@@ -1923,6 +1924,8 @@ class Game extends Phaser.Scene {
     px=Math.max(P_RAD,Math.min(MAP_W-P_RAD,px));
     py=Math.max(P_RAD,Math.min(MAP_H-P_RAD,py));
     this.pbody.setPosition(px,py);
+    const newSpd=Math.sqrt(vx*vx+vy*vy);
+    if(newSpd>0.1&&origSpd>0.1){const s=origSpd/newSpd;vx*=s;vy*=s;}
     this.pbody.setVelocity(vx,vy);
   }
 
