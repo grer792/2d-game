@@ -324,6 +324,28 @@
       </div>
       <button class="srv-join" onclick="joinServer('server1')">JOIN</button>
     </div>
+    <div class="srv-card">
+      <div class="srv-dot"></div>
+      <div class="srv-info">
+        <div class="srv-name">Bonker World #2</div>
+        <div class="srv-meta">
+          <span class="srv-players" id="srv2-count">... players online</span>
+          <span class="srv-region">🌍 Global</span>
+        </div>
+      </div>
+      <button class="srv-join" onclick="joinServer('server2')">JOIN</button>
+    </div>
+    <div class="srv-card">
+      <div class="srv-dot"></div>
+      <div class="srv-info">
+        <div class="srv-name">Bonker World #3</div>
+        <div class="srv-meta">
+          <span class="srv-players" id="srv3-count">... players online</span>
+          <span class="srv-region">🌍 Global</span>
+        </div>
+      </div>
+      <button class="srv-join" onclick="joinServer('server3')">JOIN</button>
+    </div>
   </div>
 </div>
 
@@ -559,11 +581,13 @@ const db = getDatabase(firebaseApp);
 let SERVER_KEY = null;
 function sref(path){ return ref(db,'servers/'+SERVER_KEY+'/'+path); }
 
-// Live player count for lobby
-onValue(ref(db,'servers/server1/players'),snap=>{
-  const n=snap.val()?Object.keys(snap.val()).length:0;
-  const el=document.getElementById('srv1-count');
-  if(el)el.textContent=n+' player'+(n===1?'':'s')+' online';
+// Live player counts for lobby
+[1,2,3].forEach(i=>{
+  onValue(ref(db,'servers/server'+i+'/players'),snap=>{
+    const n=snap.val()?Object.keys(snap.val()).length:0;
+    const el=document.getElementById('srv'+i+'-count');
+    if(el)el.textContent=n+' player'+(n===1?'':'s')+' online';
+  });
 });
 
 window.joinServer=function(key){
