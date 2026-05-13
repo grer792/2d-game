@@ -346,8 +346,15 @@
     .armor-vs:hover { border-color:#5a8aaa !important; }
     .armor-vs.equip-on { border-color:#2a6a3a !important; background:#0c1e10 !important; }
     .inv-ctr { display:flex; flex-direction:column; flex-shrink:0; width:250px; }
-    .inv-right { width:190px; flex-shrink:0; display:flex; flex-direction:column; padding-left:9px; border-left:1px solid #1e1e1e; margin-left:9px; max-height:340px; }
-    .inv-tab-body { overflow-y:auto; max-height:270px; flex:1; }
+    .inv-right { width:220px; flex-shrink:0; display:flex; flex-direction:column; padding-left:9px; border-left:1px solid #1e1e1e; margin-left:9px; max-height:360px; }
+    .inv-tab-body { overflow-y:auto; flex:1; }
+    .craft-cat-bar { display:flex; flex-wrap:wrap; gap:3px; padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid #1e1e1e; position:sticky; top:0; background:rgba(12,12,14,0.98); padding-top:1px; z-index:1; }
+    .craft-cat-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:5px 4px 4px; border:1px solid #2a2a2a; border-radius:4px; background:#161616; cursor:pointer; font-family:inherit; min-width:30px; transition:border-color .1s, background .1s; }
+    .craft-cat-btn:hover { border-color:#555; background:#222; }
+    .craft-cat-btn.active { border-color:#c09030; background:#241a06; }
+    .craft-cat-icon { font-size:14px; line-height:1; }
+    .craft-cat-lbl { font-size:7px; color:#555; letter-spacing:.3px; line-height:1; }
+    .craft-cat-btn.active .craft-cat-lbl { color:#b08020; }
     .inv-right-hdr { font-size:10px; color:#c0a030; letter-spacing:1px; font-weight:600; margin-bottom:5px; padding-bottom:4px; border-bottom:1px solid #2a2a2a; }
     .inv-craft-sep { font-size:8px; color:#3a3a3a; letter-spacing:1.5px; text-transform:uppercase; padding:5px 2px 3px; border-bottom:1px solid #1a1a1a; }
     .inv-craft-row { display:flex; align-items:center; gap:5px; padding:4px 3px; border-radius:3px; cursor:pointer; transition:background .08s; }
@@ -3324,7 +3331,16 @@ window.toolbarSlotClick=function(n,e){
   }
   selectSlot(n);
 };
-let _selCraftId=null, _selCraftType=null;
+let _selCraftId=null, _selCraftType=null, _craftCat='all';
+const CRAFT_CATS={
+  all:    {label:'ALL',  icon:'📋', ids:null},
+  weapons:{label:'WEAP', icon:'⚔️', ids:['axe','sword','msword','bow','crossbow']},
+  tools:  {label:'TOOL', icon:'🔧', ids:['pick','hammer']},
+  armor:  {label:'ARM',  icon:'🛡️',ids:['armor_head','armor_chest','armor_legs']},
+  ammo:   {label:'AMMO', icon:'🏹', ids:['arrow','bolt']},
+  medical:{label:'MED',  icon:'🩹', ids:['bandage']},
+  misc:   {label:'MISC', icon:'💣', ids:['explosive']},
+};
 
 function _invSlotHtml(item,i,cls){
   const icon=item?(ITEM_ICON[item.type]||'?'):'';
@@ -3361,37 +3377,56 @@ window.closeInvContainer=function(){
 
 function renderInvCraftList(){
   const nearWB=!!activeWorkbenchId;
-  let h='<div class="inv-craft-sep">BASIC</div>';
-  h+=RECIPES.map(r=>{
+  const catIds=CRAFT_CATS[_craftCat]?.ids;
+  const allBasic=RECIPES.map(r=>({...r,wb:false}));
+  const allWB=WB_RECIPES.map(r=>({...r,wb:true}));
+  const basic=catIds?allBasic.filter(r=>catIds.includes(r.id)):allBasic;
+  const wb=catIds?allWB.filter(r=>catIds.includes(r.id)):allWB;
+
+  // Category bar (sticky so it stays at top when scrolling)
+  const catBar='<div class="craft-cat-bar">'+
+    Object.entries(CRAFT_CATS).map(([key,cat])=>{
+      const act=_craftCat===key?' active':'';
+      return`<button class="craft-cat-btn${act}" onclick="setCraftCat('${key}')">
+        <span class="craft-cat-icon">${cat.icon}</span>
+        <span class="craft-cat-lbl">${cat.label}</span>
+      </button>`;
+    }).join('')+'</div>';
+
+  function recipeRow(r){
     const isTool=TOOLS.includes(r.id);
     const owned=isTool&&invHasTool(r.id);
     const canAfford=invCanAfford(r.cost);
     const costTxt=Object.entries(r.cost).map(([k,v])=>v+(ITEM_ICON[k]||k)).join(' ');
     const sel=_selCraftId===r.id?' icraft-sel':'';
-    return`<div class="inv-craft-row${sel}" onclick="selectInvCraft('${r.id}','basic')">
+    const locked=r.wb&&!nearWB?' wb-locked':'';
+    const type=r.wb?'wb':'basic';
+    return`<div class="inv-craft-row${locked}${sel}" onclick="selectInvCraft('${r.id}','${type}')">
       <span class="inv-craft-icon">${ITEM_ICON[r.id]||'?'}</span>
       <div class="inv-craft-info">
         <div class="inv-craft-name">${r.name}</div>
-        <div class="inv-craft-cost${canAfford?' ok':''}">${costTxt}</div>
+        <div class="inv-craft-cost${canAfford?' ok':''}">${costTxt}${owned?' ✓':''}</div>
       </div>
     </div>`;
-  }).join('');
-  h+='<div class="inv-craft-sep">WORKBENCH'+(nearWB?'':' 🔧')+'</div>';
-  h+=WB_RECIPES.map(r=>{
-    const canAfford=invCanAfford(r.cost);
-    const costTxt=Object.entries(r.cost).map(([k,v])=>v+(ITEM_ICON[k]||k)).join(' ');
-    const sel=_selCraftId===r.id?' icraft-sel':'';
-    const locked=nearWB?'':' wb-locked';
-    return`<div class="inv-craft-row${locked}${sel}" onclick="selectInvCraft('${r.id}','wb')">
-      <span class="inv-craft-icon">${ITEM_ICON[r.id]||'?'}</span>
-      <div class="inv-craft-info">
-        <div class="inv-craft-name">${r.name}</div>
-        <div class="inv-craft-cost${canAfford?' ok':''}">${costTxt}</div>
-      </div>
-    </div>`;
-  }).join('');
+  }
+
+  let h=catBar;
+  if(basic.length){
+    if(_craftCat==='all') h+='<div class="inv-craft-sep">BASIC</div>';
+    h+=basic.map(recipeRow).join('');
+  }
+  if(wb.length){
+    if(_craftCat==='all') h+='<div class="inv-craft-sep">WORKBENCH'+(nearWB?'':' 🔧')+'</div>';
+    else if(!nearWB) h+='<div style="font-size:9px;color:#555;padding:3px 2px 5px">🔧 Workbench required</div>';
+    h+=wb.map(recipeRow).join('');
+  }
+  if(!basic.length&&!wb.length){
+    h+='<div style="font-size:11px;color:#3a3a3a;padding:16px 4px;text-align:center">Nothing in this category</div>';
+  }
   const el=document.getElementById('inv-craft-list'); if(el)el.innerHTML=h;
 }
+
+window.setCraftCat=function(cat){ _craftCat=cat; renderInvCraftList(); };
 
 window.selectInvCraft=function(id,type){
   _selCraftId=id; _selCraftType=type;
