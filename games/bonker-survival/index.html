@@ -1059,7 +1059,8 @@ window.leaveTeam=function(){ state.teamId=null; document.getElementById('tp-curr
 // ── Crafting ──────────────────────────────────────────────────────────────────
 window.openCraftPanel=function(){
   document.getElementById('craft-list').innerHTML=RECIPES.map(r=>{
-    const owned=invHasTool(r.id);
+    const isTool=TOOLS.includes(r.id);
+    const owned=isTool&&invHasTool(r.id);
     const canAfford=invCanAfford(r.cost);
     const costTxt=Object.entries(r.cost).map(([k,v])=>`${v} ${ITEM_ICON[k]}`).join(' ');
     return `<div class="recipe-row">
@@ -1071,7 +1072,8 @@ window.openCraftPanel=function(){
   document.getElementById('craft-panel').style.display='block';
 };
 window.craftItem=function(id){
-  const r=RECIPES.find(x=>x.id===id); if(!r||invHasTool(id))return;
+  const r=RECIPES.find(x=>x.id===id); if(!r)return;
+  if(TOOLS.includes(id)&&invHasTool(id))return;
   if(!invCanAfford(r.cost))return;
   for(const[k,v]of Object.entries(r.cost))invRemove(k,v);
   invAdd(id,1);
@@ -1215,6 +1217,7 @@ class Game extends Phaser.Scene {
       up2:'UP',dn2:'DOWN',lt2:'LEFT',rt2:'RIGHT',
       esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',g:'G',i:'I',r:'R',enter:'ENTER',
       tab:Phaser.Input.Keyboard.KeyCodes.TAB,
+      shift:Phaser.Input.Keyboard.KeyCodes.SHIFT,
       k1:Phaser.Input.Keyboard.KeyCodes.ONE,
       k2:Phaser.Input.Keyboard.KeyCodes.TWO,
       k3:Phaser.Input.Keyboard.KeyCodes.THREE,
@@ -2381,6 +2384,16 @@ class Game extends Phaser.Scene {
         if(dot<0){vx-=dot*nx; vy-=dot*ny;}
       }
     }
+    // Player-player collision
+    for(const pd of Object.values(playerData)){
+      const dx=px-pd.x,dy=py-pd.y,dst=Math.sqrt(dx*dx+dy*dy),minD=P_RAD*2;
+      if(dst<minD&&dst>0.01){
+        const push=minD-dst,nx=dx/dst,ny=dy/dst;
+        px+=nx*push;py+=ny*push;
+        const dot=vx*nx+vy*ny;
+        if(dot<0){vx-=dot*nx;vy-=dot*ny;}
+      }
+    }
     px=Math.max(P_RAD,Math.min(MAP_W-P_RAD,px));
     py=Math.max(P_RAD,Math.min(MAP_H-P_RAD,py));
     this.pbody.setPosition(px,py);
@@ -2500,6 +2513,12 @@ class Game extends Phaser.Scene {
         if(bd2.type==='ewgate'&&bd2.open)continue;
         const p2=obbPush(w.x,w.y,bd2.x,bd2.y,bd2.angle||0,40,7,15);
         if(p2){w.x+=p2.dx;w.y+=p2.dy;}
+      }
+      // Wolf-wolf separation
+      for(const w2 of wolves){
+        if(w2===w||!w2.alive)continue;
+        const wwdx=w.x-w2.x,wwdy=w.y-w2.y,wwd=Math.sqrt(wwdx*wwdx+wwdy*wwdy);
+        if(wwd<30&&wwd>0.01){const push=(30-wwd)*0.5;w.x+=wwdx/wwd*push;w.y+=wwdy/wwd*push;w2.x-=wwdx/wwd*push;w2.y-=wwdy/wwd*push;}
       }
       w.atkTimer+=delta;
       if(d<WOLF_ATK_RNG&&w.atkTimer>=WOLF_ATK_TICK){
@@ -2806,7 +2825,7 @@ class Game extends Phaser.Scene {
       if(k.r.isDown) bldgAngle=(bldgAngle+60*(delta/1000))%360;
     } else if(buildMode&&Phaser.Input.Keyboard.JustDown(k.r)){buildRot=buildRot?0:1;}
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
-    if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected(this.input.keyboard.addKey('SHIFT').isDown);
+    if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected(k.shift.isDown);
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
     if(Phaser.Input.Keyboard.JustDown(k.k2))selectSlot(1);
     if(Phaser.Input.Keyboard.JustDown(k.k3))selectSlot(2);
