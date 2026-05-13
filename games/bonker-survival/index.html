@@ -613,7 +613,7 @@
 <div id="hint">
   WASD: move &nbsp; Tab/I: inventory &nbsp; C: basic craft &nbsp; G: map<br>
   E: eat food &nbsp; F: door / drink water &nbsp; Q: drop item<br>
-  Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace<br>
+  Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace &nbsp; R: rotate<br>
   ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
   🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Explosive damages bases<br>
   🔒 Enemy chests must be raided — fists barely dent walls
@@ -966,7 +966,7 @@ const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}
 const sleepingData={}, sleepingSpr={};
 let activeChestId=null, activeFurnaceId=null, activeWorkbenchId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
-let selectedSlot=0, buildMode=false, buildType='foundation', bPrev;
+let selectedSlot=0, buildMode=false, buildType='foundation', buildRot=0, bPrev;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={}, lastDCUpdate=0;
@@ -991,7 +991,7 @@ window.selectSlot=function(n){
   window._scene&&window._scene.redrawMe();
 };
 window.setBuildType=function(t){
-  buildType=t;
+  buildType=t; buildRot=0;
   document.querySelectorAll('.bopt').forEach(el=>el.classList.remove('bsel'));
   document.getElementById('bopt-'+t).classList.add('bsel');
 };
@@ -1102,7 +1102,7 @@ document.getElementById('chat-input').addEventListener('keydown',e=>{
   if(e.key==='Escape'){e.preventDefault();closeChat();}
 });
 document.addEventListener('keydown',e=>{
-  if(e.key==='Tab'){ e.preventDefault(); }
+  if(e.key==='Tab'){ e.preventDefault(); if(!chatOpen&&window._scene)window.toggleInvPanel(); }
 });
 
 // ── Phaser Scene ───────────────────────────────────────────────────────────────
@@ -1155,7 +1155,7 @@ class Game extends Phaser.Scene {
     this.keys=this.input.keyboard.addKeys({
       up:'W',dn:'S',lt:'A',rt:'D',
       up2:'UP',dn2:'DOWN',lt2:'LEFT',rt2:'RIGHT',
-      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',g:'G',i:'I',enter:'ENTER',
+      esc:'ESC',t:'T',c:'C',f:'F',q:'Q',e:'E',g:'G',i:'I',r:'R',enter:'ENTER',
       tab:Phaser.Input.Keyboard.KeyCodes.TAB,
       k1:Phaser.Input.Keyboard.KeyCodes.ONE,
       k2:Phaser.Input.Keyboard.KeyCodes.TWO,
@@ -1577,14 +1577,25 @@ class Game extends Phaser.Scene {
       if(mine) gfx.lineStyle(1.5,0xe67e22,0.7).strokeRect(x-20,y-17,40,36);
     } else if(type==='sleeping_bag'){
       const bc=mine?0x3a5878:0x283448, ic=mine?0x4a78a8:0x324060;
-      gfx.fillStyle(0x000000,0.18).fillEllipse(x+2,y+8,26,9);
-      gfx.fillStyle(bc,1).fillRoundedRect(x-10,y-15,20,26,4);
-      gfx.fillStyle(ic,1).fillEllipse(x,y-11,14,10);
-      gfx.fillStyle(0x101820,0.85).fillEllipse(x,y-11,10,7);
-      gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
-      gfx.beginPath();gfx.moveTo(x-8,y-3);gfx.lineTo(x+8,y-3);gfx.strokePath();
-      gfx.beginPath();gfx.moveTo(x-8,y+3);gfx.lineTo(x+8,y+3);gfx.strokePath();
-      gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1).strokeRoundedRect(x-10,y-15,20,26,4);
+      if(d.rot){
+        gfx.fillStyle(0x000000,0.18).fillEllipse(x+8,y+2,9,26);
+        gfx.fillStyle(bc,1).fillRoundedRect(x-13,y-10,26,20,4);
+        gfx.fillStyle(ic,1).fillEllipse(x+11,y,10,14);
+        gfx.fillStyle(0x101820,0.85).fillEllipse(x+11,y,7,10);
+        gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
+        gfx.beginPath();gfx.moveTo(x-3,y-8);gfx.lineTo(x-3,y+8);gfx.strokePath();
+        gfx.beginPath();gfx.moveTo(x+3,y-8);gfx.lineTo(x+3,y+8);gfx.strokePath();
+        gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1).strokeRoundedRect(x-13,y-10,26,20,4);
+      } else {
+        gfx.fillStyle(0x000000,0.18).fillEllipse(x+2,y+8,26,9);
+        gfx.fillStyle(bc,1).fillRoundedRect(x-10,y-15,20,26,4);
+        gfx.fillStyle(ic,1).fillEllipse(x,y-11,14,10);
+        gfx.fillStyle(0x101820,0.85).fillEllipse(x,y-11,10,7);
+        gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
+        gfx.beginPath();gfx.moveTo(x-8,y-3);gfx.lineTo(x+8,y-3);gfx.strokePath();
+        gfx.beginPath();gfx.moveTo(x-8,y+3);gfx.lineTo(x+8,y+3);gfx.strokePath();
+        gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1).strokeRoundedRect(x-10,y-15,20,26,4);
+      }
     }
     if(tier>0&&(type==='wall'||type==='door')){
       gfx.fillStyle(0x000000,0.4).fillCircle(x+16,y-22,7);
@@ -1671,7 +1682,7 @@ class Game extends Phaser.Scene {
     const counts={tree:RES_N,rock:RES_N,bush:RES_N,ore:22,iron:28,coal:24,sulfur:18};
     Object.keys(RES_DEF).forEach(type=>{
       const maxHp=RES_DEF[type].maxHp, n=counts[type]||RES_N;
-      for(let i=0;i<n;i++) batch[type+'_'+i]={x:ISLAND_GRASS+40+Math.random()*(MAP_W-(ISLAND_GRASS+40)*2),y:ISLAND_GRASS+40+Math.random()*(MAP_H-(ISLAND_GRASS+40)*2),type,hp:maxHp,maxHp};
+      for(let i=0;i<n;i++){let rx,ry,t=0;do{rx=ISLAND_GRASS+40+Math.random()*(MAP_W-(ISLAND_GRASS+40)*2);ry=ISLAND_GRASS+40+Math.random()*(MAP_H-(ISLAND_GRASS+40)*2);}while(isInRiver(rx,ry)&&++t<20);batch[type+'_'+i]={x:rx,y:ry,type,hp:maxHp,maxHp};}
     });
     set(sref('resources'),batch)
       .then(()=>console.log('[seedMap] wrote',Object.keys(batch).length,'resources'))
@@ -2055,11 +2066,13 @@ class Game extends Phaser.Scene {
       if((buildType==='wall'||buildType==='door')&&(td.type==='wall'||td.type==='door')&&dist2(placeX,placeY,td.x,td.y)<3){this.pop(this.pbody.x,this.pbody.y-30,'Already a wall/door here!','#e74c3c');return;}
       if(buildType!=='foundation'&&buildType!=='wall'&&buildType!=='door'&&td.type===buildType&&dist2(placeX,placeY,td.x,td.y)<22){this.pop(this.pbody.x,this.pbody.y-30,'Something is already here!','#e74c3c');return;}
     }
+    if(isInRiver(placeX,placeY)){this.pop(this.pbody.x,this.pbody.y-30,"Can't build in the river!",'#3498db');return;}
     if(buildType==='sleeping_bag'){
       const bagCount=Object.values(bldgSpr).filter(g=>g._d.type==='sleeping_bag'&&g._d.ownerId===PID).length;
       if(bagCount>=MAX_BAGS){this.pop(this.pbody.x,this.pbody.y-30,'Max '+MAX_BAGS+' beds!','#e74c3c');return;}
       const n=bagCount+1; extra.name='Bed '+n;
     }
+    if(buildRot&&(buildType==='sleeping_bag'||buildType==='chest'||buildType==='foundation'))extra.rot=buildRot;
     for(const[res,amt]of Object.entries(cost)){if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}}
     for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
@@ -2504,7 +2517,8 @@ class Game extends Phaser.Scene {
     if(Phaser.Input.Keyboard.JustDown(k.esc)){if(buildMode)selectSlot(0);}
     if(Phaser.Input.Keyboard.JustDown(k.t)){const tp=document.getElementById('team-panel');tp.style.display=tp.style.display==='none'?'block':'none';if(tp.style.display==='block')document.getElementById('tp-current').textContent=state.teamId||'None';}
     if(Phaser.Input.Keyboard.JustDown(k.c)){const cp=document.getElementById('craft-panel');if(cp.style.display==='block'){cp.style.display='none';}else{window.openCraftPanel();}}
-    if(!chatOpen&&(Phaser.Input.Keyboard.JustDown(k.i)||Phaser.Input.Keyboard.JustDown(k.tab))){toggleInvPanel();}
+    if(!chatOpen&&Phaser.Input.Keyboard.JustDown(k.i)){toggleInvPanel();}
+    if(buildMode&&Phaser.Input.Keyboard.JustDown(k.r)){buildRot=buildRot?0:1;}
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
     if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected();
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
@@ -2566,7 +2580,8 @@ class Game extends Phaser.Scene {
       else if(buildType==='tc'){bPrev.fillStyle(0x6a4a2a,0.4).fillRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(2,0x27ae60,0.7).strokeRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);}
       else if(buildType==='monument'){bPrev.fillStyle(0xf0c040,0.3).fillRect(p.worldX-15,p.worldY-50,30,65);bPrev.lineStyle(2,0xf0c040,0.8).strokeRect(p.worldX-15,p.worldY-50,30,65);}
       else if(buildType==='roof'){const rsnap=getRoofSnap(p.worldX,p.worldY);const rx=rsnap?rsnap.x:p.worldX,ry=rsnap?rsnap.y:p.worldY,rcol=rsnap?0x252530:0xe74c3c;bPrev.fillStyle(rcol,0.45).fillRect(rx-31,ry-31,62,62);bPrev.lineStyle(2,rcol,0.8).strokeRect(rx-31,ry-31,62,62);}
-      else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,30);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,30);}
+      else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,36);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,36);}
+      else if(buildType==='sleeping_bag'){const pw=buildRot?26:20,ph=buildRot?20:26;bPrev.fillStyle(0x3a5878,0.4).fillRoundedRect(p.worldX-pw/2,p.worldY-ph/2,pw,ph,3);bPrev.lineStyle(2,0x5a88c8,0.8).strokeRoundedRect(p.worldX-pw/2,p.worldY-ph/2,pw,ph,3);if(buildRot)bPrev.fillStyle(0x4a78a8,0.6).fillEllipse(p.worldX+11,p.worldY,10,14);else bPrev.fillStyle(0x4a78a8,0.6).fillEllipse(p.worldX,p.worldY-ph/2+5,14,10);}
       else{bPrev.fillStyle(0xd4a96a,0.35).fillRoundedRect(p.worldX-20,p.worldY-13,40,26,3);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRoundedRect(p.worldX-20,p.worldY-13,40,26,3);}
     } else if(bPrev)bPrev.setVisible(false);
 
