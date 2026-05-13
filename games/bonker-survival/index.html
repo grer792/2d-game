@@ -2220,7 +2220,7 @@ class Game extends Phaser.Scene {
       for(const g of Object.values(bldgSpr)){
         const bd=g._d; if(!bd)continue;
         if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
-        if(bd.type==='door'&&(bd.open||bd.ownerId===PID||(state.teamId&&bd.teamId===state.teamId)))continue;
+        if(bd.type==='door'&&bd.open)continue;
         const rot=bd.rot||0;
         const hw=bd.type==='wall'?(rot?4:30):(rot?20:30), hh=bd.type==='wall'?(rot?30:4):(rot?30:20);
         const nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
