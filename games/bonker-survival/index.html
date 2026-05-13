@@ -857,7 +857,7 @@ function obbPush(px,py,ox,oy,aDeg,hw,hh,radius){
 }
 function getEwSnapPos(wx,wy){
   const EHALF=40;
-  let best=null, bestDist=70;
+  let bestEnd=null, bestDist=70;
   for(const g of Object.values(bldgSpr)){
     const d=g._d;
     if(d.type!=='ewwall'&&d.type!=='ewgate')continue;
@@ -865,10 +865,18 @@ function getEwSnapPos(wx,wy){
     for(const side of[-1,1]){
       const ex=d.x+side*EHALF*c, ey=d.y+side*EHALF*s;
       const dst=dist2(wx,wy,ex,ey);
-      if(dst<bestDist){bestDist=dst; best={x:ex+side*EHALF*c,y:ey+side*EHALF*s,angle:d.angle||0};}
+      if(dst<bestDist){bestDist=dst; bestEnd={x:ex,y:ey};}
     }
   }
-  return best||{x:Math.round(wx),y:Math.round(wy),angle:ewwallAngle,free:true};
+  if(bestEnd){
+    // Snap ONE END of the new wall (at current ewwallAngle) to bestEnd; keep user's rotation
+    const r2=ewwallAngle*Math.PI/180, c2=Math.cos(r2), s2=Math.sin(r2);
+    const ax=bestEnd.x+EHALF*c2, ay=bestEnd.y+EHALF*s2; // left-end attaches
+    const bx=bestEnd.x-EHALF*c2, by=bestEnd.y-EHALF*s2; // right-end attaches
+    const center=dist2(wx,wy,ax,ay)<dist2(wx,wy,bx,by)?{x:ax,y:ay}:{x:bx,y:by};
+    return {x:center.x,y:center.y,angle:ewwallAngle};
+  }
+  return {x:Math.round(wx),y:Math.round(wy),angle:ewwallAngle,free:true};
 }
 function getConnectedFoundations(startId){
   const idMap={};
@@ -1679,17 +1687,68 @@ class Game extends Phaser.Scene {
         const openPct=d._openPct||0, swingDeg=openPct*80;
         const lhx=x-EHALF*aCos, lhy=y-EHALF*aSin;
         const rhx=x+EHALF*aCos, rhy=y+EHALF*aSin;
-        drawPanel(lhx,lhy,aDeg+swingDeg,5);
-        drawPanel(rhx,rhy,aDeg+180-swingDeg,5);
-        gfx.fillStyle(postC,1);
-        gfx.fillCircle(lhx,lhy,4.5);gfx.fillCircle(rhx,rhy,4.5);
-        gfx.fillStyle(0x9a6030,1);
-        gfx.fillCircle(lhx,lhy,2.5);gfx.fillCircle(rhx,rhy,2.5);
-        if(openPct<0.1){
-          gfx.fillStyle(mine?0xf0c040:0x9a6030,1);
-          gfx.fillCircle(x,y,3);
-          gfx.lineStyle(1,mine?0xb09000:0x5a3010,1);
-          gfx.strokeCircle(x,y,3);
+        const W2=(lx,ly)=>({x:x+lx*aCos-ly*aSin,y:y+lx*aSin+ly*aCos});
+        const N=5, PLEN=N*8;
+        const drawGatePanel=(hx,hy,pAng)=>{
+          const pr=pAng*Math.PI/180, pc2=Math.cos(pr), ps2=Math.sin(pr);
+          const Wp=(lx,ly)=>({x:hx+lx*pc2-ly*ps2,y:hy+lx*ps2+ly*pc2});
+          // Dark frame background
+          gfx.fillStyle(0x3a1a06,1);
+          gfx.fillPoints([Wp(0,-(EHW+0.5)),Wp(PLEN,-(EHW+0.5)),Wp(PLEN,EHW+0.5),Wp(0,EHW+0.5)],true);
+          // Individual planks
+          for(let i=0;i<N;i++){
+            const lx0=i*8+0.5,lx1=(i+1)*8-0.5;
+            gfx.fillStyle(i%2?0x7a4a1c:0x8c5c2c,1);
+            gfx.fillPoints([Wp(lx0,-(EHW-0.8)),Wp(lx1,-(EHW-0.8)),Wp(lx1,EHW-0.8),Wp(lx0,EHW-0.8)],true);
+            // subtle grain
+            gfx.lineStyle(0.5,0x3a1a06,0.35);
+            const gc=Wp((lx0+lx1)/2,-(EHW-0.8)),ge=Wp((lx0+lx1)/2,EHW-0.8);
+            gfx.beginPath().moveTo(gc.x,gc.y).lineTo(ge.x,ge.y).strokePath();
+          }
+          // Z-brace diagonal (from outer-top to inner-bottom)
+          gfx.lineStyle(2.5,0x1e0a02,0.85);
+          const zp1=Wp(0,-(EHW-1.5)),zp2=Wp(PLEN,EHW-1.5);
+          gfx.beginPath().moveTo(zp1.x,zp1.y).lineTo(zp2.x,zp2.y).strokePath();
+          // Horizontal mid-rail
+          gfx.lineStyle(2,0x1e0a02,0.7);
+          const rp1=Wp(1,0),rp2=Wp(PLEN-1,0);
+          gfx.beginPath().moveTo(rp1.x,rp1.y).lineTo(rp2.x,rp2.y).strokePath();
+          // Iron bolt at brace crossing
+          const boltX=PLEN*0.5, boltY=(EHW-1.5)*(boltX/PLEN)-(EHW-1.5);
+          const bolt=Wp(boltX,0);
+          gfx.fillStyle(0xb09040,1).fillCircle(bolt.x,bolt.y,2);
+          gfx.lineStyle(1,0x6a5020,1).strokeCircle(bolt.x,bolt.y,2);
+          // Panel border
+          gfx.lineStyle(1.5,0x1a0a02,1);
+          const fc=[Wp(0,-(EHW+0.5)),Wp(PLEN,-(EHW+0.5)),Wp(PLEN,EHW+0.5),Wp(0,EHW+0.5)];
+          gfx.beginPath().moveTo(fc[0].x,fc[0].y);
+          fc.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));
+          gfx.closePath().strokePath();
+        };
+        drawGatePanel(lhx,lhy,aDeg+swingDeg);
+        drawGatePanel(rhx,rhy,aDeg+180-swingDeg);
+        // Gate posts — square wood post with iron hinge ring
+        const drawPost=(px,py)=>{
+          gfx.fillStyle(0x2c1408,1).fillCircle(px,py,6);
+          gfx.lineStyle(2,0x100800,1).strokeCircle(px,py,6);
+          gfx.lineStyle(2.5,0xb09040,0.95).strokeCircle(px,py,4.5);
+          gfx.fillStyle(0x7a5828,1).fillCircle(px,py,2.5);
+          gfx.lineStyle(1,0x4a3010,1).strokeCircle(px,py,2.5);
+        };
+        drawPost(lhx,lhy); drawPost(rhx,rhy);
+        // Center latch when gate is closed
+        if(openPct<0.2){
+          const fade=1-openPct/0.2;
+          const lw=14,lh=3.5;
+          gfx.fillStyle(0x9a8030,fade);
+          gfx.fillPoints([W2(-lw/2,-lh/2),W2(lw/2,-lh/2),W2(lw/2,lh/2),W2(-lw/2,lh/2)],true);
+          gfx.lineStyle(1.5,0x5a4010,fade);
+          const lc=[W2(-lw/2,-lh/2),W2(lw/2,-lh/2),W2(lw/2,lh/2),W2(-lw/2,lh/2)];
+          gfx.beginPath().moveTo(lc[0].x,lc[0].y);lc.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));
+          gfx.closePath().strokePath();
+          // Latch bolt (golden if mine)
+          gfx.fillStyle(mine?0xd4b040:0xa08030,fade).fillCircle(x,y,2.5);
+          gfx.lineStyle(1,mine?0x9a8000:0x6a5020,fade).strokeCircle(x,y,2.5);
         }
       }
     }
