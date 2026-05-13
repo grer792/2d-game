@@ -377,7 +377,7 @@ function updateProfileUI(user){
   const un=document.getElementById('u-name'); if(un) un.textContent='@'+_currentUsername;
   window._currentUsername=_currentUsername;
   window._currentAvatar=_currentAvatar;
-  if(window._refreshMenuAccount)window._refreshMenuAccount();
+  document.getElementById('gameFrame')?.contentWindow?._refreshMenuAccount?.();
   updateBarBtns();
 }
 

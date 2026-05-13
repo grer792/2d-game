@@ -660,8 +660,9 @@ window.menuTab=function(tab){
   if(tab==='account')window._refreshMenuAccount();
 };
 window._refreshMenuAccount=function(){
-  const uname=window._currentUsername;
-  const av=window._currentAvatar;
+  const src=(window.parent&&window.parent!==window)?window.parent:window;
+  const uname=src._currentUsername;
+  const av=src._currentAvatar;
   const avEl=document.getElementById('menu-acct-avatar');
   if(avEl){
     if(uname&&av){avEl.innerHTML=`<img src="/assets/avatars/avatar${av}.png" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`;}
