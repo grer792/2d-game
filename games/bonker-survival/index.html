@@ -1668,21 +1668,36 @@ class Game extends Phaser.Scene {
         gfx.strokePath();
       };
       if(type==='ewwall'){
+        const W=(lx,ly)=>({x:x+lx*aCos-ly*aSin,y:y+lx*aSin+ly*aCos});
+        // Dark background strip
+        gfx.fillStyle(0x1e0a02,1);
+        gfx.fillPoints([W(-EHALF,-(EHW+0.5)),W(EHALF,-(EHW+0.5)),W(EHALF,EHW+0.5),W(-EHALF,EHW+0.5)],true);
+        // 10 log bodies — brighter alternating brown so logs are clearly visible
         for(let i=0;i<10;i++){
           const lx=-EHALF+(i+0.5)*8;
-          fillOBB(x+lx*aCos,y+lx*aSin,3.5,EHW-0.5,aCos,aSin,i%2?logA:logB);
+          fillOBB(x+lx*aCos,y+lx*aSin,3.5,EHW-0.8,aCos,aSin,i%2?0x5c3212:0x6e4020);
         }
-        gfx.lineStyle(1.5,ropeC,0.85);
+        // Rope bindings: thick dark line with lighter centre highlight
         for(const lx of[-20,0,20]){
           const rcx=x+lx*aCos, rcy=y+lx*aSin;
-          gfx.beginPath();
-          gfx.moveTo(rcx-(EHW-0.5)*aSin,rcy+(EHW-0.5)*aCos);
-          gfx.lineTo(rcx+(EHW-0.5)*aSin,rcy-(EHW-0.5)*aCos);
-          gfx.strokePath();
+          gfx.lineStyle(3.5,0x0e0602,0.95);
+          gfx.beginPath().moveTo(rcx-EHW*aSin,rcy+EHW*aCos).lineTo(rcx+EHW*aSin,rcy-EHW*aCos).strokePath();
+          gfx.lineStyle(1.5,0x4a2808,0.6);
+          gfx.beginPath().moveTo(rcx-EHW*aSin,rcy+EHW*aCos).lineTo(rcx+EHW*aSin,rcy-EHW*aCos).strokePath();
         }
-        gfx.fillStyle(postC,1);
-        gfx.fillCircle(x-EHALF*aCos,y-EHALF*aSin,4);
-        gfx.fillCircle(x+EHALF*aCos,y+EHALF*aSin,4);
+        // Border
+        gfx.lineStyle(1.5,0x100802,1);
+        const bc=[W(-EHALF,-(EHW+0.5)),W(EHALF,-(EHW+0.5)),W(EHALF,EHW+0.5),W(-EHALF,EHW+0.5)];
+        gfx.beginPath().moveTo(bc[0].x,bc[0].y);bc.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+        // End posts — match gate post style
+        const drawWallPost=(px,py)=>{
+          gfx.fillStyle(0x1e0a02,1).fillCircle(px,py,5.5);
+          gfx.lineStyle(1.5,0x100800,1).strokeCircle(px,py,5.5);
+          gfx.fillStyle(0x6a4018,1).fillCircle(px,py,3.5);
+          gfx.fillStyle(0x3a2008,1).fillCircle(px,py,1.5);
+        };
+        drawWallPost(x-EHALF*aCos,y-EHALF*aSin);
+        drawWallPost(x+EHALF*aCos,y+EHALF*aSin);
       } else {
         const openPct=d._openPct||0, swingDeg=openPct*80;
         const lhx=x-EHALF*aCos, lhy=y-EHALF*aSin;
