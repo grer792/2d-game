@@ -1198,15 +1198,14 @@ class Game extends Phaser.Scene {
       bg.fillStyle(0x2d8ad4,0.5).fillEllipse(w.x-9,w.y-7,38,22);
       bg.lineStyle(2,0x0a4a7a,0.7).strokeEllipse(w.x,w.y,72,48);
     });
-    // ── River S-curve (top to bottom) — banks fade smoothly into ocean at endpoints ──
+    // ── River S-curve (top to bottom) — each layer drawn as a full pass ──
     {const S=22,FADE_D=350;
-    for(let d=0;d<=RIVER_LEN;d+=S){
-      const p=_riverPt(d),ed=Math.min(d,RIVER_LEN-d),fade=Math.min(1,ed/FADE_D);
-      if(fade>0.02){bg.fillStyle(0x6a9a44,0.55*fade);bg.fillCircle(p.x,p.y,RIVER_RADIUS+20);bg.fillStyle(0xc8b070,0.50*fade);bg.fillCircle(p.x,p.y,RIVER_RADIUS+9);}
-      bg.fillStyle(0x1768b8,0.92);bg.fillCircle(p.x,p.y,RIVER_RADIUS);
-      bg.fillStyle(0x0d4e96,0.55);bg.fillCircle(p.x,p.y,RIVER_RADIUS*0.50);
-      bg.fillStyle(0x5cb8f0,0.10);bg.fillCircle(p.x,p.y,RIVER_RADIUS*0.82);
-    }
+    for(let d=0;d<=RIVER_LEN;d+=S){const p=_riverPt(d),ed=Math.min(d,RIVER_LEN-d),fade=Math.min(1,ed/FADE_D);if(fade>0.02){bg.fillStyle(0x6a9a44,0.55*fade);bg.fillCircle(p.x,p.y,RIVER_RADIUS+20);}}
+    for(let d=0;d<=RIVER_LEN;d+=S){const p=_riverPt(d),ed=Math.min(d,RIVER_LEN-d),fade=Math.min(1,ed/FADE_D);if(fade>0.02){bg.fillStyle(0xc8b070,0.50*fade);bg.fillCircle(p.x,p.y,RIVER_RADIUS+9);}}
+    bg.fillStyle(0x1768b8,0.92);for(let d=0;d<=RIVER_LEN;d+=S){const p=_riverPt(d);bg.fillCircle(p.x,p.y,RIVER_RADIUS);}
+    bg.fillStyle(0x0d4e96,0.55);for(let d=0;d<=RIVER_LEN;d+=S){const p=_riverPt(d);bg.fillCircle(p.x,p.y,RIVER_RADIUS*0.50);}
+    bg.fillStyle(0x5cb8f0,0.10);for(let d=0;d<=RIVER_LEN;d+=S){const p=_riverPt(d);bg.fillCircle(p.x,p.y,RIVER_RADIUS*0.82);}
+
     // Current direction arrows along path
     bg.fillStyle(0x9dd8ff,0.30);
     for(let d=180;d<RIVER_LEN-40;d+=280){
