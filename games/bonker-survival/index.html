@@ -580,14 +580,14 @@ const PNAME    = PID.substr(-4).toUpperCase();
 const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
-const MAP_W=3000, MAP_H=3000, SPEED=210, P_RAD=13;
+const MAP_W=3000, MAP_H=3000, SPEED=160, P_RAD=13;
 const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45;
 const SYNC_MS=50, RES_N=55, HIT_CD=320;
 const FOOD_TICK=55000, THIRST_TICK=36000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
 const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
 // ── River (S-curve, top to bottom) ──────────────────────────────────────
-const RIVER_RADIUS=115, RIVER_CURRENT=130;
+const RIVER_RADIUS=78, RIVER_CURRENT=130;
 const RIVER_PATH=[
   {x:1200,y:0},{x:1200,y:280},{x:1950,y:680},{x:2150,y:1080},
   {x:1850,y:1380},{x:1500,y:1500},{x:1150,y:1620},
@@ -1000,6 +1000,7 @@ class Game extends Phaser.Scene {
 
   create(){
     window._scene=this;
+    this._resQueue=[];this._resDraining=false;
     const mk=(key,w,h)=>{ const g=this.make.graphics({add:false}); g.fillStyle(0xffffff,1).fillRect(0,0,w,h); g.generateTexture(key,w,h); g.destroy(); };
     mk('body',P_RAD*2,P_RAD*2);
     this.physics.world.setBounds(0,0,MAP_W,MAP_H);
@@ -1025,7 +1026,7 @@ class Game extends Phaser.Scene {
     this.nameTag=this.add.text(0,0,PNAME,{fontSize:'11px',color:'#fff',stroke:'#000',strokeThickness:3,fontFamily:'Segoe UI'}).setOrigin(0.5).setDepth(99000);
     this.myChatBubble=null;
     this.redrawMe();
-    this.cameras.main.startFollow(this.pbody,true,0.08,0.08);
+    this.cameras.main.startFollow(this.pbody,true,1,1);
     this.cameras.main.centerOn(state.x,state.y);
     this.cameras.main.setZoom(2.5);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
@@ -1504,6 +1505,13 @@ class Game extends Phaser.Scene {
 
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
   rxRes(id,d){ if(!resSpr[id])return; resSpr[id]._d=d; this.drawRes(resSpr[id],d); }
+  _drainRes(){
+    this._resDraining=true;
+    if(!this._resQueue.length){this._resDraining=false;return;}
+    const e=this._resQueue.shift();
+    if(e&&!resSpr[e.key])this.mkRes(e.key,e.val);
+    setTimeout(()=>this._drainRes(),6);
+  }
   mkOther(id,d){
     const g=this.add.graphics().setDepth(d.y);
     const wg=this.add.graphics().setDepth(d.y+0.5);
@@ -1584,7 +1592,7 @@ class Game extends Phaser.Scene {
     checkResources();
     // Second check after 4 s in case Firebase was slow to respond
     setTimeout(()=>{ if(Object.keys(resSpr).length<10) checkResources(); }, 4000);
-    onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]) sc.mkRes(s.key,s.val());});
+    onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]){sc._resQueue.push({key:s.key,val:s.val()});if(!sc._resDraining)sc._drainRes();}});
     onChildChanged(sref('resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
     onChildRemoved(sref('resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}});
     onChildAdded(sref('players'),  s=>{if(s.key!==PID&&s.val())sc.mkOther(s.key,s.val());});
