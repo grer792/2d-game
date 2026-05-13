@@ -1012,7 +1012,7 @@ const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}
 const sleepingData={}, sleepingSpr={};
 let activeChestId=null, activeFurnaceId=null, activeWorkbenchId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
-let selectedSlot=0, buildMode=false, buildType='foundation', buildRot=0, bPrev, ewwallAngle=0;
+let selectedSlot=0, buildMode=false, buildType='foundation', buildRot=0, bPrev, ewwallAngle=0, bldgAngle=0;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={}, lastDCUpdate=0;
@@ -1037,7 +1037,7 @@ window.selectSlot=function(n){
   window._scene&&window._scene.redrawMe();
 };
 window.setBuildType=function(t){
-  buildType=t; buildRot=0;
+  buildType=t; buildRot=0; bldgAngle=0;
   document.querySelectorAll('.bopt').forEach(el=>el.classList.remove('bsel'));
   document.getElementById('bopt-'+t).classList.add('bsel');
 };
@@ -1557,14 +1557,18 @@ class Game extends Phaser.Scene {
         gfx.lineStyle(1.5,dk,1).strokeRect(x-7,y-30,14,60);
       }
     } else if(type==='tc'){
-      const cc=mine?0x6a4a2a:0x3a2808;
-      gfx.fillStyle(cc,1).fillRect(x-16,y-20,32,34);
-      gfx.fillStyle(mine?0xd4a96a:0x8b6042,1).fillRect(x-13,y-17,11,18);
-      gfx.fillStyle(mine?0xd4a96a:0x8b6042,1).fillRect(x+2,y-17,11,18);
-      gfx.lineStyle(1,mine?0x5a3820:0x1a0a00,1).strokeRect(x-13,y-17,11,18);
-      gfx.lineStyle(1,mine?0x5a3820:0x1a0a00,1).strokeRect(x+2,y-17,11,18);
-      gfx.lineStyle(2,mine?0x5a3820:0x1a0a00,1).strokeRect(x-16,y-20,32,34);
-      gfx.fillStyle(mine?0x27ae60:0xe74c3c,0.9).fillCircle(x,y+9,5);
+      const cc=mine?0x6a4a2a:0x3a2808, dc=mine?0xd4a96a:0x8b6042, ddk=mine?0x5a3820:0x1a0a00;
+      const ang=(d.angle||0)*Math.PI/180, aC=Math.cos(ang), aS=Math.sin(ang);
+      const W=(lx,ly)=>({x:x+lx*aC-ly*aS,y:y+lx*aS+ly*aC});
+      gfx.fillStyle(cc,1).fillPoints([W(-16,-17),W(16,-17),W(16,17),W(-16,17)],true);
+      gfx.fillStyle(dc,1).fillPoints([W(-13,-17),W(-2,-17),W(-2,1),W(-13,1)],true);
+      gfx.fillStyle(dc,1).fillPoints([W(2,-17),W(13,-17),W(13,1),W(2,1)],true);
+      gfx.lineStyle(1,ddk,1);
+      let dr=[W(-13,-17),W(-2,-17),W(-2,1),W(-13,1)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      dr=[W(2,-17),W(13,-17),W(13,1),W(2,1)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      gfx.lineStyle(2,ddk,1);
+      dr=[W(-16,-17),W(16,-17),W(16,17),W(-16,17)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      const ind=W(0,9); gfx.fillStyle(mine?0x27ae60:0xe74c3c,0.9).fillCircle(ind.x,ind.y,5);
       if(mine)gfx.lineStyle(1,0x27ae60,0.22).strokeCircle(x,y,TC_ZONE);
     } else if(type==='campfire'){
       for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2;gfx.fillStyle(0x8796a0,1).fillCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5);gfx.lineStyle(1,0x4a5560,1).strokeCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5);}
@@ -1572,15 +1576,37 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(0xd44000,1).fillTriangle(x-8,y+2,x+8,y+2,x-2,y-14);gfx.fillStyle(0xf06020,1).fillTriangle(x-6,y+2,x+6,y+2,x+2,y-18);
       gfx.fillStyle(0xf8a020,1).fillTriangle(x-4,y+1,x+4,y+1,x,y-14);gfx.fillStyle(0xffd040,1).fillTriangle(x-2,y,x+2,y,x,y-8);
     } else if(type==='chest'){
-      const cc=mine?0xb07040:0x8b6042, lid=mine?0xd4a870:0xa07852, dk2=mine?0x6a3e18:0x3a2010;
-      gfx.fillStyle(cc,1).fillRect(x-18,y-6,36,22);
-      gfx.lineStyle(1,dk2,0.5);gfx.beginPath();gfx.moveTo(x-18,y+5);gfx.lineTo(x+18,y+5);gfx.strokePath();
-      gfx.fillStyle(lid,1).fillRect(x-18,y-18,36,14);
-      gfx.fillStyle(0xd4be90,0.3).fillRect(x-16,y-16,32,10);
-      gfx.fillStyle(0xc0a820,1);gfx.fillRect(x-14,y-19,5,4);gfx.fillRect(x+9,y-19,5,4);
-      gfx.fillStyle(0xf0c040,1).fillCircle(x,y-2,5);gfx.lineStyle(1.5,0xa08000,1).strokeCircle(x,y-2,5);
-      gfx.fillStyle(0xa08000,1).fillRect(x-2,y+2,4,5);
-      gfx.lineStyle(2,dk2,1).strokeRect(x-18,y-18,36,36);
+      const cc=mine?0x9a5a2a:0x7a4820, lc=mine?0xba7040:0x966038, dk2=mine?0x5a3010:0x2e1a08;
+      const ang=(d.angle||0)*Math.PI/180, aC=Math.cos(ang), aS=Math.sin(ang);
+      const W=(lx,ly)=>({x:x+lx*aC-ly*aS,y:y+lx*aS+ly*aC});
+      const sh=W(2,10); gfx.fillStyle(0x000000,0.18).fillEllipse(sh.x,sh.y,30,9);
+      // body
+      gfx.fillStyle(cc,1).fillPoints([W(-13,-13),W(13,-13),W(13,13),W(-13,13)],true);
+      // lid (top ~40% of height, local y -13 to -2)
+      gfx.fillStyle(lc,1).fillPoints([W(-13,-13),W(13,-13),W(13,-2),W(-13,-2)],true);
+      // lid highlight
+      gfx.fillStyle(0xffffff,0.08).fillPoints([W(-12,-12),W(12,-12),W(12,-7),W(-12,-7)],true);
+      // lid-body divider
+      const ml=W(-13,-2),mr=W(13,-2);
+      gfx.lineStyle(2,dk2,0.85).beginPath().moveTo(ml.x,ml.y).lineTo(mr.x,mr.y).strokePath();
+      // wood grain lines on body
+      gfx.lineStyle(1,dk2,0.3);
+      [[-4,-2,-4,12],[4,-2,4,12]].forEach(([lx1,ly1,lx2,ly2])=>{
+        const a=W(lx1,ly1),b=W(lx2,ly2);gfx.beginPath().moveTo(a.x,a.y).lineTo(b.x,b.y).strokePath();
+      });
+      // metal corner brackets
+      [[-13,-13,1,1],[13,-13,-1,1],[13,13,-1,-1],[-13,13,1,-1]].forEach(([cx,cy,sx,sy])=>{
+        const a=W(cx+sx*5,cy),b=W(cx,cy),c=W(cx,cy+sy*5);
+        gfx.lineStyle(2.5,0x8899aa,1).beginPath().moveTo(a.x,a.y).lineTo(b.x,b.y).lineTo(c.x,c.y).strokePath();
+      });
+      // center latch
+      const cl=W(0,4); gfx.fillStyle(0xd4b040,1).fillCircle(cl.x,cl.y,3.5);
+      gfx.lineStyle(1.5,0x8a7020,1).strokeCircle(cl.x,cl.y,3.5);
+      gfx.fillStyle(0x6a5010,1).fillCircle(cl.x,cl.y,1.5);
+      // outer border
+      gfx.lineStyle(2,dk2,1);
+      const bp=[W(-13,-13),W(13,-13),W(13,13),W(-13,13)];
+      gfx.beginPath().moveTo(bp[0].x,bp[0].y);bp.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
     } else if(type==='monument'){
       gfx.fillStyle(0x888888,1).fillRect(x-28,y+8,56,16); gfx.fillStyle(0x999999,1).fillRect(x-22,y+4,44,8);
       gfx.lineStyle(2,0x444444,1).strokeRect(x-28,y+8,56,16);
@@ -1590,18 +1616,25 @@ class Game extends Phaser.Scene {
       gfx.lineStyle(2,0xc0a000,1).strokeTriangle(x-11,y-34,x+11,y-34,x,y-60);
       if(d._holdPct>0){gfx.lineStyle(4,0xf0c040,d._holdPct).strokeCircle(x,y-20,38);gfx.lineStyle(2,0xffffff,0.4*d._holdPct).strokeCircle(x,y-20,44);}
     } else if(type==='workbench'){
-      gfx.fillStyle(0x000000,0.15).fillEllipse(x+2,y+22,52,14);
-      gfx.fillStyle(0x7a5030,1).fillRect(x-22,y-8,44,14); // table top
-      gfx.fillStyle(0x9a6a40,1).fillRect(x-20,y-10,44,11); // highlight
-      gfx.fillStyle(0x6a4020,1).fillRect(x-18,y+6,6,18);gfx.fillRect(x+12,y+6,6,18); // legs
-      gfx.fillStyle(0x5a3010,1).fillRect(x-18,y+20,6,4);gfx.fillRect(x+12,y+20,6,4); // feet
-      gfx.lineStyle(2,0x4a2808,1).strokeRect(x-22,y-10,44,14);
-      // Tools on bench
-      gfx.lineStyle(1.5,0x9ba8b2,0.8);gfx.beginPath();gfx.moveTo(x-12,y-8);gfx.lineTo(x-8,y-2);gfx.strokePath();
-      gfx.fillStyle(0x8090a0,0.9).fillTriangle(x-14,y-8,x-10,y-8,x-12,y-14);
-      gfx.lineStyle(1.5,0x8b6030,0.8);gfx.beginPath();gfx.moveTo(x+8,y-8);gfx.lineTo(x+12,y-2);gfx.strokePath();
-      gfx.fillStyle(0x7080a0,0.9).fillTriangle(x+6,y-9,x+10,y-9,x+12,y-14);
-      if(mine) gfx.lineStyle(1.5,0x3498db,0.7).strokeRect(x-23,y-11,46,16);
+      const ang=(d.angle||0)*Math.PI/180, aC=Math.cos(ang), aS=Math.sin(ang);
+      const W=(lx,ly)=>({x:x+lx*aC-ly*aS,y:y+lx*aS+ly*aC});
+      const sh=W(0,18); gfx.fillStyle(0x000000,0.15).fillEllipse(sh.x,sh.y,52,14);
+      gfx.fillStyle(0x7a5030,1).fillPoints([W(-22,-7),W(22,-7),W(22,6),W(-22,6)],true);
+      gfx.fillStyle(0x9a6a40,1).fillPoints([W(-20,-10),W(22,-10),W(22,-1),W(-20,-1)],true);
+      gfx.fillStyle(0x6a4020,1).fillPoints([W(-18,6),W(-12,6),W(-12,24),W(-18,24)],true);
+      gfx.fillStyle(0x6a4020,1).fillPoints([W(12,6),W(18,6),W(18,24),W(12,24)],true);
+      gfx.fillStyle(0x5a3010,1).fillPoints([W(-18,20),W(-12,20),W(-12,24),W(-18,24)],true);
+      gfx.fillStyle(0x5a3010,1).fillPoints([W(12,20),W(18,20),W(18,24),W(12,24)],true);
+      gfx.lineStyle(2,0x4a2808,1);
+      const wb=[W(-22,-10),W(22,-10),W(22,6),W(-22,6)];
+      gfx.beginPath().moveTo(wb[0].x,wb[0].y);wb.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      // tools on bench
+      const ta=W(-12,-8),tb=W(-8,-2),tc2=W(8,-8),td2=W(12,-2);
+      gfx.lineStyle(1.5,0x9ba8b2,0.8).beginPath().moveTo(ta.x,ta.y).lineTo(tb.x,tb.y).strokePath();
+      gfx.fillStyle(0x8090a0,0.9).fillPoints([W(-14,-7),W(-10,-7),W(-12,-14)],true);
+      gfx.lineStyle(1.5,0x8b6030,0.8).beginPath().moveTo(tc2.x,tc2.y).lineTo(td2.x,td2.y).strokePath();
+      gfx.fillStyle(0x7080a0,0.9).fillPoints([W(6,-8),W(10,-8),W(12,-14)],true);
+      if(mine){gfx.lineStyle(1.5,0x3498db,0.7);const mr=[W(-23,-11),W(23,-11),W(23,7),W(-23,7)];gfx.beginPath().moveTo(mr[0].x,mr[0].y);mr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();}
     } else if(type==='furnace'){
       gfx.fillStyle(0x000000,0.20).fillEllipse(x+3,y+22,50,14);
       // Stone body
@@ -1623,25 +1656,19 @@ class Game extends Phaser.Scene {
       if(mine) gfx.lineStyle(1.5,0xe67e22,0.7).strokeRect(x-20,y-17,40,36);
     } else if(type==='sleeping_bag'){
       const bc=mine?0x3a5878:0x283448, ic=mine?0x4a78a8:0x324060;
-      if(d.rot){
-        gfx.fillStyle(0x000000,0.18).fillEllipse(x+8,y+2,9,26);
-        gfx.fillStyle(bc,1).fillRoundedRect(x-13,y-10,26,20,4);
-        gfx.fillStyle(ic,1).fillEllipse(x+11,y,10,14);
-        gfx.fillStyle(0x101820,0.85).fillEllipse(x+11,y,7,10);
-        gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
-        gfx.beginPath();gfx.moveTo(x-3,y-8);gfx.lineTo(x-3,y+8);gfx.strokePath();
-        gfx.beginPath();gfx.moveTo(x+3,y-8);gfx.lineTo(x+3,y+8);gfx.strokePath();
-        gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1).strokeRoundedRect(x-13,y-10,26,20,4);
-      } else {
-        gfx.fillStyle(0x000000,0.18).fillEllipse(x+2,y+8,26,9);
-        gfx.fillStyle(bc,1).fillRoundedRect(x-10,y-15,20,26,4);
-        gfx.fillStyle(ic,1).fillEllipse(x,y-11,14,10);
-        gfx.fillStyle(0x101820,0.85).fillEllipse(x,y-11,10,7);
-        gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
-        gfx.beginPath();gfx.moveTo(x-8,y-3);gfx.lineTo(x+8,y-3);gfx.strokePath();
-        gfx.beginPath();gfx.moveTo(x-8,y+3);gfx.lineTo(x+8,y+3);gfx.strokePath();
-        gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1).strokeRoundedRect(x-10,y-15,20,26,4);
-      }
+      const ang=(d.angle||0)*Math.PI/180, aC=Math.cos(ang), aS=Math.sin(ang);
+      const W=(lx,ly)=>({x:x+lx*aC-ly*aS,y:y+lx*aS+ly*aC});
+      const sh=W(1,9); gfx.fillStyle(0x000000,0.16).fillEllipse(sh.x,sh.y,24,8);
+      const p1=W(-10,-13),p2=W(10,-13),p3=W(10,13),p4=W(-10,13);
+      gfx.fillStyle(bc,1).fillPoints([p1,p2,p3,p4],true);
+      const ph=W(0,-9); gfx.fillStyle(ic,1).fillCircle(ph.x,ph.y,7.5);
+      gfx.fillStyle(0x101820,0.8).fillCircle(ph.x,ph.y,5);
+      const s1a=W(-7,-3),s1b=W(-7,10),s2a=W(7,-3),s2b=W(7,10);
+      gfx.lineStyle(0.8,mine?0x2a4060:0x1a2838,0.65);
+      gfx.beginPath().moveTo(s1a.x,s1a.y).lineTo(s1b.x,s1b.y).strokePath();
+      gfx.beginPath().moveTo(s2a.x,s2a.y).lineTo(s2b.x,s2b.y).strokePath();
+      gfx.lineStyle(1.5,mine?0x1a3050:0x0c1828,1);
+      gfx.beginPath().moveTo(p1.x,p1.y).lineTo(p2.x,p2.y).lineTo(p3.x,p3.y).lineTo(p4.x,p4.y).closePath().strokePath();
     } else if(type==='ewwall'||type==='ewgate'){
       const aDeg=d.angle||0, aRad=aDeg*Math.PI/180, aCos=Math.cos(aRad), aSin=Math.sin(aRad);
       const EHALF=40, EHW=6, logA=0x3a1a06, logB=0x4e2810, ropeC=0x1e0e02, postC=0x5a3010;
@@ -1772,9 +1799,11 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(tier===2?0x4a6070:0x8898a8,1).fillCircle(x+16,y-22,6);
       gfx.fillStyle(tier===2?0xd4a830:0xd0e0e8,1).fillCircle(x+16,y-22,3);
     }
-    gfx.fillStyle(0x27ae60,1).fillRect(x-20,y-34,40*hpR,4);
-    gfx.fillStyle(0xc0392b,1).fillRect(x-20+40*hpR,y-34,40*(1-hpR),4);
-    gfx.lineStyle(1,0x000000,0.4).strokeRect(x-20,y-34,40,4);
+    if(hpR<0.95&&mine){
+      gfx.fillStyle(0x27ae60,1).fillRect(x-20,y-34,40*hpR,4);
+      gfx.fillStyle(0xc0392b,1).fillRect(x-20+40*hpR,y-34,40*(1-hpR),4);
+      gfx.lineStyle(1,0x000000,0.4).strokeRect(x-20,y-34,40,4);
+    }
   }
 
   drawRoof(gfx,d){
@@ -2152,7 +2181,7 @@ class Game extends Phaser.Scene {
   tryOpenChest(ptr){
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d; if(d.type!=='chest')continue;
-      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>26)continue;
+      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>18*18)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
       if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){
         this.pop(d.x,d.y-28,'🔒 Raid the base to loot!','#e74c3c'); return true;
@@ -2239,13 +2268,26 @@ class Game extends Phaser.Scene {
       if((buildType==='wall'||buildType==='door')&&(td.type==='wall'||td.type==='door')&&dist2(placeX,placeY,td.x,td.y)<3){this.pop(this.pbody.x,this.pbody.y-30,'Already a wall/door here!','#e74c3c');return;}
       if(buildType!=='foundation'&&buildType!=='wall'&&buildType!=='door'&&td.type===buildType&&dist2(placeX,placeY,td.x,td.y)<22){this.pop(this.pbody.x,this.pbody.y-30,'Something is already here!','#e74c3c');return;}
     }
+    if(buildType==='foundation'){
+      for(const[,tg] of Object.entries(bldgSpr)){
+        const td=tg._d; if(td.type!=='ewwall'&&td.type!=='ewgate')continue;
+        if(obbPush(placeX,placeY,td.x,td.y,td.angle||0,40,7,34)){this.pop(this.pbody.x,this.pbody.y-30,"Can't place next to palisade!",'#e74c3c');return;}
+      }
+    }
+    if(buildType==='ewwall'||buildType==='ewgate'){
+      for(const[,tg] of Object.entries(bldgSpr)){
+        const td=tg._d; if(td.type!=='foundation')continue;
+        if(obbPush(td.x,td.y,placeX,placeY,extra.angle||0,40,7,34)){this.pop(this.pbody.x,this.pbody.y-30,"Can't place palisade on foundation!",'#e74c3c');return;}
+      }
+    }
     if(isInRiver(placeX,placeY)){this.pop(this.pbody.x,this.pbody.y-30,"Can't build in the river!",'#3498db');return;}
     if(buildType==='sleeping_bag'){
       const bagCount=Object.values(bldgSpr).filter(g=>g._d.type==='sleeping_bag'&&g._d.ownerId===PID).length;
       if(bagCount>=MAX_BAGS){this.pop(this.pbody.x,this.pbody.y-30,'Max '+MAX_BAGS+' beds!','#e74c3c');return;}
       const n=bagCount+1; extra.name='Bed '+n;
     }
-    if(buildRot&&(buildType==='sleeping_bag'||buildType==='chest'||buildType==='foundation'))extra.rot=buildRot;
+    if(buildType==='sleeping_bag'||buildType==='chest'||buildType==='workbench'||buildType==='tc')extra.angle=Math.round(bldgAngle);
+    if(buildRot&&buildType==='foundation')extra.rot=buildRot;
     for(const[res,amt]of Object.entries(cost)){if(invCount(res)<amt){this.pop(this.pbody.x,this.pbody.y-30,'Need '+amt+' '+ITEM_ICON[res]+'!','#e74c3c');return;}}
     for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
@@ -2264,6 +2306,11 @@ class Game extends Phaser.Scene {
       const d=g._d; if(!d)continue;
       if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
       if(d.type==='door'&&(d.open||d.ownerId===PID||(state.teamId&&d.teamId===state.teamId)))continue;
+      if(d.type==='chest'){
+        const p2=obbPush(px,py,d.x,d.y,d.angle||0,13,13,P_RAD);
+        if(p2){px+=p2.dx;py+=p2.dy;const dot=vx*p2.nx+vy*p2.ny;if(dot<0){vx-=dot*p2.nx;vy-=dot*p2.ny;}}
+        continue;
+      }
       const rot=d.rot||0;
       const hw=d.type==='wall'?(rot?4:30):(rot?20:30), hh=d.type==='wall'?(rot?30:4):(rot?30:20);
       const nearX=Math.max(d.x-hw,Math.min(px,d.x+hw)), nearY=Math.max(d.y-hh,Math.min(py,d.y+hh));
@@ -2717,6 +2764,8 @@ class Game extends Phaser.Scene {
     if(!chatOpen&&Phaser.Input.Keyboard.JustDown(k.i)){toggleInvPanel();}
     if(buildMode&&(buildType==='ewwall'||buildType==='ewgate')){
       if(k.r.isDown) ewwallAngle=(ewwallAngle+60*(delta/1000))%360;
+    } else if(buildMode&&(buildType==='workbench'||buildType==='sleeping_bag'||buildType==='chest'||buildType==='tc')){
+      if(k.r.isDown) bldgAngle=(bldgAngle+60*(delta/1000))%360;
     } else if(buildMode&&Phaser.Input.Keyboard.JustDown(k.r)){buildRot=buildRot?0:1;}
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
     if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected();
@@ -2765,7 +2814,9 @@ class Game extends Phaser.Scene {
         const fsnap=getFoundationSnap(p.worldX,p.worldY);
         const fx=fsnap?fsnap.x:Math.round(p.worldX),fy=fsnap?fsnap.y:Math.round(p.worldY);
         const tooClose=Object.values(bldgSpr).some(g=>g._d.type==='foundation'&&Math.abs(g._d.x-fx)<58&&Math.abs(g._d.y-fy)<58);
-        const fcol=tooClose?0xe74c3c:0xd4a96a;
+        const nearPalisade=Object.values(bldgSpr).some(g=>(g._d.type==='ewwall'||g._d.type==='ewgate')&&obbPush(fx,fy,g._d.x,g._d.y,g._d.angle||0,40,7,34));
+        const inRiv=isInRiver(fx,fy);
+        const fcol=(tooClose||nearPalisade||inRiv)?0xe74c3c:0x4ade80;
         bPrev.fillStyle(fcol,0.35).fillRect(fx-30,fy-30,60,60);bPrev.lineStyle(2,fcol,0.7).strokeRect(fx-30,fy-30,60,60);
       }
       else if(buildType==='wall'||buildType==='door'){
@@ -2776,15 +2827,38 @@ class Game extends Phaser.Scene {
         bPrev.fillStyle(col,0.35).fillRect(sx-hw,sy-hh,hw*2,hh*2);
         bPrev.lineStyle(2,col,0.7).strokeRect(sx-hw,sy-hh,hw*2,hh*2);
       }
-      else if(buildType==='tc'){bPrev.fillStyle(0x6a4a2a,0.4).fillRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(2,0x27ae60,0.7).strokeRect(p.worldX-16,p.worldY-20,32,34);bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);}
+      else if(buildType==='tc'){
+        const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
+        const BW=(lx,ly)=>({x:p.worldX+lx*bC-ly*bS,y:p.worldY+lx*bS+ly*bC});
+        bPrev.fillStyle(0x6a4a2a,0.4).fillPoints([BW(-16,-17),BW(16,-17),BW(16,17),BW(-16,17)],true);
+        bPrev.lineStyle(2,0x27ae60,0.7);const tb=[BW(-16,-17),BW(16,-17),BW(16,17),BW(-16,17)];
+        bPrev.beginPath().moveTo(tb[0].x,tb[0].y);tb.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
+        bPrev.lineStyle(1,0x27ae60,0.18).strokeCircle(p.worldX,p.worldY,TC_ZONE);
+      }
       else if(buildType==='monument'){bPrev.fillStyle(0xf0c040,0.3).fillRect(p.worldX-15,p.worldY-50,30,65);bPrev.lineStyle(2,0xf0c040,0.8).strokeRect(p.worldX-15,p.worldY-50,30,65);}
       else if(buildType==='roof'){const rsnap=getRoofSnap(p.worldX,p.worldY);const rx=rsnap?rsnap.x:p.worldX,ry=rsnap?rsnap.y:p.worldY,rcol=rsnap?0x252530:0xe74c3c;bPrev.fillStyle(rcol,0.45).fillRect(rx-31,ry-31,62,62);bPrev.lineStyle(2,rcol,0.8).strokeRect(rx-31,ry-31,62,62);}
-      else if(buildType==='chest'){bPrev.fillStyle(0xb5834a,0.35).fillRect(p.worldX-18,p.worldY-18,36,36);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRect(p.worldX-18,p.worldY-18,36,36);}
-      else if(buildType==='sleeping_bag'){const pw=buildRot?26:20,ph=buildRot?20:26;bPrev.fillStyle(0x3a5878,0.4).fillRoundedRect(p.worldX-pw/2,p.worldY-ph/2,pw,ph,3);bPrev.lineStyle(2,0x5a88c8,0.8).strokeRoundedRect(p.worldX-pw/2,p.worldY-ph/2,pw,ph,3);if(buildRot)bPrev.fillStyle(0x4a78a8,0.6).fillEllipse(p.worldX+11,p.worldY,10,14);else bPrev.fillStyle(0x4a78a8,0.6).fillEllipse(p.worldX,p.worldY-ph/2+5,14,10);}
+      else if(buildType==='chest'){
+        const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
+        const BW=(lx,ly)=>({x:p.worldX+lx*bC-ly*bS,y:p.worldY+lx*bS+ly*bC});
+        bPrev.fillStyle(0xb5834a,0.35).fillPoints([BW(-13,-13),BW(13,-13),BW(13,13),BW(-13,13)],true);
+        bPrev.lineStyle(2,0xd4a96a,0.7);const cb=[BW(-13,-13),BW(13,-13),BW(13,13),BW(-13,13)];
+        bPrev.beginPath().moveTo(cb[0].x,cb[0].y);cb.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
+        const ph=BW(0,-9);bPrev.fillStyle(0x4a78a8,0.5).fillCircle(ph.x,ph.y,5);
+      }
+      else if(buildType==='sleeping_bag'){
+        const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
+        const BW=(lx,ly)=>({x:p.worldX+lx*bC-ly*bS,y:p.worldY+lx*bS+ly*bC});
+        bPrev.fillStyle(0x3a5878,0.4).fillPoints([BW(-10,-13),BW(10,-13),BW(10,13),BW(-10,13)],true);
+        bPrev.lineStyle(2,0x5a88c8,0.8);const sb=[BW(-10,-13),BW(10,-13),BW(10,13),BW(-10,13)];
+        bPrev.beginPath().moveTo(sb[0].x,sb[0].y);sb.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
+        const ph=BW(0,-9);bPrev.fillStyle(0x4a78a8,0.6).fillCircle(ph.x,ph.y,6);
+      }
       else if(buildType==='ewwall'||buildType==='ewgate'){
         const snap=getEwSnapPos(p.worldX,p.worldY);
         const sx=snap.x, sy=snap.y, sAng=snap.angle;
-        const col=snap.free?0xe67e22:0x4ade80;
+        const inRiv=isInRiver(sx,sy)||isInRiver(sx+40*Math.cos(sAng*Math.PI/180),sy+40*Math.sin(sAng*Math.PI/180))||isInRiver(sx-40*Math.cos(sAng*Math.PI/180),sy-40*Math.sin(sAng*Math.PI/180));
+        const nearFound=Object.values(bldgSpr).some(g=>g._d.type==='foundation'&&obbPush(g._d.x,g._d.y,sx,sy,sAng,40,7,34));
+        const col=inRiv||nearFound?0xe74c3c:snap.free?0xe67e22:0x4ade80;
         const sr=sAng*Math.PI/180, sc=Math.cos(sr), ss=Math.sin(sr);
         const EHALF=40, EHW=6;
         bPrev.fillStyle(col,0.28).fillPoints([
@@ -2805,6 +2879,13 @@ class Game extends Phaser.Scene {
           const rhx=sx+EHALF*sc, rhy=sy+EHALF*ss;
           bPrev.fillStyle(col,0.7).fillCircle(lhx,lhy,4).fillCircle(rhx,rhy,4);
         }
+      }
+      else if(buildType==='workbench'){
+        const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
+        const BW=(lx,ly)=>({x:p.worldX+lx*bC-ly*bS,y:p.worldY+lx*bS+ly*bC});
+        bPrev.fillStyle(0x7a5030,0.35).fillPoints([BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)],true);
+        bPrev.lineStyle(2,0x9a6a40,0.7);const wpts=[BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)];
+        bPrev.beginPath().moveTo(wpts[0].x,wpts[0].y);wpts.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
       }
       else{bPrev.fillStyle(0xd4a96a,0.35).fillRoundedRect(p.worldX-20,p.worldY-13,40,26,3);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRoundedRect(p.worldX-20,p.worldY-13,40,26,3);}
     } else if(bPrev)bPrev.setVisible(false);
