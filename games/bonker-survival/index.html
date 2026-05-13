@@ -272,12 +272,13 @@
     #inv-panel {
       display:none; position:fixed; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      background:rgba(14,14,14,0.97); border:1px solid #555;
-      padding:18px 20px; border-radius:8px; z-index:30; color:#ddd; min-width:320px;
+      background:rgba(12,12,14,0.97); border:1px solid #3a3a3a;
+      border-radius:8px; z-index:30; color:#ddd;
+      max-height:92vh; overflow:hidden;
     }
-    #inv-panel h3 { color:#f0c040; margin-bottom:6px; font-size:14px; }
+    #inv-panel h3 { color:#f0c040; font-size:14px; margin:0; }
     .inv-section-lbl { font-size:9px; color:#555; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 3px; }
-    .inv-grid-big { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+    .inv-grid-big { display:grid; grid-template-columns:repeat(5,46px); gap:5px; }
     .inv-slot-big {
       border:1px solid #444; border-radius:4px; background:#1e1e1e;
       padding:4px; text-align:center; cursor:pointer; font-size:17px; min-height:46px;
@@ -337,6 +338,38 @@
     .cslot.drag-src { border-color:#f0c040 !important; }
     .cslot.drag-over { border-color:#3498db !important; background:#0f1820; }
     .cslot .cc { font-size:9px; color:#999; }
+    /* ── Wide inventory panel ── */
+    .inv-hdr { display:flex; align-items:center; justify-content:space-between; padding:9px 14px 7px; border-bottom:1px solid #1e1e1e; flex-shrink:0; }
+    .inv-body { display:flex; padding:9px; gap:0; align-items:flex-start; }
+    .inv-arm-col { display:flex; flex-direction:column; gap:5px; padding-right:9px; border-right:1px solid #1e1e1e; margin-right:9px; flex-shrink:0; }
+    .armor-vs { width:52px !important; height:52px !important; min-height:0 !important; border-color:#3a4a5a !important; background:#141e28 !important; }
+    .armor-vs:hover { border-color:#5a8aaa !important; }
+    .armor-vs.equip-on { border-color:#2a6a3a !important; background:#0c1e10 !important; }
+    .inv-ctr { display:flex; flex-direction:column; flex-shrink:0; width:250px; }
+    .inv-right { width:190px; flex-shrink:0; display:flex; flex-direction:column; padding-left:9px; border-left:1px solid #1e1e1e; margin-left:9px; max-height:340px; }
+    .inv-tab-body { overflow-y:auto; max-height:270px; flex:1; }
+    .inv-right-hdr { font-size:10px; color:#c0a030; letter-spacing:1px; font-weight:600; margin-bottom:5px; padding-bottom:4px; border-bottom:1px solid #2a2a2a; }
+    .inv-craft-sep { font-size:8px; color:#3a3a3a; letter-spacing:1.5px; text-transform:uppercase; padding:5px 2px 3px; border-bottom:1px solid #1a1a1a; }
+    .inv-craft-row { display:flex; align-items:center; gap:5px; padding:4px 3px; border-radius:3px; cursor:pointer; transition:background .08s; }
+    .inv-craft-row:hover { background:rgba(255,255,255,0.04); }
+    .inv-craft-row.icraft-sel { background:rgba(240,192,64,0.10); }
+    .inv-craft-icon { font-size:16px; min-width:18px; text-align:center; }
+    .inv-craft-info { flex:1; min-width:0; }
+    .inv-craft-name { font-size:11px; color:#bbb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .inv-craft-cost { font-size:9px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .inv-craft-cost.ok { color:#5a9a5a; }
+    .wb-locked { opacity:0.38; }
+    .inv-container-grid { display:grid; grid-template-columns:repeat(4,42px); gap:4px; }
+    .inv-act-panel { width:115px; flex-shrink:0; display:flex; flex-direction:column; padding-left:9px; border-left:1px solid #1e1e1e; margin-left:9px; gap:4px; min-height:160px; }
+    .inv-sel-box { width:56px; height:56px; border:1px solid #2e2e3e; border-radius:5px; background:#141420; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0 auto; flex-shrink:0; }
+    .inv-qty-inp { width:100%; padding:3px 6px; background:#1a1a1a; border:1px solid #3e3e3e; color:#ccc; border-radius:3px; font-size:11px; outline:none; box-sizing:border-box; }
+    .inv-act-btn { width:100%; padding:5px 0; border-radius:3px; font-size:11px; font-family:inherit; cursor:pointer; border:1px solid #3e3e3e; background:#1e1e1e; color:#aaa; transition:background .1s; }
+    .inv-act-btn:hover:not(:disabled) { background:#2e2e2e; color:#fff; }
+    .inv-act-btn:disabled { opacity:0.3; cursor:default; }
+    .craft-act { background:#141e14 !important; color:#7ab07a !important; border-color:#2a4a2a !important; }
+    .craft-act:hover:not(:disabled) { background:#1e2e1e !important; color:#9ad09a !important; }
+    .split-act { background:#141422 !important; color:#7080b0 !important; border-color:#2a2a4a !important; }
+    .split-act:hover:not(:disabled) { background:#1e1e32 !important; color:#9090c8 !important; }
   </style>
 </head>
 <body>
@@ -553,20 +586,62 @@
 </div>
 
 <div id="inv-panel">
-  <button class="close-btn" onclick="toggleInvPanel()">✕</button>
-  <h3>🎒 INVENTORY</h3>
-  <div class="inv-section-lbl">Backpack</div>
-  <div class="inv-grid-big" id="inv-pack-grid"></div>
-  <div class="inv-section-lbl" style="margin-top:10px">Armor</div>
-  <div style="display:flex;gap:8px;margin-top:4px" id="inv-armor-row">
-    <div class="inv-slot-big" id="iap-head" onclick="invArmorSlotClick('head')" title="Helmet slot" style="border-color:#3a4a5a">
-      <span id="iap-head-icon" style="font-size:20px">⛑️</span><span class="ic" style="color:#444">HEAD</span>
+  <div class="inv-hdr">
+    <h3>🎒 INVENTORY</h3>
+    <button class="close-btn" style="float:none;margin:0" onclick="toggleInvPanel()">✕</button>
+  </div>
+  <div class="inv-body">
+    <!-- Armor column -->
+    <div class="inv-arm-col">
+      <div class="inv-section-lbl" style="margin-top:0">ARMOR</div>
+      <div class="inv-slot-big armor-vs" id="iap-head" onclick="invArmorSlotClick('head')" title="Helmet">
+        <span id="iap-head-icon" style="font-size:20px">⛑️</span><span class="ic" style="color:#444">HEAD</span>
+      </div>
+      <div class="inv-slot-big armor-vs" id="iap-chest" onclick="invArmorSlotClick('chest')" title="Chest armor">
+        <span id="iap-chest-icon" style="font-size:20px">🦺</span><span class="ic" style="color:#444">BODY</span>
+      </div>
+      <div class="inv-slot-big armor-vs" id="iap-legs" onclick="invArmorSlotClick('legs')" title="Leg armor">
+        <span id="iap-legs-icon" style="font-size:20px">👖</span><span class="ic" style="color:#444">LEGS</span>
+      </div>
     </div>
-    <div class="inv-slot-big" id="iap-chest" onclick="invArmorSlotClick('chest')" title="Chest slot" style="border-color:#3a4a5a">
-      <span id="iap-chest-icon" style="font-size:20px">🦺</span><span class="ic" style="color:#444">CHEST</span>
+    <!-- Inventory grid -->
+    <div class="inv-ctr">
+      <div class="inv-section-lbl" style="margin-top:0">BACKPACK</div>
+      <div class="inv-grid-big" id="inv-pack-grid"></div>
+      <div class="inv-section-lbl" style="margin-top:6px">HOTBAR</div>
+      <div class="inv-grid-big" id="inv-hotbar-grid"></div>
     </div>
-    <div class="inv-slot-big" id="iap-legs" onclick="invArmorSlotClick('legs')" title="Legs slot" style="border-color:#3a4a5a">
-      <span id="iap-legs-icon" style="font-size:20px">👖</span><span class="ic" style="color:#444">LEGS</span>
+    <!-- Crafting (always visible) + Container (appears above when chest open) -->
+    <div class="inv-right">
+      <!-- Container section — hidden until chest opened -->
+      <div id="inv-cont-section" style="display:none;margin-bottom:8px">
+        <div class="inv-right-hdr">📦 CONTAINER <span id="inv-cont-close" onclick="closeInvContainer()" style="float:right;cursor:pointer;color:#666;font-size:10px">✕</span></div>
+        <div class="inv-container-grid" id="inv-cont-grid"></div>
+      </div>
+      <!-- Crafting — always shown -->
+      <div class="inv-right-hdr">⚒ CRAFTING</div>
+      <div class="inv-tab-body">
+        <div id="inv-craft-list"></div>
+      </div>
+    </div>
+    <!-- Action / Split panel -->
+    <div class="inv-act-panel">
+      <div class="inv-section-lbl" style="margin-top:0">SELECTED</div>
+      <div class="inv-sel-box">
+        <span id="inv-sel-em" style="font-size:24px"></span>
+        <span id="inv-sel-ct" style="font-size:9px;color:#666"></span>
+      </div>
+      <div id="inv-sel-nm" style="font-size:10px;color:#888;text-align:center;min-height:13px"></div>
+      <div id="inv-act-craft" style="display:none">
+        <div class="inv-section-lbl">CRAFT QTY</div>
+        <input type="number" id="inv-cq" class="inv-qty-inp" min="1" max="99" value="1">
+        <button class="inv-act-btn craft-act" onclick="doInvCraft()">CRAFT</button>
+      </div>
+      <div id="inv-act-split" style="display:none">
+        <div class="inv-section-lbl">SPLIT STACK</div>
+        <input type="number" id="inv-sq" class="inv-qty-inp" min="1" value="1">
+        <button class="inv-act-btn split-act" onclick="doInvSplit()">SPLIT</button>
+      </div>
     </div>
   </div>
 </div>
@@ -613,7 +688,7 @@
 </div>
 
 <div id="hint">
-  WASD: move &nbsp; Tab/I: inventory &nbsp; C: basic craft &nbsp; G: map<br>
+  WASD: move &nbsp; Tab/I: inventory + crafting &nbsp; C: crafting &nbsp; G: map<br>
   E: eat food/bandage &nbsp; F: door / drink water &nbsp; Q: drop 1 &nbsp; Shift+Q: drop all<br>
   Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace &nbsp; R: rotate<br>
   ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
@@ -958,11 +1033,10 @@ function refreshArmorHUD(){
   ['head','chest','legs'].forEach(slot=>{
     const el=document.getElementById('ap-'+slot); if(el)el.classList.toggle('on',!!state.armor[slot]);
   });
-  // Update inv panel armor row if open
-  const h=document.getElementById('iap-head-icon'),c=document.getElementById('iap-chest-icon'),l=document.getElementById('iap-legs-icon');
-  if(h)h.style.opacity=state.armor.head?'1':'0.3';
-  if(c)c.style.opacity=state.armor.chest?'1':'0.3';
-  if(l)l.style.opacity=state.armor.legs?'1':'0.3';
+  ['head','chest','legs'].forEach(s=>{
+    const ic=document.getElementById('iap-'+s+'-icon'); if(ic)ic.style.opacity=state.armor[s]?'1':'0.3';
+    const sl=document.getElementById('iap-'+s); if(sl)sl.classList.toggle('equip-on',!!state.armor[s]);
+  });
 }
 
 function dropSelected(all=false){
@@ -994,22 +1068,22 @@ window.invDrop=function(e,to,idxOrRes){
   const ti=typeof idxOrRes==='number'?idxOrRes:null, tr=typeof idxOrRes==='string'?idxOrRes:null;
   invDragSrc=null;
   if(from==='inv'&&to==='inv'){ // swap two inventory slots
-    const tmp=inv[fi]; inv[fi]=inv[ti]; inv[ti]=tmp; refreshHotbar(); renderChestPanel(); renderInvPanel();
+    const tmp=inv[fi]; inv[fi]=inv[ti]; inv[ti]=tmp; refreshHotbar(); renderInvPanel();
   } else if(from==='inv'&&to==='chest'){ // deposit from inv to chest
     const item=inv[fi]; if(!item)return;
     if(!RESOURCES.includes(item.type)&&!TOOLS.includes(item.type))return;
     const d=bldgSpr[activeChestId]?._d; if(!d)return;
     const cur=(d.storage||{})[item.type]||0;
     update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
-    inv[fi]=null; refreshHotbar(); setTimeout(renderChestPanel,200);
+    inv[fi]=null; refreshHotbar(); renderInvPanel(); setTimeout(renderInvContainer,200);
   } else if(from==='chest'&&to==='inv'){ // take from chest to inv slot
     const d=bldgSpr[activeChestId]?._d; if(!d)return;
     const stored=(d.storage||{})[fr]||0; if(!stored)return;
-    if(ti!==null){ // drop onto specific slot
+    if(ti!==null){
       const existing=inv[ti];
-      if(!existing){ inv[ti]={type:fr,count:stored}; update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); refreshHotbar(); setTimeout(renderChestPanel,200); }
-      else if(existing.type===fr){ existing.count+=stored; update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); refreshHotbar(); setTimeout(renderChestPanel,200); }
-    } else { invAdd(fr,stored); update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); setTimeout(renderChestPanel,200); }
+      if(!existing){ inv[ti]={type:fr,count:stored}; update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); refreshHotbar(); renderInvPanel(); setTimeout(renderInvContainer,200); }
+      else if(existing.type===fr){ existing.count+=stored; update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); refreshHotbar(); renderInvPanel(); setTimeout(renderInvContainer,200); }
+    } else { invAdd(fr,stored); update(sref('buildings/'+activeChestId+'/storage'),{[fr]:0}); renderInvPanel(); setTimeout(renderInvContainer,200); }
   }
 };
 
@@ -1058,18 +1132,12 @@ window.leaveTeam=function(){ state.teamId=null; document.getElementById('tp-curr
 
 // ── Crafting ──────────────────────────────────────────────────────────────────
 window.openCraftPanel=function(){
-  document.getElementById('craft-list').innerHTML=RECIPES.map(r=>{
-    const isTool=TOOLS.includes(r.id);
-    const owned=isTool&&invHasTool(r.id);
-    const canAfford=invCanAfford(r.cost);
-    const costTxt=Object.entries(r.cost).map(([k,v])=>`${v} ${ITEM_ICON[k]}`).join(' ');
-    return `<div class="recipe-row">
-      <span class="recipe-name">${r.name}</span>
-      <span class="recipe-cost${canAfford?' ok':''}">${costTxt}</span>
-      <button onclick="craftItem('${r.id}')" ${owned||!canAfford?'disabled':''}>${owned?'✓ Have it':'Craft'}</button>
-    </div>`;
-  }).join('');
-  document.getElementById('craft-panel').style.display='block';
+  // Open unified inventory panel with crafting tab
+  const p=document.getElementById('inv-panel');
+  if(p.style.display!=='block'){
+    renderInvPanel(); p.style.display='block'; setToolbarInvMode(true);
+  }
+  if(window.setInvTab) window.setInvTab('craft');
 };
 window.craftItem=function(id){
   const r=RECIPES.find(x=>x.id===id); if(!r)return;
@@ -1126,7 +1194,7 @@ window.chestInvClick=function(i){
   update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
   inv[i]=null; refreshHotbar();
   window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#3498db');
-  setTimeout(renderChestPanel,200);
+  renderInvPanel(); setTimeout(renderInvContainer,200);
 };
 window.chestSlotClick=function(res){
   if(!activeChestId||!res)return;
@@ -1135,7 +1203,7 @@ window.chestSlotClick=function(res){
   if(invAdd(res,stored)){
     update(sref('buildings/'+activeChestId+'/storage'),{[res]:0});
     window._scene&&window._scene.pop(state.x,state.y-34,'Took '+stored+'x '+(ITEM_ICON[res]||res),'#2ecc71');
-    setTimeout(renderChestPanel,200);
+    renderInvPanel(); setTimeout(renderInvContainer,200);
   }
 };
 
@@ -1845,12 +1913,26 @@ class Game extends Phaser.Scene {
   }
 
   mkRes(id,d){ const g=this.add.graphics().setDepth(d.y); this.drawRes(g,d); g._d=d; resSpr[id]=g; }
-  rxRes(id,d){ if(!resSpr[id])return; resSpr[id]._d=d; this.drawRes(resSpr[id],d); }
+  rxRes(id,d){
+    if(!d.type||!d.x){
+      if(resSpr[id]){resSpr[id].destroy();delete resSpr[id];delete resHitTime[id];}
+      remove(sref('resources/'+id)); return;
+    }
+    if(d.hp<=0){
+      if(resSpr[id]){resSpr[id].destroy();delete resSpr[id];delete resHitTime[id];}
+      return;
+    }
+    if(!resSpr[id])return;
+    resSpr[id]._d=d; this.drawRes(resSpr[id],d);
+  }
   _drainRes(){
     this._resDraining=true;
     if(!this._resQueue.length){this._resDraining=false;return;}
     const e=this._resQueue.shift();
-    if(e&&!resSpr[e.key])this.mkRes(e.key,e.val);
+    if(e&&!resSpr[e.key]){
+      if(!e.val||!e.val.type||!e.val.x){if(e.val)remove(sref('resources/'+e.key));}
+      else this.mkRes(e.key,e.val);
+    }
     setTimeout(()=>this._drainRes(),6);
   }
   mkOther(id,d){
@@ -2228,8 +2310,12 @@ class Game extends Phaser.Scene {
       if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){
         this.pop(d.x,d.y-28,'🔒 Raid the base to loot!','#e74c3c'); return true;
       }
-      activeChestId=id; renderChestPanel();
-      document.getElementById('chest-panel').style.display='block';
+      activeChestId=id;
+      if(document.getElementById('inv-panel').style.display!=='block'){
+        renderInvPanel(); document.getElementById('inv-panel').style.display='block'; setToolbarInvMode(true);
+      } else { renderInvPanel(); }
+      window.setInvTab&&window.setInvTab('cont'); renderInvContainer();
+      document.getElementById('chest-panel').style.display='none';
       return true;
     }
     return false;
@@ -2449,7 +2535,7 @@ class Game extends Phaser.Scene {
     }
     if(hasDrop) set(sref('loot/bag_'+PID+'_'+Date.now()),bag);
     state.armor={head:false,chest:false,legs:false}; refreshArmorHUD();
-    invPickedSlot=null; setToolbarInvMode(false); refreshHotbar();
+    invPickedSlot=null; _selCraftId=null; activeChestId=null; setToolbarInvMode(false); refreshHotbar();
     // Close any open panels
     ['chest-panel','craft-panel','team-panel','inv-panel','furnace-panel','workbench-panel','sleeping-panel'].forEach(id=>document.getElementById(id).style.display='none');
     closeFurnace();
@@ -3206,8 +3292,12 @@ function drawHeldItem(g,tx,ty,ang,tool){
 // ── Inventory Panel ──────────────────────────────────────────────────────────
 window.toggleInvPanel=function(){
   const p=document.getElementById('inv-panel');
-  if(p.style.display==='block'){invPickedSlot=null;p.style.display='none';setToolbarInvMode(false);refreshHotbar();return;}
-  renderInvPanel();p.style.display='block';setToolbarInvMode(true);
+  if(p.style.display==='block'){
+    invPickedSlot=null; _selCraftId=null; activeChestId=null;
+    p.style.display='none'; setToolbarInvMode(false); refreshHotbar(); return;
+  }
+  _selCraftId=null;
+  renderInvPanel(); p.style.display='block'; setToolbarInvMode(true);
 };
 function toggleInvPanel(){ window.toggleInvPanel(); }
 
@@ -3234,60 +3324,207 @@ window.toolbarSlotClick=function(n,e){
   }
   selectSlot(n);
 };
-function renderInvPanel(){
-  function slotHtml(item,i,cls){
-    const icon=item?(ITEM_ICON[item.type]||'?'):'';
-    const cnt=item&&item.count>1?item.count:'';
-    const picked=i===invPickedSlot?' picked':'';
-    return`<div class="${cls}${picked}" draggable="${item?'true':'false'}"
-      ondragstart="invDragStart(event,'inv',${i})" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
-      ondrop="invDrop(event,'inv',${i})" ondragend="invDragEnd()"
-      onclick="invSlotClick(${i},event)">
-      <span style="font-size:17px">${icon}</span><span class="ic">${cnt}</span>
-    </div>`;
-  }
-  let packHtml='';
-  for(let i=HOTBAR_SIZE;i<INV_SIZE;i++) packHtml+=slotHtml(inv[i],i,'inv-slot-big');
-  document.getElementById('inv-pack-grid').innerHTML=packHtml;
-  refreshArmorHUD();
+let _selCraftId=null, _selCraftType=null;
+
+function _invSlotHtml(item,i,cls){
+  const icon=item?(ITEM_ICON[item.type]||'?'):'';
+  const cnt=item&&item.count>1?item.count:'';
+  const picked=i===invPickedSlot?' picked':'';
+  return`<div class="${cls}${picked}" draggable="${item?'true':'false'}"
+    ondragstart="invDragStart(event,'inv',${i})" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
+    ondrop="invDrop(event,'inv',${i})" ondragend="invDragEnd()"
+    onclick="invSlotClick(${i},event)">
+    <span style="font-size:17px">${icon}</span><span class="ic">${cnt}</span>
+  </div>`;
 }
+
+function renderInvPanel(){
+  const packEl=document.getElementById('inv-pack-grid');
+  const hotEl=document.getElementById('inv-hotbar-grid');
+  if(packEl){ let h=''; for(let i=HOTBAR_SIZE;i<INV_SIZE;i++) h+=_invSlotHtml(inv[i],i,'inv-slot-big'); packEl.innerHTML=h; }
+  if(hotEl){ let h=''; for(let i=0;i<HOTBAR_SIZE;i++) h+=_invSlotHtml(inv[i],i,'inv-slot-big hotbar-slot'); hotEl.innerHTML=h; }
+  refreshArmorHUD();
+  renderInvCraftList();
+  updateInvSelPanel();
+}
+
+window.setInvTab=function(tab){
+  // Container section shows above crafting when tab='cont'
+  const contSec=document.getElementById('inv-cont-section');
+  if(contSec) contSec.style.display=tab==='cont'?'':'none';
+};
+window.closeInvContainer=function(){
+  const contSec=document.getElementById('inv-cont-section');
+  if(contSec) contSec.style.display='none';
+  activeChestId=null;
+};
+
+function renderInvCraftList(){
+  const nearWB=!!activeWorkbenchId;
+  let h='<div class="inv-craft-sep">BASIC</div>';
+  h+=RECIPES.map(r=>{
+    const isTool=TOOLS.includes(r.id);
+    const owned=isTool&&invHasTool(r.id);
+    const canAfford=invCanAfford(r.cost);
+    const costTxt=Object.entries(r.cost).map(([k,v])=>v+(ITEM_ICON[k]||k)).join(' ');
+    const sel=_selCraftId===r.id?' icraft-sel':'';
+    return`<div class="inv-craft-row${sel}" onclick="selectInvCraft('${r.id}','basic')">
+      <span class="inv-craft-icon">${ITEM_ICON[r.id]||'?'}</span>
+      <div class="inv-craft-info">
+        <div class="inv-craft-name">${r.name}</div>
+        <div class="inv-craft-cost${canAfford?' ok':''}">${costTxt}</div>
+      </div>
+    </div>`;
+  }).join('');
+  h+='<div class="inv-craft-sep">WORKBENCH'+(nearWB?'':' 🔧')+'</div>';
+  h+=WB_RECIPES.map(r=>{
+    const canAfford=invCanAfford(r.cost);
+    const costTxt=Object.entries(r.cost).map(([k,v])=>v+(ITEM_ICON[k]||k)).join(' ');
+    const sel=_selCraftId===r.id?' icraft-sel':'';
+    const locked=nearWB?'':' wb-locked';
+    return`<div class="inv-craft-row${locked}${sel}" onclick="selectInvCraft('${r.id}','wb')">
+      <span class="inv-craft-icon">${ITEM_ICON[r.id]||'?'}</span>
+      <div class="inv-craft-info">
+        <div class="inv-craft-name">${r.name}</div>
+        <div class="inv-craft-cost${canAfford?' ok':''}">${costTxt}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const el=document.getElementById('inv-craft-list'); if(el)el.innerHTML=h;
+}
+
+window.selectInvCraft=function(id,type){
+  _selCraftId=id; _selCraftType=type;
+  const allR=[...RECIPES,...WB_RECIPES]; const r=allR.find(x=>x.id===id); if(!r)return;
+  const nearWB=!!activeWorkbenchId;
+  const canAfford=invCanAfford(r.cost);
+  const isTool=TOOLS.includes(id); const owned=isTool&&invHasTool(id);
+  const locked=type==='wb'&&!nearWB;
+  document.getElementById('inv-sel-em').textContent=ITEM_ICON[id]||'?';
+  document.getElementById('inv-sel-ct').textContent='';
+  document.getElementById('inv-sel-nm').textContent=r.name;
+  document.getElementById('inv-act-split').style.display='none';
+  const craftDiv=document.getElementById('inv-act-craft');
+  craftDiv.style.display='';
+  const btn=craftDiv.querySelector('button');
+  if(btn){ btn.disabled=!canAfford||owned||locked; btn.textContent=owned?'✓ HAVE IT':locked?'🔧 NEED WB':'CRAFT'; }
+  const qtyEl=document.getElementById('inv-cq'); if(qtyEl)qtyEl.value=1;
+  renderInvCraftList();
+};
+
+window.doInvCraft=function(){
+  if(!_selCraftId)return;
+  const allR=[...RECIPES,...WB_RECIPES]; const r=allR.find(x=>x.id===_selCraftId); if(!r)return;
+  if(_selCraftType==='wb'&&!activeWorkbenchId){window._scene&&window._scene.pop(state.x,state.y-34,'Need a Workbench!','#e74c3c');return;}
+  if(TOOLS.includes(_selCraftId)&&invHasTool(_selCraftId))return;
+  if(!invCanAfford(r.cost))return;
+  const qty=Math.max(1,parseInt(document.getElementById('inv-cq')?.value)||1);
+  for(let q=0;q<qty;q++){
+    if(!invCanAfford(r.cost))break;
+    for(const[k,v]of Object.entries(r.cost))invRemove(k,v);
+    invAdd(_selCraftId, r.count||1);
+  }
+  window._scene&&window._scene.pop(state.x,state.y-34,r.name+' crafted!','#2ecc71');
+  renderInvPanel();
+};
+
+function updateInvSelPanel(){
+  if(_selCraftId) return;
+  const slot=invPickedSlot;
+  const item=slot!==null?inv[slot]:null;
+  document.getElementById('inv-sel-em').textContent=item?(ITEM_ICON[item.type]||'?'):'';
+  document.getElementById('inv-sel-ct').textContent=item&&item.count>1?'x'+item.count:'';
+  document.getElementById('inv-sel-nm').textContent=item?item.type:'';
+  document.getElementById('inv-act-craft').style.display='none';
+  const splitDiv=document.getElementById('inv-act-split');
+  if(item&&item.count>1){
+    splitDiv.style.display='';
+    const sq=document.getElementById('inv-sq');
+    if(sq){sq.max=item.count-1; sq.value=Math.floor(item.count/2);}
+  } else {
+    splitDiv.style.display='none';
+  }
+}
+
+window.doInvSplit=function(){
+  if(invPickedSlot===null)return;
+  const item=inv[invPickedSlot]; if(!item||item.count<2)return;
+  const qty=Math.max(1,Math.min(item.count-1,parseInt(document.getElementById('inv-sq')?.value)||1));
+  // Find empty slot
+  let emptySlot=-1;
+  for(let i=0;i<INV_SIZE;i++){if(i!==invPickedSlot&&!inv[i]){emptySlot=i;break;}}
+  if(emptySlot<0){window._scene&&window._scene.pop(state.x,state.y-34,'No empty slot!','#e74c3c');return;}
+  inv[emptySlot]={type:item.type,count:qty};
+  item.count-=qty;
+  invPickedSlot=null;
+  refreshHotbar(); renderInvPanel();
+  window._scene&&window._scene.pop(state.x,state.y-34,'Split: '+qty+'x '+(ITEM_ICON[item.type]||item.type),'#3498db');
+};
+
+function renderInvContainer(){
+  const grid=document.getElementById('inv-cont-grid');
+  const section=document.getElementById('inv-cont-section');
+  if(!activeChestId||!bldgSpr[activeChestId]){
+    if(section)section.style.display='none'; return;
+  }
+  if(section)section.style.display='';
+  const d=bldgSpr[activeChestId]?._d; const s=d?.storage||{};
+  const slots=Object.entries(s).filter(([,v])=>v>0).map(([res,amt])=>({res,amt}));
+  while(slots.length<16) slots.push({res:null,amt:0});
+  grid.innerHTML=slots.map((sl,i)=>{
+    const icon=sl.res?(ITEM_ICON[sl.res]||'?'):'';
+    return`<div class="cslot"
+      draggable="${sl.res?'true':'false'}"
+      ondragstart="invDragStart(event,'chest','${sl.res||''}')" ondragover="invDragOver(event)" ondragleave="invDragLeave(event)"
+      ondrop="invDrop(event,'chest','${sl.res||''}')" ondragend="invDragEnd()"
+      onclick="chestContSlotClick('${sl.res||''}')"
+      title="${sl.res?sl.res+' x'+sl.amt:'Empty'}">
+      <span style="font-size:17px">${icon}</span><span class="cc">${sl.amt>0?sl.amt:''}</span>
+    </div>`;
+  }).join('');
+}
+
+window.chestContSlotClick=function(res){
+  if(!res||!activeChestId)return;
+  const d=bldgSpr[activeChestId]?._d; if(!d)return;
+  const stored=(d.storage||{})[res]||0; if(!stored)return;
+  invAdd(res,stored);
+  update(sref('buildings/'+activeChestId+'/storage'),{[res]:0});
+  refreshHotbar(); renderInvPanel(); setTimeout(renderInvContainer,200);
+  window._scene&&window._scene.pop(state.x,state.y-34,'Took '+stored+'x '+(ITEM_ICON[res]||res),'#3498db');
+};
+
 window.invSlotClick=function(i,e){
-  // Shift+click: quick-move
   if(e&&e.shiftKey){
     const item=inv[i]; if(!item)return;
-    if(activeChestId&&document.getElementById('chest-panel').style.display==='block'){
+    if(activeChestId&&document.getElementById('itab-cont-body').style.display!=='none'){
       const d=bldgSpr[activeChestId]?._d; if(!d)return;
       const cur=(d.storage||{})[item.type]||0;
       update(sref('buildings/'+activeChestId+'/storage'),{[item.type]:cur+item.count});
-      inv[i]=null; refreshHotbar(); renderInvPanel(); setTimeout(renderChestPanel,150);
+      inv[i]=null; refreshHotbar(); renderInvPanel(); setTimeout(renderInvContainer,200);
       window._scene&&window._scene.pop(state.x,state.y-34,'Deposited '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#3498db');
     } else {
-      // Move between hotbar ↔ backpack
-      const isHotbar=i<HOTBAR_SIZE;
-      let moved=false;
+      const isHotbar=i<HOTBAR_SIZE; let moved=false;
       if(isHotbar){ for(let j=HOTBAR_SIZE;j<INV_SIZE;j++){if(!inv[j]){inv[j]=inv[i];inv[i]=null;moved=true;break;}} }
       else { for(let j=0;j<HOTBAR_SIZE;j++){if(!inv[j]){inv[j]=inv[i];inv[i]=null;moved=true;break;}} }
       if(moved){refreshHotbar();renderInvPanel();}
     }
     return;
   }
-  // Click-to-move: if something is picked, place/swap it
   if(invPickedSlot!==null){
     if(invPickedSlot!==i){const tmp=inv[invPickedSlot];inv[invPickedSlot]=inv[i];inv[i]=tmp;refreshHotbar();}
-    invPickedSlot=null; refreshHotbar(); renderInvPanel(); return;
+    invPickedSlot=null; _selCraftId=null; refreshHotbar(); renderInvPanel(); return;
   }
   const item=inv[i]; if(!item)return;
-  // Armor equip on click
   if(item.type.startsWith('armor_')){
     const slot=item.type.replace('armor_','');
     if(!state.armor[slot]){state.armor[slot]=true;invRemove(item.type,1);refreshArmorHUD();renderInvPanel();window._scene&&window._scene.pop(state.x,state.y-30,(ITEM_ICON[item.type]||item.type)+' equipped!','#2ecc71');return;}
   }
-  // Pick up item
+  _selCraftId=null;
   invPickedSlot=i; refreshHotbar(); renderInvPanel();
 };
 window.invArmorSlotClick=function(slot){
   if(!state.armor[slot])return;
-  // Unequip: give back to inventory
   state.armor[slot]=false;
   invAdd('armor_'+slot,1); refreshArmorHUD(); renderInvPanel();
   window._scene&&window._scene.pop(state.x,state.y-30,'Armor removed','#aaa');
