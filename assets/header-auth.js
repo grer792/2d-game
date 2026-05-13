@@ -375,6 +375,9 @@ function updateProfileUI(user){
   const pe=document.getElementById('prof-email-lbl'); if(pe) pe.textContent=user.email||'';
   const ua=document.getElementById('u-avatar'); if(ua) ua.innerHTML=imgTag;
   const un=document.getElementById('u-name'); if(un) un.textContent='@'+_currentUsername;
+  window._currentUsername=_currentUsername;
+  window._currentAvatar=_currentAvatar;
+  if(window._refreshMenuAccount)window._refreshMenuAccount();
   updateBarBtns();
 }
 

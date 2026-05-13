@@ -657,17 +657,24 @@ window.menuTab=function(tab){
   document.querySelectorAll('.mnav-btn').forEach((b,i)=>{
     b.classList.toggle('active',['servers','store','account'][i]===tab);
   });
-  if(tab==='account')_refreshMenuAccount();
+  if(tab==='account')window._refreshMenuAccount();
 };
-function _refreshMenuAccount(){
+window._refreshMenuAccount=function(){
   const uname=window._currentUsername;
-  const avatar=window._currentAvatar||'🎮';
-  document.getElementById('menu-acct-avatar').textContent=uname?avatar:'👤';
-  document.getElementById('menu-acct-name').textContent=uname||'Guest';
+  const av=window._currentAvatar;
+  const avEl=document.getElementById('menu-acct-avatar');
+  if(avEl){
+    if(uname&&av){avEl.innerHTML=`<img src="/assets/avatars/avatar${av}.png" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`;}
+    else{avEl.textContent='👤';}
+  }
+  const nm=document.getElementById('menu-acct-name');
+  if(nm)nm.textContent=uname||'Guest';
   const st=document.getElementById('menu-acct-status');
-  if(uname){st.textContent='✓ Signed in';st.className='acct-signed';}
-  else{st.textContent='Not signed in';st.className='acct-signed off';}
-}
+  if(st){
+    if(uname){st.textContent='✓ Signed in';st.className='acct-signed';}
+    else{st.textContent='Not signed in — create an account in settings';st.className='acct-signed off';}
+  }
+};
 window.joinServer=function(key){
   SERVER_KEY=key;
   document.getElementById('menu').style.display='none';
