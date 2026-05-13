@@ -623,7 +623,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import {
-  getDatabase, ref, set, get, remove, update,
+  getDatabase, ref, set, get, remove, update, push,
   onChildAdded, onChildChanged, onChildRemoved, onValue, onDisconnect
 } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
 
@@ -971,7 +971,7 @@ let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={}, lastDCUpdate=0;
 const projectiles=[];
-let wolfSyncLast=0; const remoteWolves={};
+let wolfSyncLast=0; const remoteWolves={}, _rwAtkTime={};
 let regenTimer=0;
 let isDead=false, deathCause='', deathX=0, deathY=0;
 let bagCooldowns={}, respawnAllowedAt=0, _deathInterval=null;
@@ -1747,6 +1747,18 @@ class Game extends Phaser.Scene {
       for(const pid of Object.keys(remoteWolves)){if(!all[pid])delete remoteWolves[pid];}
       for(const [pid,wlist] of Object.entries(all)){if(pid!==PID)remoteWolves[pid]=wlist?Object.values(wlist):[];}
     });
+    // Process hits on our wolves from other players
+    onValue(sref('wolf_hits/'+PID),snap=>{
+      const hits=snap.val(); if(!hits)return;
+      remove(sref('wolf_hits/'+PID));
+      for(const hit of Object.values(hits)){
+        const w=wolves[hit.wi]; if(!w||!w.alive)continue;
+        if(Date.now()-hit.t>5000)continue;
+        w.hp-=hit.dmg;
+        sc.pop(w.x,w.y-22,'-'+hit.dmg,'#f0c040');
+        if(w.hp<=0){w.alive=false;state.score+=5;sc.pop(w.x,w.y-34,'🐺 killed!','#2ecc71');}
+      }
+    });
     // Restore own state if we disconnected last session
     get(sref('sleeping/'+PID)).then(snap=>{
       if(snap.val()&&snap.val().hp>0){
@@ -1771,6 +1783,7 @@ class Game extends Phaser.Scene {
       onDisconnect(sref('sleeping/'+PID)).set({x:Math.round(state.x),y:Math.round(state.y),hp:state.hp,armor:{...state.armor},name:PNAME,color:MY_COLOR,score:state.score,teamId:state.teamId||null,lastSeen:Date.now(),inv:si});
       onDisconnect(sref('players/'+PID)).remove();
       onDisconnect(sref('wolves/'+PID)).remove();
+      onDisconnect(sref('wolf_hits/'+PID)).remove();
     };
     registerDisconnect();
     sc.registerDisconnect=registerDisconnect;
@@ -2128,9 +2141,16 @@ class Game extends Phaser.Scene {
 
   spawnWolves(){
     wolves=[];
+    const foundations=Object.values(bldgSpr).filter(g=>g._d&&g._d.type==='foundation');
     for(let i=0;i<WOLF_N;i++){
-      const a=Math.random()*Math.PI*2, d=220+Math.random()*300;
-      wolves.push({x:Math.max(50,Math.min(MAP_W-50,state.x+Math.cos(a)*d)),y:Math.max(50,Math.min(MAP_H-50,state.y+Math.sin(a)*d)),hp:WOLF_HP,maxHp:WOLF_HP,atkTimer:0,alive:true});
+      let x,y,tries=0;
+      do{
+        const a=Math.random()*Math.PI*2, d=280+Math.random()*320;
+        x=Math.max(50,Math.min(MAP_W-50,state.x+Math.cos(a)*d));
+        y=Math.max(50,Math.min(MAP_H-50,state.y+Math.sin(a)*d));
+        tries++;
+      }while(tries<20&&foundations.some(g=>Math.abs(g._d.x-x)<40&&Math.abs(g._d.y-y)<40));
+      wolves.push({x,y,hp:WOLF_HP,maxHp:WOLF_HP,atkTimer:0,alive:true});
     }
     wolvesSpawned=true;
     this.pop(state.x,state.y-50,'🐺 Wolves are coming!','#c0392b');
@@ -2141,6 +2161,7 @@ class Game extends Phaser.Scene {
   despawnWolves(){
     wolves=[]; wolvesSpawned=false; this.wolfGfx.clear();
     remove(sref('wolves/'+PID));
+    remove(sref('wolf_hits/'+PID));
   }
 
   drawWolves(){
@@ -2182,15 +2203,16 @@ class Game extends Phaser.Scene {
       if(!w.alive)continue;
       const dx=state.x-w.x, dy=state.y-w.y, d=Math.sqrt(dx*dx+dy*dy);
       if(d>WOLF_ATK_RNG){w.x+=(dx/d)*WOLF_SPEED*(delta/1000);w.y+=(dy/d)*WOLF_SPEED*(delta/1000);}
-      /* position synced below */
-      // wall push
+      // wall + door push (matching player resolveWalls dimensions)
       for(const g of Object.values(bldgSpr)){
-        const bd=g._d; if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
+        const bd=g._d; if(!bd)continue;
+        if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
+        if(bd.type==='door'&&(bd.open||bd.ownerId===PID||(state.teamId&&bd.teamId===state.teamId)))continue;
         const rot=bd.rot||0;
-        const hw=bd.type==='wall'?(rot?13:20):22, hh=bd.type==='wall'?(rot?20:13):22;
+        const hw=bd.type==='wall'?(rot?4:30):(rot?20:30), hh=bd.type==='wall'?(rot?30:4):(rot?30:20);
         const nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
         const wdx=w.x-nx,wdy=w.y-ny,wd=Math.sqrt(wdx*wdx+wdy*wdy);
-        if(wd<12&&wd>0.01){w.x+=(wdx/wd)*(12-wd);w.y+=(wdy/wd)*(12-wd);}
+        if(wd<15&&wd>0.01){w.x+=(wdx/wd)*(15-wd);w.y+=(wdy/wd)*(15-wd);}
       }
       w.atkTimer+=delta;
       if(d<WOLF_ATK_RNG&&w.atkTimer>=WOLF_ATK_TICK){
@@ -2199,6 +2221,22 @@ class Game extends Phaser.Scene {
         this.updateHUD();this.redrawMe();this.flashDamage();
         this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
         if(state.hp<=0)this.handleDeath('🐺 Killed by a wolf');
+      }
+    }
+    // Remote wolves deal damage to local player too
+    const now=Date.now();
+    for(const [pid,rwolves] of Object.entries(remoteWolves)){
+      for(let i=0;i<rwolves.length;i++){
+        const w=rwolves[i]; if(!w||w.hp<=0)continue;
+        const dx=state.x-w.x, dy=state.y-w.y, d=Math.sqrt(dx*dx+dy*dy);
+        const key=pid+'_'+i;
+        if(d<WOLF_ATK_RNG&&now-(_rwAtkTime[key]||0)>WOLF_ATK_TICK){
+          _rwAtkTime[key]=now;
+          state.hp=Math.max(0,state.hp-WOLF_DMG);
+          this.updateHUD();this.redrawMe();this.flashDamage();
+          this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
+          if(state.hp<=0)this.handleDeath('🐺 Killed by a wolf');
+        }
       }
     }
     // Throttled position sync so others can see our wolves
@@ -2213,15 +2251,26 @@ class Game extends Phaser.Scene {
   }
 
   tryAtkWolf(ptr){
+    const tool=getActiveTool();
+    const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
     for(const w of wolves){
       if(!w.alive)continue;
       if(dist2(ptr.worldX,ptr.worldY,w.x,w.y)>22)continue;
       if(dist2(state.x,state.y,w.x,w.y)>ATK_RNG+10)continue;
-      const tool=getActiveTool();
-      const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       w.hp-=dmg; this.pop(w.x,w.y-22,'-'+dmg,'#f0c040');
       if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
       return true;
+    }
+    // Hit remote wolves — push hit event so owner processes HP reduction
+    for(const [ownerPid,rwolves] of Object.entries(remoteWolves)){
+      for(let i=0;i<rwolves.length;i++){
+        const w=rwolves[i]; if(!w||w.hp<=0)continue;
+        if(dist2(ptr.worldX,ptr.worldY,w.x,w.y)>22)continue;
+        if(dist2(state.x,state.y,w.x,w.y)>ATK_RNG+10)continue;
+        push(sref('wolf_hits/'+ownerPid),{wi:i,dmg,t:Date.now()});
+        this.pop(w.x,w.y-22,'-'+dmg,'#f0c040');
+        return true;
+      }
     }
     return false;
   }
