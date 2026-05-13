@@ -580,7 +580,7 @@ const PNAME    = PID.substr(-4).toUpperCase();
 const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
-const MAP_W=3000, MAP_H=3000, SPEED=160, P_RAD=13;
+const MAP_W=3000, MAP_H=3000, SPEED=160, P_RAD=13, ISLAND_GRASS=220;
 const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45;
 const SYNC_MS=50, RES_N=55, HIT_CD=320;
 const FOOD_TICK=55000, THIRST_TICK=36000;
@@ -597,6 +597,7 @@ const _rsl=[];
 const RIVER_LEN=(()=>{let t=0;for(let i=0;i<RIVER_PATH.length-1;i++){const a=RIVER_PATH[i],b=RIVER_PATH[i+1];const l=Math.sqrt((b.x-a.x)**2+(b.y-a.y)**2);_rsl.push(l);t+=l;}return t;})();
 function _riverPt(d){let r=((d%RIVER_LEN)+RIVER_LEN)%RIVER_LEN;for(let i=0;i<RIVER_PATH.length-1;i++){if(r<=_rsl[i]){const t=r/_rsl[i],a=RIVER_PATH[i],b=RIVER_PATH[i+1];return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,dx:(b.x-a.x)/_rsl[i],dy:(b.y-a.y)/_rsl[i]};}r-=_rsl[i];}const p=RIVER_PATH[RIVER_PATH.length-1];return{x:p.x,y:p.y,dx:0,dy:1};}
 function isInRiver(x,y){for(let i=0;i<RIVER_PATH.length-1;i++){const a=RIVER_PATH[i],b=RIVER_PATH[i+1],dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;if(!len2)continue;const t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/len2)),nx=x-a.x-t*dx,ny=y-a.y-t*dy;if(nx*nx+ny*ny<RIVER_RADIUS*RIVER_RADIUS)return true;}return false;}
+function getRiverDir(x,y){let best=Infinity,bDx=0,bDy=1;for(let i=0;i<RIVER_PATH.length-1;i++){const a=RIVER_PATH[i],b=RIVER_PATH[i+1],dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;if(!len2)continue;const t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/len2)),nx=x-a.x-t*dx,ny=y-a.y-t*dy,d2=nx*nx+ny*ny;if(d2<best){best=d2;const l=Math.sqrt(len2);bDx=dx/l;bDy=dy/l;}}return{dx:bDx,dy:bDy};}
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
 const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60, sleeping_bag:60, workbench:150, furnace:200 };
@@ -1011,10 +1012,10 @@ class Game extends Phaser.Scene {
     this._riverGfx=this.add.graphics().setDepth(-8);
     this._riverLines=Array.from({length:32},()=>({
       dist: Math.random()*RIVER_LEN,
-      lineLen: 22+Math.random()*38,
+      lineLen: 10+Math.random()*16,
       spd: 95+Math.random()*85,
       alpha: 0.08+Math.random()*0.19,
-      offset: (Math.random()-0.5)*RIVER_RADIUS*0.72
+      offset: (Math.random()-0.5)*RIVER_RADIUS*0.52
     }));
     this._inRiver=false;
 
@@ -1063,11 +1064,18 @@ class Game extends Phaser.Scene {
 
   drawTerrain(){
     const bg=this.add.graphics().setDepth(-10);
-    bg.fillStyle(0x4a8a3a,1).fillRect(0,0,MAP_W,MAP_H);
+    // Island layers: deep ocean → shallow water → sand → grass
+    bg.fillStyle(0x0a3d7a,1).fillRect(0,0,MAP_W,MAP_H);
+    bg.fillStyle(0x1460a8,0.88).fillRect(45,45,MAP_W-90,MAP_H-90);
+    bg.fillStyle(0x2e7ec0,0.72).fillRect(95,95,MAP_W-190,MAP_H-190);
+    bg.fillStyle(0xb89850,1).fillRect(135,135,MAP_W-270,MAP_H-270);
+    bg.fillStyle(0xdcbc78,1).fillRect(165,165,MAP_W-330,MAP_H-330);
+    bg.fillStyle(0x68964a,0.60).fillRect(205,205,MAP_W-410,MAP_H-410);
+    bg.fillStyle(0x4a8a3a,1).fillRect(ISLAND_GRASS,ISLAND_GRASS,MAP_W-ISLAND_GRASS*2,MAP_H-ISLAND_GRASS*2);
     const grid=this.add.graphics().setDepth(-9);
     grid.lineStyle(1,0x3d7830,0.4);
-    for(let x=0;x<=MAP_W;x+=80){grid.moveTo(x,0);grid.lineTo(x,MAP_H);}
-    for(let y=0;y<=MAP_H;y+=80){grid.moveTo(0,y);grid.lineTo(MAP_W,y);}
+    for(let x=ISLAND_GRASS;x<=MAP_W-ISLAND_GRASS;x+=80){grid.moveTo(x,ISLAND_GRASS);grid.lineTo(x,MAP_H-ISLAND_GRASS);}
+    for(let y=ISLAND_GRASS;y<=MAP_H-ISLAND_GRASS;y+=80){grid.moveTo(ISLAND_GRASS,y);grid.lineTo(MAP_W-ISLAND_GRASS,y);}
     grid.strokePath();
     WATER_SRCS.forEach(w=>{
       bg.fillStyle(0x1a6aaa,0.85).fillEllipse(w.x,w.y,72,48);
@@ -1555,7 +1563,7 @@ class Game extends Phaser.Scene {
     const counts={tree:RES_N,rock:RES_N,bush:RES_N,ore:22,iron:28,coal:24,sulfur:18};
     Object.keys(RES_DEF).forEach(type=>{
       const maxHp=RES_DEF[type].maxHp, n=counts[type]||RES_N;
-      for(let i=0;i<n;i++) batch[type+'_'+i]={x:150+Math.random()*(MAP_W-300),y:150+Math.random()*(MAP_H-300),type,hp:maxHp,maxHp};
+      for(let i=0;i<n;i++) batch[type+'_'+i]={x:ISLAND_GRASS+40+Math.random()*(MAP_W-(ISLAND_GRASS+40)*2),y:ISLAND_GRASS+40+Math.random()*(MAP_H-(ISLAND_GRASS+40)*2),type,hp:maxHp,maxHp};
     });
     set(sref('resources'),batch)
       .then(()=>console.log('[seedMap] wrote',Object.keys(batch).length,'resources'))
@@ -2277,7 +2285,8 @@ class Game extends Phaser.Scene {
     const inRiver=isInRiver(state.x,state.y);
     if(inRiver){
       const bv=this.pbody.body.velocity;
-      this.pbody.setVelocity(bv.x,bv.y+RIVER_CURRENT);
+      const rd=getRiverDir(state.x,state.y);
+      this.pbody.setVelocity(bv.x+rd.dx*RIVER_CURRENT,bv.y+rd.dy*RIVER_CURRENT);
       if(!this._inRiver){this.pop(state.x,state.y-36,'🌊 River current!','#5cb8f0');this._inRiver=true;}
     } else { this._inRiver=false; }
 
@@ -2287,14 +2296,12 @@ class Game extends Phaser.Scene {
       const dt2=delta/1000;
       for(const l of this._riverLines){
         l.dist=(l.dist+l.spd*dt2)%RIVER_LEN;
-        const p1=_riverPt(l.dist);
-        const p2=_riverPt(l.dist+l.lineLen);
-        const ox=-p1.dy*l.offset, oy=p1.dx*l.offset;
+        const p1=_riverPt(l.dist),p2=_riverPt(l.dist+l.lineLen);
+        const x1=p1.x-p1.dy*l.offset,y1=p1.y+p1.dx*l.offset;
+        const x2=p2.x-p2.dy*l.offset,y2=p2.y+p2.dx*l.offset;
+        if(!isInRiver(x1,y1)||!isInRiver(x2,y2))continue;
         g.lineStyle(1.5,0x66ccff,l.alpha);
-        g.beginPath();
-        g.moveTo(p1.x+ox,p1.y+oy);
-        g.lineTo(p2.x+ox,p2.y+oy);
-        g.strokePath();
+        g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.strokePath();
       }
     }
 
@@ -2916,11 +2923,13 @@ function drawWorldMap(){
   const ctx=canvas.getContext('2d');
   const W=canvas.width,H=canvas.height,sx=W/MAP_W,sy=H/MAP_H;
   ctx.clearRect(0,0,W,H);
-  // Rich green terrain
-  const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*0.75);
-  bg.addColorStop(0,'#1c3018');bg.addColorStop(1,'#0e1a0a');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  // Vignette
+  // Island terrain: ocean → beach → grass
+  const bw=Math.round(ISLAND_GRASS*sx);
+  ctx.fillStyle='#0a3d7a';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#1460a8';ctx.fillRect(Math.round(45*sx),Math.round(45*sy),W-Math.round(90*sx),H-Math.round(90*sy));
+  ctx.fillStyle='#dcbc78';ctx.fillRect(Math.round(135*sx),Math.round(135*sy),W-Math.round(270*sx),H-Math.round(270*sy));
+  ctx.fillStyle='#2a5220';ctx.fillRect(bw,bw,W-bw*2,H-bw*2);
+  // Vignette over grass
   const vg=ctx.createRadialGradient(W/2,H/2,W*0.28,W/2,H/2,W*0.72);
   vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.42)');
   ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
