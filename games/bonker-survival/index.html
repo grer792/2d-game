@@ -687,7 +687,7 @@ window.joinServer=function(key){
 function startGame(){
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PID      = 'p_' + Math.random().toString(36).substr(2,9);
+const PID      = (()=>{let id=localStorage.getItem('bonker_pid');if(!id){id='p_'+Math.random().toString(36).substr(2,9);localStorage.setItem('bonker_pid',id);}return id;})();
 const PNAME    = PID.substr(-4).toUpperCase();
 const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
@@ -1912,6 +1912,28 @@ class Game extends Phaser.Scene {
 
   setupFirebase(){
     const sc=this;
+    // Wake up from sleeping if this player has a sleeping entry (reconnect restore)
+    get(sref('sleeping/'+PID)).then(snap=>{
+      if(!snap.exists())return;
+      const sd=snap.val();
+      // Restore position
+      state.x=sd.x||state.x; state.y=sd.y||state.y;
+      state.hp=sd.hp!==undefined?sd.hp:state.hp;
+      if(sd.armor)state.armor={...state.armor,...sd.armor};
+      if(sd.score)state.score=sd.score;
+      if(sd.teamId)state.teamId=sd.teamId;
+      // Restore inventory
+      if(sd.inv){
+        const items=Array.isArray(sd.inv)?sd.inv:Object.values(sd.inv);
+        for(const it of items){if(it?.type&&it.count>0)invAdd(it.type,it.count);}
+        refreshHotbar();
+      }
+      sc.pbody.setPosition(state.x,state.y);
+      sc.cameras.main.centerOn(state.x,state.y);
+      sc.updateHUD(); sc.redrawMe();
+      sc.pop(state.x,state.y-36,'💤 Woke up!','#7ec8e3');
+      remove(sref('sleeping/'+PID));
+    });
     // Sync server epoch for day/night — first joiner seeds it
     get(ref(db,'servers/'+SERVER_KEY+'/epoch')).then(snap=>{
       if(!snap.val()) set(ref(db,'servers/'+SERVER_KEY+'/epoch'),Date.now()-DAY_CYCLE*0.2);
@@ -1954,18 +1976,20 @@ class Game extends Phaser.Scene {
         document.getElementById('victory-screen').style.display='flex';
       }
     });
-    onChildAdded(sref('players/'+PID+'/hits'),snap=>{
-      if(!snap.val())return;
-      const {dmg,from}=snap.val();
-      remove(sref('players/'+PID+'/hits/'+snap.key));
-      const now=Date.now();
-      if(from&&lastHitFrom[from]&&now-lastHitFrom[from]<350)return;
-      if(from) lastHitFrom[from]=now;
+    // Listen to own HP changes written by attackers directly
+    onValue(sref('players/'+PID+'/hp'),snap=>{
+      if(!snap.exists()||isDead)return;
+      const remoteHp=snap.val();
+      if(typeof remoteHp!=='number')return;
       const armorPct=(state.armor.head?ARMOR_REDUCE.head:0)+(state.armor.chest?ARMOR_REDUCE.chest:0)+(state.armor.legs?ARMOR_REDUCE.legs:0);
-      const finalDmg=Math.max(1,Math.round(dmg*(1-armorPct)));
-      state.hp=Math.max(0,state.hp-finalDmg); sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
+      // Apply armor reduction to the delta only
+      const rawDelta=state.hp-remoteHp;
+      if(rawDelta<=0){state.hp=remoteHp;return;} // healed or same
+      const finalDmg=Math.max(1,Math.round(rawDelta*(1-armorPct)));
+      state.hp=Math.max(0,state.hp-finalDmg);
+      sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
       sc.pop(state.x,state.y-24,'-'+finalDmg+(armorPct>0?' 🛡':''),'#e74c3c');
-      if(state.hp<=0)sc.handleDeath('⚔️ Killed by '+(playerData[from]?.name||from?.substr(-4).toUpperCase()||'a player'));
+      if(state.hp<=0)sc.handleDeath('⚔️ Killed by a player');
     });
     onValue(sref('wolves'),snap=>{
       const all=snap.val()||{};
@@ -2161,7 +2185,10 @@ class Game extends Phaser.Scene {
       if(dist2(ptr.worldX,ptr.worldY,rx,ry)>P_RAD*3+10)continue;
       const dmg=tool==='msword'?METAL_SWORD_DMG:tool==='sword'?SWORD_DMG:tool==='axe'?AXE_DMG:FIST_DMG;
       lastAtkTime=now;
-      set(sref('players/'+id+'/hits/'+now),{dmg,from:PID});
+      const targetHp=od.hp!==undefined?od.hp:MAX_HP;
+      const newHp=Math.max(0,targetHp-dmg);
+      // Write HP directly (works even if target is tabbed out / disconnecting)
+      update(sref('players/'+id),{hp:newHp,_hitBy:PID,_hitT:now});
       state.score+=5;this.updateHUD();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
@@ -2196,7 +2223,7 @@ class Game extends Phaser.Scene {
   tryOpenChest(ptr){
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d; if(d.type!=='chest')continue;
-      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>18*18)continue;
+      if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>18)continue;
       if(dist2(state.x,state.y,d.x,d.y)>ATK_RNG+10)continue;
       if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){
         this.pop(d.x,d.y-28,'🔒 Raid the base to loot!','#e74c3c'); return true;
