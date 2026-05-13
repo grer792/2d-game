@@ -614,7 +614,7 @@
 
 <div id="hint">
   WASD: move &nbsp; Tab/I: inventory &nbsp; C: basic craft &nbsp; G: map<br>
-  E: eat food &nbsp; F: door / drink water &nbsp; Q: drop item<br>
+  E: eat food/bandage &nbsp; F: door / drink water &nbsp; Q: drop 1 &nbsp; Shift+Q: drop all<br>
   Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace &nbsp; R: rotate<br>
   ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
   🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Explosive damages bases<br>
@@ -693,7 +693,7 @@ const PCOLORS  = [0xe74c3c,0x3498db,0x9b59b6,0xf39c12,0x16a085,0xe67e22];
 const MY_COLOR = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
 
 const MAP_W=3000, MAP_H=3000, SPEED=160, P_RAD=13, ISLAND_GRASS=220;
-const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=25, METAL_SWORD_DMG=45;
+const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=18, METAL_SWORD_DMG=30;
 const SYNC_MS=50, RES_N=55, HIT_CD=320;
 const FOOD_TICK=55000, THIRST_TICK=36000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
@@ -712,7 +712,7 @@ function isInRiver(x,y){for(let i=0;i<RIVER_PATH.length-1;i++){const a=RIVER_PAT
 function getRiverDir(x,y){let best=Infinity,bDx=0,bDy=1;for(let i=0;i<RIVER_PATH.length-1;i++){const a=RIVER_PATH[i],b=RIVER_PATH[i+1],dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;if(!len2)continue;const t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/len2)),nx=x-a.x-t*dx,ny=y-a.y-t*dy,d2=nx*nx+ny*ny;if(d2<best){best=d2;const l=Math.sqrt(len2);bDx=dx/l;bDy=dy/l;}}return{dx:bDx,dy:bDy};}
 const WOLF_N=5, WOLF_HP=30, WOLF_SPEED=95, WOLF_DMG=10, WOLF_ATK_TICK=1400, WOLF_ATK_RNG=22;
 
-const BLDG_HP  ={ foundation:40, wall:120, door:80, tc:300, chest:150, monument:500, roof:60, sleeping_bag:60, workbench:150, furnace:200, ewwall:200, ewgate:150 };
+const BLDG_HP  ={ foundation:120, wall:120, door:80, tc:300, chest:150, monument:500, roof:60, sleeping_bag:60, workbench:150, furnace:200, ewwall:200, ewgate:150 };
 const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10,stone:5}, chest:{wood:5}, monument:{wood:20,stone:20,food:10}, roof:{wood:2}, sleeping_bag:{wood:3}, workbench:{wood:20,stone:5}, furnace:{stone:15,metal:5}, ewwall:{wood:8}, ewgate:{wood:10} };
 const FIST_BLDG_DMG=1, BAG_COOLDOWN=120000, MAX_BAGS=3, RESPAWN_DELAY=5000;
 const WALL_TIERS=[{hp:120},{hp:400,upg:{stone:5}},{hp:800,upg:{metal:5}}];
@@ -730,17 +730,18 @@ const RES_DROP ={
   tree:()=>2+Math.floor(Math.random()*3),
   rock:()=>1+Math.floor(Math.random()*3),
   ore:()=>2+Math.floor(Math.random()*2),
-  bush:()=>1+Math.floor(Math.random()*2),
+  bush:()=>1,
   iron:()=>2+Math.floor(Math.random()*3),
   coal:()=>2+Math.floor(Math.random()*3),
   sulfur:()=>1+Math.floor(Math.random()*3),
 };
 const RECIPES  =[
-  {id:'axe',   name:'🪓 Stone Axe',   cost:{wood:5,stone:3}},
-  {id:'pick',  name:'⛏ Stone Pick',  cost:{wood:3,stone:5}},
-  {id:'sword', name:'⚔️ Stone Sword', cost:{wood:5,stone:5}},
-  {id:'msword',name:'🗡️ Metal Sword', cost:{metal:8,stone:2}},
-  {id:'hammer',name:'🔨 Hammer',      cost:{wood:2}},
+  {id:'axe',     name:'🪓 Stone Axe',   cost:{wood:5,stone:3}},
+  {id:'pick',    name:'⛏ Stone Pick',  cost:{wood:3,stone:5}},
+  {id:'sword',   name:'⚔️ Stone Sword', cost:{wood:5,stone:5}},
+  {id:'msword',  name:'🗡️ Metal Sword', cost:{metal:8,stone:2}},
+  {id:'hammer',  name:'🔨 Hammer',      cost:{wood:2}},
+  {id:'bandage', name:'🩹 Bandage',     cost:{wood:2,food:1}},
 ];
 const WB_RECIPES=[
   {id:'bow',         name:'🏹 Bow',          cost:{wood:10,stone:5},   ammo:'arrow'},
@@ -753,14 +754,16 @@ const WB_RECIPES=[
   {id:'explosive',   name:'💣 Explosive x1', cost:{metal:4,sulfur:6,coal:2}, count:1, id2:'explosive'},
 ];
 const ITEM_ICON={
-  axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', hammer:'🔨',
+  axe:'🪓', pick:'⛏', sword:'⚔️', msword:'🗡️', hammer:'🔨', bandage:'🩹',
   wood:'🪵', stone:'🪨', metal:'🔩', food:'🍎',
   iron_ore:'🟤', coal:'⬛', sulfur:'🟡',
   explosive:'💣', bow:'🏹', crossbow:'🎯', arrow:'🏹', bolt:'🔩',
   armor_head:'⛑️', armor_chest:'🦺', armor_legs:'👖',
 };
 const TOOLS=['axe','pick','sword','msword','hammer','bow','crossbow'];
-const RESOURCES=['wood','stone','metal','food','iron_ore','coal','sulfur','explosive','arrow','bolt','armor_head','armor_chest','armor_legs'];
+const RESOURCES=['wood','stone','metal','food','iron_ore','coal','sulfur','explosive','arrow','bolt','armor_head','armor_chest','armor_legs','bandage'];
+const STACK_MAX={food:8,wood:50,stone:50,metal:30,iron_ore:20,coal:20,sulfur:20,explosive:5,arrow:30,bolt:30,bandage:10,axe:1,pick:1,sword:1,msword:1,hammer:1,bow:1,crossbow:1,armor_head:1,armor_chest:1,armor_legs:1};
+function getStackMax(t){return STACK_MAX[t]??30;}
 const BOW_RNG=ATK_RNG*2, CROSSBOW_RNG=ATK_RNG*2.4, BOW_DMG=18, CROSSBOW_DMG=28;
 const ARMOR_REDUCE={head:0.10,chest:0.20,legs:0.10};
 const EXP_BUILD_DMG=80;
@@ -896,18 +899,25 @@ const INV_SIZE=25, HOTBAR_SIZE=5;
 const inv = Array(INV_SIZE).fill(null);
 
 function invAdd(type, count){
-  // Stack on same type first (full inventory)
-  for(let i=0;i<INV_SIZE;i++){ if(inv[i]?.type===type){inv[i].count+=count;refreshHotbar();return true;} }
-  // Tools prefer hotbar
-  if(TOOLS.includes(type)){
-    for(let i=0;i<HOTBAR_SIZE;i++){if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;}}
+  const max=getStackMax(type);
+  let rem=count;
+  // Fill existing stacks first
+  for(let i=0;i<INV_SIZE&&rem>0;i++){
+    if(inv[i]?.type===type&&inv[i].count<max){const add=Math.min(max-inv[i].count,rem);inv[i].count+=add;rem-=add;}
   }
-  // First empty slot anywhere
-  for(let i=0;i<INV_SIZE;i++){ if(!inv[i]){inv[i]={type,count};refreshHotbar();return true;} }
-  // Full — drop
-  const id='overflow_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
-  bag[type]=count; set(sref('loot/'+id),bag);
-  return false;
+  // Tools prefer hotbar for new slots
+  if(rem>0&&TOOLS.includes(type)){
+    for(let i=0;i<HOTBAR_SIZE&&rem>0;i++){if(!inv[i]){const add=Math.min(max,rem);inv[i]={type,count:add};rem-=add;}}
+  }
+  // Fill empty slots anywhere
+  for(let i=0;i<INV_SIZE&&rem>0;i++){
+    if(!inv[i]){const add=Math.min(max,rem);inv[i]={type,count:add};rem-=add;}
+  }
+  refreshHotbar();
+  if(rem>0){
+    const id='overflow_'+Date.now();const bag={x:Math.round(state.x),y:Math.round(state.y+25)};bag[type]=rem;set(sref('loot/'+id),bag);return false;
+  }
+  return true;
 }
 function invCount(type){ return inv.reduce((s,sl)=>s+(sl?.type===type?sl.count:0),0); }
 function invRemove(type, count){
@@ -955,14 +965,16 @@ function refreshArmorHUD(){
   if(l)l.style.opacity=state.armor.legs?'1':'0.3';
 }
 
-function dropSelected(){
+function dropSelected(all=false){
   if(selectedSlot>=HOTBAR_SIZE)return;
   const item=inv[selectedSlot]; if(!item)return;
+  const count=all?item.count:1;
   const id='drop_'+Date.now(); const bag={x:Math.round(state.x),y:Math.round(state.y+25)};
-  bag[item.type]=item.count;
-  inv[selectedSlot]=null; refreshHotbar();
+  bag[item.type]=count;
+  item.count-=count; if(item.count<=0)inv[selectedSlot]=null;
+  refreshHotbar();
   set(sref('loot/'+id),bag);
-  window._scene&&window._scene.pop(state.x,state.y-30,'Dropped '+item.count+'x '+(ITEM_ICON[item.type]||item.type),'#aaa');
+  window._scene&&window._scene.pop(state.x,state.y-30,'Dropped '+count+'x '+(ITEM_ICON[item.type]||item.type),'#aaa');
 }
 
 // ── Drag state for inventory/chest panels ────────────────────────────────────
@@ -1799,7 +1811,7 @@ class Game extends Phaser.Scene {
       gfx.fillStyle(tier===2?0x4a6070:0x8898a8,1).fillCircle(x+16,y-22,6);
       gfx.fillStyle(tier===2?0xd4a830:0xd0e0e8,1).fillCircle(x+16,y-22,3);
     }
-    if(hpR<0.95&&mine){
+    if((hpR<0.95&&mine)||(gfx._lastDmg&&Date.now()-gfx._lastDmg<10000)){
       gfx.fillStyle(0x27ae60,1).fillRect(x-20,y-34,40*hpR,4);
       gfx.fillStyle(0xc0392b,1).fillRect(x-20+40*hpR,y-34,40*(1-hpR),4);
       gfx.lineStyle(1,0x000000,0.4).strokeRect(x-20,y-34,40,4);
@@ -2200,13 +2212,17 @@ class Game extends Phaser.Scene {
     const tool=getActiveTool();
     const heldItem=inv[selectedSlot];
     const isExplosive=heldItem?.type==='explosive'&&heldItem.count>0;
-    const dmg=isExplosive?EXP_BUILD_DMG:({msword:30,axe:22,sword:15,pick:12}[tool]||FIST_BLDG_DMG);
+    const dmg=isExplosive?EXP_BUILD_DMG:({msword:12,axe:8,sword:6,pick:5}[tool]||FIST_BLDG_DMG);
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
-      const maxRange=d.type==='chest'?32:ATK_RNG; // chest requires close contact
+      const maxRange=d.type==='chest'?32:ATK_RNG;
       if(dist2(d.x,d.y,px,py)>maxRange)continue;
       if(Math.abs(ptr.worldX-d.x)>28||Math.abs(ptr.worldY-d.y)>28)continue;
+      // Foundation requires explosives
+      if(d.type==='foundation'&&!isExplosive){this.pop(d.x,d.y-24,'💣 Use explosives to raid foundations!','#e67e22');lastBldgAtkTime=now;return;}
+      // Can't attack through walls
+      if(pathBlocked(px,py,d.x,d.y)){this.pop(d.x,d.y-24,'Destroy the wall first!','#e67e22');lastBldgAtkTime=now;return;}
       lastBldgAtkTime=now;
       if(isExplosive){ invRemove('explosive',1); this.pop(d.x,d.y-20,'💥 BOOM!','#e67e22'); }
       const newHp=d.hp-dmg;
@@ -2216,8 +2232,17 @@ class Game extends Phaser.Scene {
           for(const [res,amt] of Object.entries(storage)){if((amt||0)>0){bag[res]=amt;hasDrop=true;}}
           if(hasDrop) set(sref('loot/cr_'+id),bag);
         }
+        // Cascade: destroy walls, doors, and roofs on this foundation
+        if(d.type==='foundation'){
+          for(const [wid,wg] of Object.entries(bldgSpr)){
+            const wd=wg._d; if(!wd)continue;
+            if(wd.type==='wall'||wd.type==='door'||wd.type==='roof'){
+              if(dist2(wd.x,wd.y,d.x,d.y)<40)remove(sref('buildings/'+wid));
+            }
+          }
+        }
         remove(sref('buildings/'+id));state.score+=10;this.updateHUD();this.pop(d.x,d.y-28,'DESTROYED!','#e74c3c');
-      } else {update(sref('buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,isExplosive?'#e67e22':'#e74c3c');}
+      } else {if(bldgSpr[id])bldgSpr[id]._lastDmg=Date.now();update(sref('buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,isExplosive?'#e67e22':'#e74c3c');}
       return;
     }
   }
@@ -2296,19 +2321,27 @@ class Game extends Phaser.Scene {
     if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
     if(buildType==='monument')this.pop(placeX,placeY-40,'Monument! Stand on it 90s to win!','#f0c040');
     if(buildType==='sleeping_bag'){this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');}
+    // Clear resources that were spawned on this foundation
+    if(buildType==='foundation'){
+      for(const [rid,rg] of Object.entries(resSpr)){
+        const d=rg._d; if(!d)continue;
+        if(Math.abs(d.x-placeX)<32&&Math.abs(d.y-placeY)<32)remove(sref('resources/'+rid));
+      }
+    }
   }
 
   resolveWalls(){
     let px=this.pbody.x, py=this.pbody.y;
     let vx=this.pbody.body.velocity.x, vy=this.pbody.body.velocity.y;
     const origSpd=Math.sqrt(vx*vx+vy*vy);
+    let hitWall=false;
     for(const g of Object.values(bldgSpr)){
       const d=g._d; if(!d)continue;
       if(d.type!=='wall'&&d.type!=='door'&&d.type!=='chest'&&d.type!=='tc')continue;
       if(d.type==='door'&&(d.open||d.ownerId===PID||(state.teamId&&d.teamId===state.teamId)))continue;
       if(d.type==='chest'){
         const p2=obbPush(px,py,d.x,d.y,d.angle||0,13,13,P_RAD);
-        if(p2){px+=p2.dx;py+=p2.dy;const dot=vx*p2.nx+vy*p2.ny;if(dot<0){vx-=dot*p2.nx;vy-=dot*p2.ny;}}
+        if(p2){hitWall=true;px+=p2.dx;py+=p2.dy;const dot=vx*p2.nx+vy*p2.ny;if(dot<0){vx-=dot*p2.nx;vy-=dot*p2.ny;}}
         continue;
       }
       const rot=d.rot||0;
@@ -2316,9 +2349,9 @@ class Game extends Phaser.Scene {
       const nearX=Math.max(d.x-hw,Math.min(px,d.x+hw)), nearY=Math.max(d.y-hh,Math.min(py,d.y+hh));
       const dx=px-nearX, dy=py-nearY, dst=Math.sqrt(dx*dx+dy*dy);
       if(dst<P_RAD&&dst>0.01){
+        hitWall=true;
         const push=P_RAD-dst, nx=dx/dst, ny=dy/dst;
         px+=nx*push; py+=ny*push;
-        // cancel velocity into the wall so sliding feels smooth
         const dot=vx*nx+vy*ny;
         if(dot<0){vx-=dot*nx; vy-=dot*ny;}
       }
@@ -2329,7 +2362,7 @@ class Game extends Phaser.Scene {
       if(d.type!=='ewwall'&&d.type!=='ewgate')continue;
       if(d.type==='ewgate'&&d.open)continue;
       const p=obbPush(px,py,d.x,d.y,d.angle||0,40,7,P_RAD);
-      if(p){px+=p.dx;py+=p.dy;const dot=vx*p.nx+vy*p.ny;if(dot<0){vx-=dot*p.nx;vy-=dot*p.ny;}}
+      if(p){hitWall=true;px+=p.dx;py+=p.dy;const dot=vx*p.nx+vy*p.ny;if(dot<0){vx-=dot*p.nx;vy-=dot*p.ny;}}
     }
     for(const g of Object.values(resSpr)){
       const d=g._d; if(!d)continue;
@@ -2341,6 +2374,7 @@ class Game extends Phaser.Scene {
       else continue;
       const dx=px-cx,dy=py-cy,dst=Math.sqrt(dx*dx+dy*dy),minD=P_RAD+colR;
       if(dst<minD&&dst>0.01){
+        hitWall=true;
         const push=minD-dst, nx=dx/dst, ny=dy/dst;
         px+=nx*push; py+=ny*push;
         const dot=vx*nx+vy*ny;
@@ -2353,6 +2387,10 @@ class Game extends Phaser.Scene {
     const newSpd=Math.sqrt(vx*vx+vy*vy);
     if(newSpd>0.1&&origSpd>0.1){const s=origSpd/newSpd;vx*=s;vy*=s;}
     this.pbody.setVelocity(vx,vy);
+    const now=Date.now();
+    if(hitWall&&origSpd>50&&(!this._wallShakeAt||now-this._wallShakeAt>280)){
+      this._wallShakeAt=now; this.cameras.main.shake(70,0.0025);
+    }
   }
 
   handleDeath(cause='Unknown cause'){
@@ -2768,7 +2806,7 @@ class Game extends Phaser.Scene {
       if(k.r.isDown) bldgAngle=(bldgAngle+60*(delta/1000))%360;
     } else if(buildMode&&Phaser.Input.Keyboard.JustDown(k.r)){buildRot=buildRot?0:1;}
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
-    if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected();
+    if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected(this.input.keyboard.addKey('SHIFT').isDown);
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
     if(Phaser.Input.Keyboard.JustDown(k.k2))selectSlot(1);
     if(Phaser.Input.Keyboard.JustDown(k.k3))selectSlot(2);
@@ -2781,30 +2819,36 @@ class Game extends Phaser.Scene {
 
     // F = open/close nearby door/gate, or drink water
     if(Phaser.Input.Keyboard.JustDown(k.f)){
-      let doorToggled=false;
+      let doorToggled=false, nearEnemyDoor=false;
       for(const[id,g] of Object.entries(bldgSpr)){
         const d=g._d; if(d.type!=='door'&&d.type!=='ewgate')continue;
-        if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
         if(dist2(state.x,state.y,d.x,d.y)>(d.type==='ewgate'?65:55))continue;
+        if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){nearEnemyDoor=true;continue;}
         update(sref('buildings/'+id),{open:!d.open});
         this.pop(state.x,state.y-30,d.open?(d.type==='ewgate'?'Gate closed':'Door closed'):(d.type==='ewgate'?'Gate opened':'Door opened'),'#f0c040');
         doorToggled=true; break;
       }
       if(!doorToggled){
-        let drank=false;
-        for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
-        if(!drank&&isInRiver(state.x,state.y)){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank from river!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;}
-        if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
+        if(nearEnemyDoor){this.pop(state.x,state.y-30,"🔒 Not your door!",'#e74c3c');}
+        else{
+          let drank=false;
+          for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
+          if(!drank&&isInRiver(state.x,state.y)){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank from river!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;}
+          if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
+        }
       }
     }
 
-    // E = eat food
+    // E = eat food or use bandage
     if(Phaser.Input.Keyboard.JustDown(k.e)){
       const slot=inv[selectedSlot];
-      if(slot&&slot.type==='food'&&slot.count>0){
+      if(slot?.type==='bandage'&&slot.count>0){
+        if(state.hp>=MAX_HP){this.pop(state.x,state.y-30,'Already full HP','#555');}
+        else{invRemove('bandage',1);state.hp=Math.min(MAX_HP,state.hp+25);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-30,'+25 ❤️ Bandaged!','#2ecc71');}
+      } else if(slot?.type==='food'&&slot.count>0){
         if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
         else{invRemove('food',1);state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);this.updateHUD();this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');}
-      } else this.pop(state.x,state.y-30,'No food in slot!','#555');
+      } else this.pop(state.x,state.y-30,'No food/bandage in slot!','#555');
     }
 
     // Build preview
@@ -2932,11 +2976,11 @@ class Game extends Phaser.Scene {
     // Health regen when well fed and hydrated
     if(state.hp<MAX_HP && state.food_meter/MAX_FOOD>=0.6 && state.thirst/MAX_THIRST>=0.6){
       regenTimer+=delta;
-      if(regenTimer>=4000){
+      if(regenTimer>=8000){
         regenTimer=0;
-        state.hp=Math.min(MAX_HP,state.hp+3);
+        state.hp=Math.min(MAX_HP,state.hp+2);
         this.updateHUD(); this.redrawMe();
-        this.pop(state.x,state.y-32,'+3 ❤️','#2ecc71');
+        this.pop(state.x,state.y-32,'+2 ❤️','#2ecc71');
       }
     } else regenTimer=0;
 
