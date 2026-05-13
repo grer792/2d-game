@@ -198,44 +198,76 @@
       color:rgba(255,255,255,0.3); font-family:'Segoe UI',sans-serif;
       line-height:1.8; pointer-events:none;
     }
-    /* ── LOBBY ── */
-    #lobby {
+    /* ── MAIN MENU ── */
+    #menu {
       position:fixed; inset:0; z-index:200;
       background:radial-gradient(ellipse at 50% 30%, #1a2a1a 0%, #0d0d0d 100%);
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:0;
+      display:flex; align-items:center; justify-content:center;
     }
-    .lobby-title {
-      font-size:48px; font-weight:900; color:#f0c040;
-      text-shadow:0 0 40px rgba(240,192,64,0.5);
-      letter-spacing:3px; margin-bottom:6px;
+    .menu-wrap { width:520px; display:flex; flex-direction:column; align-items:center; }
+    .menu-title {
+      font-size:46px; font-weight:900; color:#f0c040;
+      text-shadow:0 0 40px rgba(240,192,64,0.45);
+      letter-spacing:3px; margin-bottom:4px; text-align:center;
     }
-    .lobby-sub {
-      color:#888; font-size:14px; letter-spacing:2px; text-transform:uppercase;
-      margin-bottom:40px;
+    .menu-subtitle {
+      color:#555; font-size:11px; letter-spacing:4px; text-transform:uppercase;
+      margin-bottom:30px;
     }
-    .lobby-servers { display:flex; flex-direction:column; gap:12px; width:480px; }
+    .menu-nav {
+      display:flex; gap:2px; margin-bottom:22px;
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
+      border-radius:10px; padding:4px;
+    }
+    .mnav-btn {
+      background:none; border:none; color:#555;
+      padding:9px 30px; border-radius:7px;
+      font-size:13px; font-weight:600; cursor:pointer;
+      font-family:'Segoe UI',sans-serif; letter-spacing:0.5px;
+      transition:color .15s, background .15s;
+    }
+    .mnav-btn:hover { color:#aaa; }
+    .mnav-btn.active { background:rgba(240,192,64,0.13); color:#f0c040; }
+    .menu-panel { width:100%; }
+    .lobby-servers { display:flex; flex-direction:column; gap:10px; }
     .srv-card {
-      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
-      border-radius:12px; padding:20px 24px;
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
+      border-radius:12px; padding:18px 22px;
       display:flex; align-items:center; gap:20px;
       transition:border-color .2s, background .2s;
     }
     .srv-card:hover { border-color:rgba(240,192,64,0.4); background:rgba(255,255,255,0.07); }
-    .srv-dot { width:10px; height:10px; border-radius:50%; background:#2ecc71; flex-shrink:0; box-shadow:0 0 8px #2ecc71; }
+    .srv-dot { width:9px; height:9px; border-radius:50%; background:#2ecc71; flex-shrink:0; box-shadow:0 0 7px #2ecc71; }
     .srv-info { flex:1; }
-    .srv-name { font-size:17px; font-weight:700; color:#fff; margin-bottom:4px; }
+    .srv-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:3px; }
     .srv-meta { font-size:12px; color:#666; display:flex; gap:14px; }
-    .srv-players { color:#aaa; }
-    .srv-region { color:#555; }
+    .srv-players { color:#999; }
+    .srv-region { color:#444; }
     .srv-join {
       background:#f0c040; color:#111; border:none;
-      padding:11px 26px; border-radius:8px;
-      font-size:14px; font-weight:800; cursor:pointer;
+      padding:10px 24px; border-radius:8px;
+      font-size:13px; font-weight:800; cursor:pointer;
       transition:background .15s, transform .1s;
       font-family:'Segoe UI',sans-serif; letter-spacing:0.5px;
     }
     .srv-join:hover { background:#ffd060; transform:scale(1.04); }
+    /* store panel */
+    .store-empty {
+      text-align:center; padding:56px 0;
+      color:#333; font-size:14px; letter-spacing:1px;
+    }
+    .store-empty span { display:block; font-size:32px; margin-bottom:12px; }
+    /* account panel */
+    .acct-card {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
+      border-radius:12px; padding:24px 26px;
+      display:flex; align-items:center; gap:20px;
+    }
+    .acct-avatar { font-size:46px; line-height:1; flex-shrink:0; }
+    .acct-name { font-size:20px; font-weight:700; color:#fff; margin-bottom:5px; }
+    .acct-signed { font-size:12px; color:#2ecc71; }
+    .acct-signed.off { color:#555; }
+    .acct-label { font-size:10px; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; }
     /* ── Inventory Panel ── */
     #inv-panel {
       display:none; position:fixed; top:50%; left:50%;
@@ -309,42 +341,70 @@
 </head>
 <body>
 
-<div id="lobby">
-  <div class="lobby-title">⚔ BONKER SURVIVAL</div>
-  <div class="lobby-sub">Select a server</div>
-  <div class="lobby-servers" id="lobby-servers">
-    <div class="srv-card">
-      <div class="srv-dot"></div>
-      <div class="srv-info">
-        <div class="srv-name">Bonker World #1</div>
-        <div class="srv-meta">
-          <span class="srv-players" id="srv1-count">... players online</span>
-          <span class="srv-region">🌍 Global</span>
+<div id="menu">
+  <div class="menu-wrap">
+    <div class="menu-title">⚔ BONKER SURVIVAL</div>
+    <div class="menu-subtitle">BonkerGames</div>
+    <nav class="menu-nav">
+      <button class="mnav-btn active" onclick="menuTab('servers')">Servers</button>
+      <button class="mnav-btn" onclick="menuTab('store')">Store</button>
+      <button class="mnav-btn" onclick="menuTab('account')">Account</button>
+    </nav>
+
+    <!-- Servers -->
+    <div id="menu-panel-servers" class="menu-panel">
+      <div class="lobby-servers">
+        <div class="srv-card">
+          <div class="srv-dot"></div>
+          <div class="srv-info">
+            <div class="srv-name">Bonker World #1</div>
+            <div class="srv-meta">
+              <span class="srv-players" id="srv1-count">… players online</span>
+              <span class="srv-region">🌍 Global</span>
+            </div>
+          </div>
+          <button class="srv-join" onclick="joinServer('server1')">JOIN</button>
+        </div>
+        <div class="srv-card">
+          <div class="srv-dot"></div>
+          <div class="srv-info">
+            <div class="srv-name">Bonker World #2</div>
+            <div class="srv-meta">
+              <span class="srv-players" id="srv2-count">… players online</span>
+              <span class="srv-region">🌍 Global</span>
+            </div>
+          </div>
+          <button class="srv-join" onclick="joinServer('server2')">JOIN</button>
+        </div>
+        <div class="srv-card">
+          <div class="srv-dot"></div>
+          <div class="srv-info">
+            <div class="srv-name">Bonker World #3</div>
+            <div class="srv-meta">
+              <span class="srv-players" id="srv3-count">… players online</span>
+              <span class="srv-region">🌍 Global</span>
+            </div>
+          </div>
+          <button class="srv-join" onclick="joinServer('server3')">JOIN</button>
         </div>
       </div>
-      <button class="srv-join" onclick="joinServer('server1')">JOIN</button>
     </div>
-    <div class="srv-card">
-      <div class="srv-dot"></div>
-      <div class="srv-info">
-        <div class="srv-name">Bonker World #2</div>
-        <div class="srv-meta">
-          <span class="srv-players" id="srv2-count">... players online</span>
-          <span class="srv-region">🌍 Global</span>
-        </div>
-      </div>
-      <button class="srv-join" onclick="joinServer('server2')">JOIN</button>
+
+    <!-- Store -->
+    <div id="menu-panel-store" class="menu-panel" style="display:none">
+      <div class="store-empty"><span>🔒</span>Coming soon</div>
     </div>
-    <div class="srv-card">
-      <div class="srv-dot"></div>
-      <div class="srv-info">
-        <div class="srv-name">Bonker World #3</div>
-        <div class="srv-meta">
-          <span class="srv-players" id="srv3-count">... players online</span>
-          <span class="srv-region">🌍 Global</span>
+
+    <!-- Account -->
+    <div id="menu-panel-account" class="menu-panel" style="display:none">
+      <div class="acct-label">BonkerGames Account</div>
+      <div class="acct-card" id="menu-acct-card">
+        <div class="acct-avatar" id="menu-acct-avatar">👤</div>
+        <div>
+          <div class="acct-name" id="menu-acct-name">Loading…</div>
+          <div class="acct-signed off" id="menu-acct-status">Checking…</div>
         </div>
       </div>
-      <button class="srv-join" onclick="joinServer('server3')">JOIN</button>
     </div>
   </div>
 </div>
@@ -590,9 +650,27 @@ function sref(path){ return ref(db,'servers/'+SERVER_KEY+'/'+path); }
   });
 });
 
+window.menuTab=function(tab){
+  ['servers','store','account'].forEach(t=>{
+    document.getElementById('menu-panel-'+t).style.display=t===tab?'':'none';
+  });
+  document.querySelectorAll('.mnav-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['servers','store','account'][i]===tab);
+  });
+  if(tab==='account')_refreshMenuAccount();
+};
+function _refreshMenuAccount(){
+  const uname=window._currentUsername;
+  const avatar=window._currentAvatar||'🎮';
+  document.getElementById('menu-acct-avatar').textContent=uname?avatar:'👤';
+  document.getElementById('menu-acct-name').textContent=uname||'Guest';
+  const st=document.getElementById('menu-acct-status');
+  if(uname){st.textContent='✓ Signed in';st.className='acct-signed';}
+  else{st.textContent='Not signed in';st.className='acct-signed off';}
+}
 window.joinServer=function(key){
   SERVER_KEY=key;
-  document.getElementById('lobby').style.display='none';
+  document.getElementById('menu').style.display='none';
   startGame();
 };
 
