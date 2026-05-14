@@ -221,12 +221,19 @@ body.sidebar-on .sidebar:hover .sb-contact .label { opacity: 1; }
 
 /* Footer content in sidebar */
 .sb-footer {
-  padding: 10px 8px 4px;
+  padding: 0 8px;
   border-top: 1px solid var(--border);
-  display: none; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 6px;
   overflow: hidden;
+  max-height: 0; opacity: 0; pointer-events: none;
+  transition: max-height 0.25s ease, opacity 0.25s ease;
+  transition-delay: 0.15s;
 }
-body.sidebar-on .sidebar:hover .sb-footer { display: flex; }
+body.sidebar-on .sidebar:hover .sb-footer {
+  max-height: 300px; opacity: 1; pointer-events: auto;
+  padding: 10px 8px 4px;
+  transition-delay: 0s;
+}
 .sb-footer-title {
   font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.8px; color: var(--text2); white-space: nowrap;
