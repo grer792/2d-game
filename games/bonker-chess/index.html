@@ -728,7 +728,7 @@ friendModeBtn.addEventListener('click', () => {
 });
 
 document.getElementById('createFriendBtn').addEventListener('click', () => {
-  createRoom().catch(e => { console.error(e); showModeRoom(null); setModeBusy(false); setModeNote('Could not create room.'); });
+  createRoom().catch(e => { console.error(e); showModeRoom(null); setModeBusy(false); setModeNote('Error: ' + (e?.message || e)); });
 });
 
 document.getElementById('joinCodeBtn').addEventListener('click', () => {
