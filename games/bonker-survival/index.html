@@ -500,18 +500,14 @@
 </div>
 
 <div id="build-sub">
-  <span class="bopt bsel" id="bopt-foundation" onclick="setBuildType('foundation')">[1] Floor 3🪵</span>
-  <span class="bopt"      id="bopt-wall"       onclick="setBuildType('wall')">[2] Wall 4🪵</span>
-  <span class="bopt"      id="bopt-door"       onclick="setBuildType('door')">[3] Door 2🪵</span>
-  <span class="bopt"      id="bopt-tc"         onclick="setBuildType('tc')">[4] Cabinet 10🪵5🪨</span>
-  <span class="bopt"      id="bopt-chest"      onclick="setBuildType('chest')">[5] Chest 5🪵</span>
-  <span class="bopt"      id="bopt-monument"   onclick="setBuildType('monument')">[6] Monument 20🪵20🪨10🍎</span>
-  <span class="bopt"      id="bopt-roof"         onclick="setBuildType('roof')">[7] Roof 2🪵</span>
-  <span class="bopt"      id="bopt-sleeping_bag" onclick="setBuildType('sleeping_bag')">[8] Bed 3🪵</span>
-  <span class="bopt"      id="bopt-workbench"   onclick="setBuildType('workbench')">[9] Workbench 20🪵5🪨</span>
-  <span class="bopt"      id="bopt-furnace"     onclick="setBuildType('furnace')">[0] Furnace 15🪨5🔩</span>
-  <span class="bopt"      id="bopt-ewwall"      onclick="setBuildType('ewwall')">[W] Palisade 8🪵</span>
-  <span class="bopt"      id="bopt-ewgate"      onclick="setBuildType('ewgate')">[G] P.Gate 10🪵</span>
+  <span class="bopt bsel" id="bopt-ewwall"       onclick="setBuildType('ewwall')">[1] Ext. Wall 8🪵</span>
+  <span class="bopt"      id="bopt-ewgate"       onclick="setBuildType('ewgate')">[2] Gate 10🪵</span>
+  <span class="bopt"      id="bopt-tc"           onclick="setBuildType('tc')">[3] Cabinet 10🪵5🪨</span>
+  <span class="bopt"      id="bopt-chest"        onclick="setBuildType('chest')">[4] Chest 5🪵</span>
+  <span class="bopt"      id="bopt-sleeping_bag" onclick="setBuildType('sleeping_bag')">[5] Bed 3🪵</span>
+  <span class="bopt"      id="bopt-workbench"    onclick="setBuildType('workbench')">[6] Workbench 20🪵5🪨</span>
+  <span class="bopt"      id="bopt-furnace"      onclick="setBuildType('furnace')">[7] Furnace 15🪨5🔩</span>
+  <span class="bopt"      id="bopt-monument"     onclick="setBuildType('monument')">[8] Monument 20🪵20🪨10🍎</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -699,10 +695,10 @@
 <div id="hint">
   WASD: move &nbsp; Tab/I: inventory + crafting &nbsp; C: crafting &nbsp; G: map<br>
   E: eat food/bandage &nbsp; F: door / drink water &nbsp; Q: drop 1 &nbsp; Shift+Q: drop all<br>
-  Build: Floor→Walls→Door→Cabinet→Bed→Workbench→Furnace &nbsp; R: rotate<br>
+  Build: Ext.Wall (upgradeable)→Gate→Cabinet→Chest→Bed→Workbench→Furnace &nbsp; R: rotate<br>
   ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
-  🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Explosive damages bases<br>
-  🔒 Enemy chests must be raided — fists barely dent walls
+  🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Raid with explosives only<br>
+  🔨 Hammer: highlight green=upgrade available &nbsp; click to upgrade Ext.Wall Wood→Stone→Iron
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
@@ -801,6 +797,7 @@ const BLDG_COST={ foundation:{wood:3}, wall:{wood:4}, door:{wood:2}, tc:{wood:10
 const FIST_BLDG_DMG=1, BAG_COOLDOWN=120000, MAX_BAGS=3, RESPAWN_DELAY=5000;
 const WALL_TIERS=[{hp:120},{hp:400,upg:{stone:5}},{hp:800,upg:{metal:5}}];
 const DOOR_TIERS=[{hp:80},{hp:250,upg:{stone:3}},{hp:600,upg:{metal:3}}];
+const EWWALL_TIERS=[{hp:200},{hp:600,upg:{stone:8}},{hp:1200,upg:{metal:8}}];
 const RES_DEF  ={
   tree:{maxHp:3,loot:'wood',hitR:22},
   rock:{maxHp:5,loot:'stone',hitR:18},
@@ -1107,7 +1104,7 @@ const others={}, playerData={}, resSpr={}, bldgSpr={}, lootSpr={}, resHitTime={}
 const sleepingData={}, sleepingSpr={};
 let activeChestId=null, activeFurnaceId=null, activeWorkbenchId=null, chatOpen=false;
 let monHoldStart=null, monHoldId=null;
-let selectedSlot=0, buildMode=false, buildType='foundation', buildRot=0, bPrev, ewwallAngle=0, bldgAngle=0;
+let selectedSlot=0, buildMode=false, buildType='ewwall', buildRot=0, bPrev, ewwallAngle=0, bldgAngle=0;
 let foodTimer=0, thirstTimer=0, lastSync=0, dayTimer=60000;
 let wolves=[], wolvesSpawned=false;
 let serverEpoch=null, lastAtkTime=0, lastHitFrom={}, lastDCUpdate=0;
@@ -1286,7 +1283,7 @@ class Game extends Phaser.Scene {
     this.cameras.main.setZoom(2.5);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
     this.hammerGfx=this.add.graphics().setDepth(98001);
-    this.hammerHintTxt=this.add.text(0,0,'🔨 Click: green=upgrade (costs met)  orange=can\'t afford  red=demolish',{fontSize:'8px',color:'#ffe',stroke:'#111',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.65)',padding:{x:5,y:3}}).setOrigin(0.5).setDepth(99002).setVisible(false);
+    this.hammerHintTxt=this.add.text(0,0,'🔨 Click to upgrade  Green=can afford  Orange=need more mats  Grey=max tier',{fontSize:'8px',color:'#ffe',stroke:'#111',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.65)',padding:{x:5,y:3}}).setOrigin(0.5).setDepth(99002).setVisible(false);
     this.wolfGfx=this.add.graphics().setDepth(50000);
 
     this.keys=this.input.keyboard.addKeys({
@@ -1558,7 +1555,7 @@ class Game extends Phaser.Scene {
   drawBldg(gfx,d){
     const {x,y,type,hp}=d, tier=d.tier||0;
     const mine=d.ownerId===PID||(state.teamId&&d.teamId===state.teamId);
-    const tData=type==='wall'?WALL_TIERS[tier]:type==='door'?DOOR_TIERS[tier]:null;
+    const tData=type==='wall'?WALL_TIERS[tier]:type==='door'?DOOR_TIERS[tier]:type==='ewwall'?EWWALL_TIERS[tier]:null;
     const maxHp=(tData?tData.hp:BLDG_HP[type])||100;
     const hpR=Math.max(0,hp/maxHp);
     gfx.clear();
@@ -1787,33 +1784,41 @@ class Game extends Phaser.Scene {
         gfx.strokePath();
       };
       if(type==='ewwall'){
+        const wTier=d.tier||0;
         const W=(lx,ly)=>({x:x+lx*aCos-ly*aSin,y:y+lx*aSin+ly*aCos});
-        // Dark background strip
-        gfx.fillStyle(0x1e0a02,1);
+        // Tier colours: 0=wood, 1=stone, 2=iron
+        const wallPal=[
+          {bg:0x1e0a02, a:0x5c3212, b:0x6e4020, rope:0x0e0602, rhi:0x4a2808, post:0x6a4018, postDk:0x3a2008, border:0x100802},
+          {bg:0x1a1a1a, a:0x606060, b:0x787878, rope:0x0c0c0c, rhi:0x484848, post:0x707070, postDk:0x404040, border:0x101010},
+          {bg:0x0c1420, a:0x2a4a6a, b:0x3a6080, rope:0x080e18, rhi:0x2a4060, post:0x4a7090, postDk:0x1a3050, border:0x0a1018},
+        ][wTier]||{bg:0x1e0a02,a:0x5c3212,b:0x6e4020,rope:0x0e0602,rhi:0x4a2808,post:0x6a4018,postDk:0x3a2008,border:0x100802};
+        gfx.fillStyle(wallPal.bg,1);
         gfx.fillPoints([W(-EHALF,-(EHW+0.5)),W(EHALF,-(EHW+0.5)),W(EHALF,EHW+0.5),W(-EHALF,EHW+0.5)],true);
-        // 10 log bodies — brighter alternating brown so logs are clearly visible
         for(let i=0;i<10;i++){
           const lx=-EHALF+(i+0.5)*8;
-          fillOBB(x+lx*aCos,y+lx*aSin,3.5,EHW-0.8,aCos,aSin,i%2?0x5c3212:0x6e4020);
+          fillOBB(x+lx*aCos,y+lx*aSin,3.5,EHW-0.8,aCos,aSin,i%2?wallPal.a:wallPal.b);
         }
-        // Rope bindings: thick dark line with lighter centre highlight
         for(const lx of[-20,0,20]){
           const rcx=x+lx*aCos, rcy=y+lx*aSin;
-          gfx.lineStyle(3.5,0x0e0602,0.95);
+          gfx.lineStyle(3.5,wallPal.rope,0.95);
           gfx.beginPath().moveTo(rcx-EHW*aSin,rcy+EHW*aCos).lineTo(rcx+EHW*aSin,rcy-EHW*aCos).strokePath();
-          gfx.lineStyle(1.5,0x4a2808,0.6);
+          gfx.lineStyle(1.5,wallPal.rhi,0.6);
           gfx.beginPath().moveTo(rcx-EHW*aSin,rcy+EHW*aCos).lineTo(rcx+EHW*aSin,rcy-EHW*aCos).strokePath();
         }
-        // Border
-        gfx.lineStyle(1.5,0x100802,1);
+        gfx.lineStyle(1.5,wallPal.border,1);
         const bc=[W(-EHALF,-(EHW+0.5)),W(EHALF,-(EHW+0.5)),W(EHALF,EHW+0.5),W(-EHALF,EHW+0.5)];
         gfx.beginPath().moveTo(bc[0].x,bc[0].y);bc.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
-        // End posts — match gate post style
+        // Tier badge dot on wall
+        if(wTier>0){
+          const bx=x, by=y; const dotC=wTier===2?0x4a90d0:0x909090;
+          gfx.fillStyle(0x000000,0.5).fillCircle(bx,by,5);
+          gfx.fillStyle(dotC,1).fillCircle(bx,by,3.5);
+        }
         const drawWallPost=(px,py)=>{
-          gfx.fillStyle(0x1e0a02,1).fillCircle(px,py,5.5);
-          gfx.lineStyle(1.5,0x100800,1).strokeCircle(px,py,5.5);
-          gfx.fillStyle(0x6a4018,1).fillCircle(px,py,3.5);
-          gfx.fillStyle(0x3a2008,1).fillCircle(px,py,1.5);
+          gfx.fillStyle(wallPal.bg,1).fillCircle(px,py,5.5);
+          gfx.lineStyle(1.5,wallPal.border,1).strokeCircle(px,py,5.5);
+          gfx.fillStyle(wallPal.post,1).fillCircle(px,py,3.5);
+          gfx.fillStyle(wallPal.postDk,1).fillCircle(px,py,1.5);
         };
         drawWallPost(x-EHALF*aCos,y-EHALF*aSin);
         drawWallPost(x+EHALF*aCos,y+EHALF*aSin);
@@ -2177,7 +2182,7 @@ class Game extends Phaser.Scene {
       if(dist2(d.x,d.y,px,py)>ATK_RNG+20)continue;
       if(Math.abs(ptr.worldX-d.x)>36||Math.abs(ptr.worldY-d.y)>36)continue;
       const tier=d.tier||0;
-      const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:null;
+      const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:d.type==='ewwall'?EWWALL_TIERS:null;
       if(tiers&&tier<2){
         const next=tiers[tier+1], upgCost=next.upg;
         if(invCanAfford(upgCost)){
@@ -2337,15 +2342,15 @@ class Game extends Phaser.Scene {
     const tool=getActiveTool();
     const heldItem=inv[selectedSlot];
     const isExplosive=heldItem?.type==='explosive'&&heldItem.count>0;
-    const dmg=isExplosive?EXP_BUILD_DMG:({msword:12,axe:8,sword:6,pick:5}[tool]||FIST_BLDG_DMG);
+    const dmg=isExplosive?EXP_BUILD_DMG:0;
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId===PID||(state.teamId&&d.teamId===state.teamId))continue;
       const maxRange=d.type==='chest'?32:ATK_RNG;
       if(dist2(d.x,d.y,px,py)>maxRange)continue;
       if(Math.abs(ptr.worldX-d.x)>28||Math.abs(ptr.worldY-d.y)>28)continue;
-      // Foundation requires explosives
-      if(d.type==='foundation'&&!isExplosive){this.pop(d.x,d.y-24,'💣 Use explosives to raid foundations!','#e67e22');lastBldgAtkTime=now;return;}
+      // All structures require explosives to raid
+      if(!isExplosive){this.pop(d.x,d.y-24,'💣 Need explosives to raid!','#e67e22');lastBldgAtkTime=now;return;}
       // Can't attack through walls
       if(pathBlocked(px,py,d.x,d.y)){this.pop(d.x,d.y-24,'Destroy the wall first!','#e67e22');lastBldgAtkTime=now;return;}
       lastBldgAtkTime=now;
@@ -3085,13 +3090,17 @@ class Game extends Phaser.Scene {
         const d=g._d;
         if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
         if(dist2(d.x,d.y,state.x,state.y)>ATK_RNG+30)continue;
-        const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:null;
+        const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:d.type==='ewwall'?EWWALL_TIERS:null;
         const tier=d.tier||0;
+        const isEww=d.type==='ewwall'||d.type==='ewgate';
+        const r=isEww?38:28;
         if(tiers&&tier<2){
           const col=invCanAfford(tiers[tier+1].upg)?0x2ecc71:0xf39c12;
-          this.hammerGfx.lineStyle(2.5,col,0.85).strokeCircle(d.x,d.y,28);
+          this.hammerGfx.lineStyle(2.5,col,0.85).strokeRect(d.x-r,d.y-10,r*2,20);
+        } else if(tiers){
+          this.hammerGfx.lineStyle(2.5,0x888888,0.6).strokeRect(d.x-r,d.y-10,r*2,20);
         } else {
-          this.hammerGfx.lineStyle(2.5,0xe74c3c,0.75).strokeCircle(d.x,d.y,28);
+          this.hammerGfx.lineStyle(2.5,0x2ecc71,0.7).strokeCircle(d.x,d.y,28);
         }
       }
     }
