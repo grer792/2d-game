@@ -738,6 +738,14 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           </div>
           <div class="card-info"><div class="card-name">Tic Tac Toe</div><div class="card-meta">Strategy <span class="card-dot"></span> Multiplayer</div></div>
         </div>
+        <div class="game-card" onclick="window._trackRecent&&window._trackRecent('snake');window.location.href='/game/snake'">
+          <div class="card-thumb" style="background:linear-gradient(135deg,#1a1230,#13131f);font-size:2.4rem;">🐍
+            <button class="card-fav-btn" data-fav-game="snake" onclick="event.stopPropagation();window._toggleFav&&window._toggleFav('snake')" title="Favorite">
+              <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </button>
+          </div>
+          <div class="card-info"><div class="card-name">Bonker Snake</div><div class="card-meta">Arcade <span class="card-dot"></span> Solo</div></div>
+        </div>
         <div class="game-card">
           <div class="card-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">ðŸŽï¸
             <div class="coming-overlay"><span class="coming-pill">Coming soon</span></div>
