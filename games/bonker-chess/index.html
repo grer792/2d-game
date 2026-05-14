@@ -240,6 +240,8 @@ import { Chess } from 'https://esm.run/chess.js@1.4.0';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getDatabase, ref, set, get, remove, update, onValue, onDisconnect, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
+import { getAuth, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 
 const fbApp = initializeApp({
   apiKey: 'AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU',
@@ -251,6 +253,22 @@ const fbApp = initializeApp({
   appId: '1:80712714092:web:4b15f70196f05942905549'
 });
 const db = getDatabase(fbApp);
+const auth = getAuth(fbApp);
+
+let myName = 'Guest';
+let opponentName = 'Guest';
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    try {
+      const snap = await get(ref(db, `profiles/${user.uid}/username`));
+      myName = snap.exists() ? snap.val() : 'Guest';
+    } catch { myName = 'Guest'; }
+  } else {
+    myName = 'Guest';
+  }
+  render();
+});
 
 const BASE = 'https://cdn.jsdelivr.net/gh/lichess-org/lila@master/public/piece/cburnett';
 const PM = {
@@ -379,14 +397,23 @@ function setModeBusy(b) {
 }
 
 function updateStrips() {
-  if (flipped) {
-    topName.textContent = aiMode ? 'You (White)' : onlineMode ? (playerColor === 'w' ? 'You' : 'Opponent') : 'White';
-    bottomName.textContent = aiMode ? 'Computer' : onlineMode ? (playerColor === 'b' ? 'You' : 'Opponent') : 'Black';
-    topAvatar.src = PM.wp; bottomAvatar.src = PM.bp;
+  // whiteLabel = name shown for the white side, blackLabel = name for the black side
+  let whiteLabel, blackLabel;
+  if (aiMode) {
+    whiteLabel = myName; blackLabel = 'Computer';
+  } else if (onlineMode) {
+    whiteLabel = playerColor === 'w' ? myName : opponentName;
+    blackLabel  = playerColor === 'b' ? myName : opponentName;
   } else {
-    topName.textContent = aiMode ? 'Computer' : onlineMode ? (playerColor === 'b' ? 'You' : 'Opponent') : 'Black';
-    bottomName.textContent = aiMode ? 'You (White)' : onlineMode ? (playerColor === 'w' ? 'You' : 'Opponent') : 'White';
-    topAvatar.src = PM.bp; bottomAvatar.src = PM.wp;
+    whiteLabel = myName; blackLabel = 'Guest';
+  }
+  // bottom of board = white when not flipped, black when flipped
+  if (flipped) {
+    topName.textContent = whiteLabel;   topAvatar.src = PM.wp;
+    bottomName.textContent = blackLabel; bottomAvatar.src = PM.bp;
+  } else {
+    topName.textContent = blackLabel;    topAvatar.src = PM.bp;
+    bottomName.textContent = whiteLabel; bottomAvatar.src = PM.wp;
   }
 }
 
@@ -600,6 +627,7 @@ function listenRoom(id) {
     const state = snap.val();
     roomState = state;
     if (!playerColor) playerColor = state.white === playerId ? 'w' : state.black === playerId ? 'b' : null;
+    opponentName = playerColor === 'w' ? (state.blackName || 'Guest') : (state.whiteName || 'Guest');
     applyRemote(state);
     if (onlineMode && state.white && state.black) { hideModeScreen(); showModeRoom(null); setModeBusy(false); }
     render();
@@ -611,8 +639,9 @@ async function createRoom() {
   const id = makeId();
   currentRoomId = id; playerColor = 'w'; onlineMode = true; aiMode = false;
   chess = new Chess(); lastMove = null; selected = null; legalTargets = []; flipped = false;
+  opponentName = 'Guest';
   roomState = { white: playerId, black: null, status: 'waiting' };
-  await set(rRef(id), { kind:'friend', white: playerId, black: null, fen: chess.fen(), pgn: '', turn: 'w', status: 'waiting', createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  await set(rRef(id), { kind:'friend', white: playerId, whiteName: myName, black: null, blackName: null, fen: chess.fen(), pgn: '', turn: 'w', status: 'waiting', createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
   onDisconnect(ref(db, `chessRooms/${id}/whiteOnline`)).remove();
   await set(ref(db, `chessRooms/${id}/whiteOnline`), true);
   setUrlRoom(id);
@@ -635,12 +664,13 @@ async function joinRoom(raw) {
   if (existing.black && existing.black !== playerId) { showModeRoom(null); setModeBusy(false); setModeNote('Room is full.'); return; }
   const updates = {};
   if (!existing.black || existing.black === playerId) {
-    if (existing.white !== playerId) { updates.black = playerId; updates.status = 'playing'; updates.updatedAt = serverTimestamp(); }
+    if (existing.white !== playerId) { updates.black = playerId; updates.blackName = myName; updates.status = 'playing'; updates.updatedAt = serverTimestamp(); }
   }
   if (Object.keys(updates).length) await update(rRef(id), updates);
   const state = { ...existing, ...updates };
   currentRoomId = id; onlineMode = true; aiMode = false;
   playerColor = state.black === playerId ? 'b' : state.white === playerId ? 'w' : null;
+  opponentName = playerColor === 'w' ? (state.blackName || 'Guest') : (state.whiteName || 'Guest');
   roomState = state; flipped = playerColor === 'b';
   applyRemote(state);
   hideModeScreen(); showModeRoom(null); setModeBusy(false); setModeNote('');
