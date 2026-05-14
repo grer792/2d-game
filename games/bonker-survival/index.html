@@ -274,7 +274,7 @@
     #inv-panel {
       display:none; position:fixed; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      background:rgba(12,12,14,0.97); border:1px solid #3a3a3a;
+      background:rgba(12,12,14,0.72); border:1px solid #3a3a3a; backdrop-filter:blur(6px);
       border-radius:8px; z-index:30; color:#ddd;
       max-height:92vh; overflow:hidden;
     }
@@ -354,7 +354,7 @@
     .inv-tab-body::-webkit-scrollbar-track { background:transparent; }
     .inv-tab-body::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:2px; }
     /* category bar — icon only */
-    .craft-cat-bar { display:flex; flex-wrap:wrap; gap:4px; padding-bottom:7px; margin-bottom:6px; border-bottom:1px solid #1e1e1e; position:sticky; top:0; background:rgba(12,12,14,0.98); padding-top:2px; z-index:1; }
+    .craft-cat-bar { display:flex; flex-wrap:wrap; gap:4px; padding-bottom:7px; margin-bottom:6px; border-bottom:1px solid #1e1e1e; position:sticky; top:0; background:rgba(12,12,14,0.82); backdrop-filter:blur(4px); padding-top:2px; z-index:1; }
     .craft-cat-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid #2a2a2a; border-radius:6px; background:#161616; cursor:pointer; font-family:inherit; transition:border-color .1s, background .1s; }
     .craft-cat-btn:hover { border-color:#555; background:#222; }
     .craft-cat-btn.active { border-color:#c09030; background:#241a06; }
