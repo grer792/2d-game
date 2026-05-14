@@ -368,7 +368,9 @@
     .craft-cell.can-craft:hover { background:#0d1e0d; }
     .craft-cell.icraft-sel { border-color:#f0c040 !important; background:#1a1400 !important; box-shadow:0 0 0 1px rgba(240,192,64,0.2); }
     .craft-cell.wb-needed { opacity:0.45; }
-    .craft-cell-icon { font-size:26px; line-height:1; }
+    .craft-cell-icon { font-size:26px; line-height:1; display:flex; align-items:center; justify-content:center; }
+    .craft-cell-icon svg { display:block; }
+    .inv-sel-box svg { display:block; max-width:44px; max-height:44px; }
     .craft-cell-badge { position:absolute; bottom:3px; right:5px; font-size:8px; color:#555; font-weight:700; line-height:1; }
     .craft-cell.can-craft .craft-cell-badge { color:#3a8a3a; }
     .craft-cell-wb { position:absolute; top:3px; right:4px; font-size:7px; color:#7a5a8a; font-weight:800; letter-spacing:-.3px; }
@@ -781,7 +783,7 @@ const ATK_RNG=80, FIST_DMG=8, AXE_DMG=15, SWORD_DMG=18, METAL_SWORD_DMG=30;
 const SYNC_MS=50, RES_N=55, HIT_CD=320;
 const FOOD_TICK=55000, THIRST_TICK=36000;
 const MAX_FOOD=10, MAX_THIRST=10, MAX_HP=100;
-const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=180;
+const WATER_RNG=65, MON_HOLD=90000, DAY_CYCLE=240000, TC_ZONE=110;
 // ── River (S-curve, top to bottom) ──────────────────────────────────────
 const RIVER_RADIUS=78, RIVER_CURRENT=130;
 const RIVER_PATH=[
@@ -852,6 +854,86 @@ const ITEM_ICON={
   armor_head:'⛑️', armor_chest:'🦺', armor_legs:'👖',
   chest:'📦', sleeping_bag:'🛏', tc:'🗄', workbench:'🪚', furnace:'🔥',
 };
+const ITEM_SVG={
+  chest:`<svg viewBox="-14 -14 28 28" width="38" height="38"><ellipse cx="1" cy="12" rx="14" ry="4" fill="rgba(0,0,0,.18)"/><rect x="-13" y="-13" width="26" height="26" fill="#9a5a2a"/><rect x="-13" y="-13" width="26" height="11" fill="#ba7040"/><rect x="-12" y="-12" width="24" height="4" fill="rgba(255,255,255,.08)"/><line x1="-13" y1="-2" x2="13" y2="-2" stroke="#5a3010" stroke-width="2"/><line x1="-4" y1="-2" x2="-4" y2="12" stroke="#5a3010" stroke-width="1" opacity=".3"/><line x1="4" y1="-2" x2="4" y2="12" stroke="#5a3010" stroke-width="1" opacity=".3"/><path d="M-13,-8L-13,-13L-8,-13" stroke="#8899aa" stroke-width="2.5" fill="none" stroke-linecap="square"/><path d="M13,-8L13,-13L8,-13" stroke="#8899aa" stroke-width="2.5" fill="none" stroke-linecap="square"/><path d="M-13,8L-13,13L-8,13" stroke="#8899aa" stroke-width="2.5" fill="none" stroke-linecap="square"/><path d="M13,8L13,13L8,13" stroke="#8899aa" stroke-width="2.5" fill="none" stroke-linecap="square"/><circle cx="0" cy="4" r="3.5" fill="#d4b040"/><circle cx="0" cy="4" r="3.5" stroke="#8a7020" stroke-width="1.5" fill="none"/><circle cx="0" cy="4" r="1.5" fill="#6a5010"/><rect x="-13" y="-13" width="26" height="26" fill="none" stroke="#5a3010" stroke-width="2"/></svg>`,
+  sleeping_bag:`<svg viewBox="-12 -15 24 30" width="32" height="38"><ellipse cx="1" cy="12" rx="11" ry="4" fill="rgba(0,0,0,.16)"/><rect x="-10" y="-13" width="20" height="26" rx="3" fill="#3a5878"/><circle cx="0" cy="-9" r="7.5" fill="#4a78a8"/><circle cx="0" cy="-9" r="5" fill="#101820" opacity=".8"/><line x1="-7" y1="-3" x2="-7" y2="10" stroke="#2a4060" stroke-width=".8" opacity=".65"/><line x1="7" y1="-3" x2="7" y2="10" stroke="#2a4060" stroke-width=".8" opacity=".65"/><rect x="-10" y="-13" width="20" height="26" rx="3" fill="none" stroke="#1a3050" stroke-width="1.5"/></svg>`,
+  tc:`<svg viewBox="-13 -14 26 28" width="34" height="36"><rect x="-11" y="-12" width="22" height="24" fill="#6a4a2a"/><rect x="-9" y="-12" width="7" height="13" fill="#d4a96a"/><rect x="2" y="-12" width="7" height="13" fill="#d4a96a"/><rect x="-9" y="-12" width="7" height="13" fill="none" stroke="#5a3820" stroke-width="1"/><rect x="2" y="-12" width="7" height="13" fill="none" stroke="#5a3820" stroke-width="1"/><rect x="-11" y="-12" width="22" height="24" fill="none" stroke="#5a3820" stroke-width="2"/><circle cx="0" cy="6" r="4" fill="#27ae60" opacity=".9"/></svg>`,
+  workbench:`<svg viewBox="-24 -14 48 38" width="42" height="32"><ellipse cx="0" cy="22" rx="22" ry="6" fill="rgba(0,0,0,.15)"/><rect x="-22" y="-10" width="44" height="16" fill="#7a5030"/><rect x="-20" y="-10" width="42" height="9" fill="#9a6a40"/><rect x="-18" y="6" width="6" height="18" fill="#6a4020"/><rect x="12" y="6" width="6" height="18" fill="#6a4020"/><rect x="-18" y="20" width="6" height="4" fill="#5a3010"/><rect x="12" y="20" width="6" height="4" fill="#5a3010"/><rect x="-22" y="-10" width="44" height="16" fill="none" stroke="#4a2808" stroke-width="2"/><line x1="-12" y1="-8" x2="-8" y2="-2" stroke="#9ba8b2" stroke-width="1.5" opacity=".8"/><polygon points="-14,-7 -10,-7 -12,-14" fill="#8090a0" opacity=".9"/><line x1="8" y1="-8" x2="12" y2="-2" stroke="#8b6030" stroke-width="1.5" opacity=".8"/><polygon points="6,-8 10,-8 12,-14" fill="#7080a0" opacity=".9"/></svg>`,
+  furnace:`<svg viewBox="-20 -30 40 52" width="28" height="38"><ellipse cx="1" cy="20" rx="19" ry="6" fill="rgba(0,0,0,.2)"/><rect x="-19" y="-16" width="38" height="34" fill="#484848"/><rect x="-17" y="-14" width="34" height="30" fill="#3a3a3a"/><rect x="-6" y="-28" width="12" height="14" fill="#404040"/><rect x="-6" y="-28" width="12" height="14" fill="none" stroke="#282828" stroke-width="1"/><rect x="-11" y="-2" width="22" height="18" fill="#1a1a1a"/><rect x="-9" y="0" width="18" height="14" fill="#e05010" opacity=".9"/><polygon points="-8,14 8,14 -2,-2" fill="#f07020" opacity=".8"/><polygon points="-5,14 5,14 1,2" fill="#f8a020" opacity=".7"/><polygon points="-2,12 2,12 0,4" fill="#ffd040" opacity=".5"/><circle cx="-14" cy="-10" r="2.5" fill="#606060"/><circle cx="14" cy="-10" r="2.5" fill="#606060"/><circle cx="-14" cy="12" r="2.5" fill="#606060"/><circle cx="14" cy="12" r="2.5" fill="#606060"/><rect x="-19" y="-16" width="38" height="34" fill="none" stroke="#282828" stroke-width="2"/></svg>`,
+};
+function getItemIcon(type){return ITEM_SVG[type]||(ITEM_ICON[type]||'?');}
+
+// ── Procedural Sound Effects (Web Audio API — no copyright) ──────────────────
+const SFX=(()=>{
+  let ctx=null;
+  const C=()=>{
+    if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==='suspended')ctx.resume();
+    return ctx;
+  };
+  // noise burst: bandpass filtered white noise
+  const _n=(c,dur,lo,hi,vol,atk=0.002,t=null)=>{
+    const n=t??c.currentTime, sz=Math.ceil(c.sampleRate*dur);
+    const buf=c.createBuffer(1,sz,c.sampleRate), da=buf.getChannelData(0);
+    for(let i=0;i<sz;i++)da[i]=Math.random()*2-1;
+    const src=c.createBufferSource(); src.buffer=buf;
+    const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=(lo+hi)/2; f.Q.value=0.8;
+    const g=c.createGain();
+    g.gain.setValueAtTime(0,n); g.gain.linearRampToValueAtTime(vol,n+atk); g.gain.exponentialRampToValueAtTime(0.0001,n+dur);
+    src.connect(f); f.connect(g); g.connect(c.destination);
+    src.start(n); src.stop(n+dur+0.05);
+  };
+  // tone: oscillator with optional frequency glide
+  const _t=(c,freq,dur,vol=0.15,type='sine',atk=0.005,t=null,fe=null)=>{
+    const n=t??c.currentTime;
+    const osc=c.createOscillator(); osc.type=type;
+    osc.frequency.setValueAtTime(freq,n);
+    if(fe!=null)osc.frequency.exponentialRampToValueAtTime(fe,n+dur);
+    const g=c.createGain();
+    g.gain.setValueAtTime(0,n); g.gain.linearRampToValueAtTime(vol,n+atk); g.gain.exponentialRampToValueAtTime(0.0001,n+dur);
+    osc.connect(g); g.connect(c.destination);
+    osc.start(n); osc.stop(n+dur+0.05);
+  };
+  return{
+    // resources
+    axeHit(){const c=C(),n=c.currentTime;_t(c,155,0.09,0.2,'sawtooth',0.002,n);_n(c,0.08,100,650,0.18,0.002,n);},
+    pickHit(){const c=C(),n=c.currentTime;_t(c,720,0.13,0.16,'sine',0.002,n);_n(c,0.07,400,1600,0.12,0.002,n);},
+    bushHit(){const c=C();_n(c,0.07,700,2600,0.08,0.005);},
+    gather(){const c=C(),n=c.currentTime;_t(c,880,0.1,0.12,'sine',0.005,n);_t(c,1100,0.12,0.1,'sine',0.005,n+0.08);},
+    // combat
+    swing(){const c=C(),n=c.currentTime;_n(c,0.13,600,4500,0.11,0.001,n);_t(c,200,0.06,0.06,'sawtooth',0.001,n,70);},
+    hit(){const c=C(),n=c.currentTime;_t(c,155,0.07,0.24,'sawtooth',0.001,n);_n(c,0.06,200,2200,0.18,0.001,n);},
+    hurt(){const c=C(),n=c.currentTime;_n(c,0.12,300,5500,0.26,0.001,n);_t(c,260,0.12,0.14,'sawtooth',0.001,n,95);},
+    death(){const c=C(),n=c.currentTime;_t(c,310,0.75,0.2,'sine',0.01,n,65);_t(c,185,0.75,0.12,'sine',0.01,n,38);_n(c,0.4,70,900,0.1,0.05,n);},
+    wolfAttack(){const c=C(),n=c.currentTime;_t(c,75,0.17,0.22,'sawtooth',0.005,n);_n(c,0.14,45,290,0.2,0.005,n);},
+    wolfDie(){const c=C(),n=c.currentTime;_t(c,580,0.15,0.18,'sawtooth',0.003,n,260);_n(c,0.1,180,950,0.12,0.003,n+0.05);},
+    wolfWarn(){const c=C(),n=c.currentTime;for(let i=0;i<3;i++){_t(c,185-i*15,0.17,0.14,'sawtooth',0.01,n+i*0.22);_n(c,0.13,45,260,0.09,0.01,n+i*0.22);}},
+    arrowFire(){const c=C(),n=c.currentTime;_n(c,0.14,1100,5500,0.1,0.001,n);_t(c,280,0.07,0.09,'sawtooth',0.001,n,65);},
+    crossbowFire(){const c=C(),n=c.currentTime;_t(c,215,0.07,0.2,'sawtooth',0.001,n);_n(c,0.1,700,4500,0.13,0.001,n);},
+    projHit(){const c=C(),n=c.currentTime;_n(c,0.07,300,2200,0.14,0.001,n);_t(c,270,0.05,0.08,'sawtooth',0.001,n);},
+    explosion(){const c=C(),n=c.currentTime;_t(c,52,0.55,0.34,'sawtooth',0.003,n,20);_t(c,78,0.42,0.24,'sine',0.003,n,26);_n(c,0.5,28,620,0.4,0.003,n);_n(c,0.2,900,7000,0.19,0.003,n);},
+    // building
+    place(){const c=C(),n=c.currentTime;_t(c,145,0.11,0.22,'sawtooth',0.002,n);_n(c,0.09,90,520,0.2,0.002,n);},
+    upgrade(){const c=C(),n=c.currentTime;_t(c,523,0.12,0.14,'sine',0.005,n);_t(c,659,0.12,0.14,'sine',0.005,n+0.09);_t(c,784,0.2,0.15,'sine',0.005,n+0.18);},
+    demolish(){const c=C(),n=c.currentTime;_n(c,0.23,75,1300,0.27,0.002,n);_t(c,165,0.19,0.11,'sawtooth',0.002,n,50);},
+    chestOpen(){const c=C(),n=c.currentTime;
+      const osc=c.createOscillator();osc.type='sine';
+      osc.frequency.setValueAtTime(175,n);osc.frequency.linearRampToValueAtTime(310,n+0.1);osc.frequency.linearRampToValueAtTime(155,n+0.22);
+      const g=c.createGain();g.gain.setValueAtTime(0.11,n);g.gain.exponentialRampToValueAtTime(0.0001,n+0.25);
+      osc.connect(g);g.connect(c.destination);osc.start(n);osc.stop(n+0.28);
+      _n(c,0.12,140,950,0.06,0.01,n);},
+    doorToggle(){const c=C(),n=c.currentTime;_n(c,0.12,180,950,0.07,0.008,n);_t(c,250,0.12,0.07,'sine',0.008,n,155);},
+    // items & ui
+    craft(){const c=C(),n=c.currentTime;_t(c,660,0.18,0.13,'sine',0.005,n);_t(c,880,0.2,0.11,'sine',0.005,n+0.08);},
+    pickup(){const c=C();_t(c,1100,0.1,0.1,'sine',0.003);},
+    // survival
+    eat(){const c=C(),n=c.currentTime;_n(c,0.07,380,1900,0.1,0.005,n);_n(c,0.05,280,1100,0.07,0.008,n+0.06);},
+    drink(){const c=C(),n=c.currentTime;_t(c,920,0.1,0.1,'sine',0.003,n,540);_t(c,1200,0.09,0.07,'sine',0.003,n+0.08,680);},
+    bandage(){const c=C(),n=c.currentTime;_n(c,0.22,380,2100,0.08,0.02,n);_t(c,440,0.22,0.1,'sine',0.02,n,660);},
+    heal(){const c=C(),n=c.currentTime;_t(c,660,0.14,0.06,'sine',0.01,n);_t(c,880,0.14,0.04,'sine',0.01,n+0.09);},
+  };
+})();
+
 const TOOLS=['axe','pick','sword','msword','hammer','bow','crossbow'];
 const RESOURCES=['wood','stone','metal','food','iron_ore','coal','sulfur','explosive','arrow','bolt','armor_head','armor_chest','armor_legs','bandage','chest','sleeping_bag','tc','workbench','furnace'];
 const STACK_MAX={food:8,wood:50,stone:50,metal:30,iron_ore:20,coal:20,sulfur:20,explosive:5,arrow:30,bolt:30,bandage:10,axe:1,pick:1,sword:1,msword:1,hammer:1,bow:1,crossbow:1,armor_head:1,armor_chest:1,armor_legs:1,chest:1,sleeping_bag:1,tc:1,workbench:1,furnace:1};
@@ -1681,15 +1763,15 @@ class Game extends Phaser.Scene {
       const cc=mine?0x6a4a2a:0x3a2808, dc=mine?0xd4a96a:0x8b6042, ddk=mine?0x5a3820:0x1a0a00;
       const ang=(d.angle||0)*Math.PI/180, aC=Math.cos(ang), aS=Math.sin(ang);
       const W=(lx,ly)=>({x:x+lx*aC-ly*aS,y:y+lx*aS+ly*aC});
-      gfx.fillStyle(cc,1).fillPoints([W(-16,-17),W(16,-17),W(16,17),W(-16,17)],true);
-      gfx.fillStyle(dc,1).fillPoints([W(-13,-17),W(-2,-17),W(-2,1),W(-13,1)],true);
-      gfx.fillStyle(dc,1).fillPoints([W(2,-17),W(13,-17),W(13,1),W(2,1)],true);
+      gfx.fillStyle(cc,1).fillPoints([W(-11,-12),W(11,-12),W(11,12),W(-11,12)],true);
+      gfx.fillStyle(dc,1).fillPoints([W(-9,-12),W(-2,-12),W(-2,1),W(-9,1)],true);
+      gfx.fillStyle(dc,1).fillPoints([W(2,-12),W(9,-12),W(9,1),W(2,1)],true);
       gfx.lineStyle(1,ddk,1);
-      let dr=[W(-13,-17),W(-2,-17),W(-2,1),W(-13,1)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
-      dr=[W(2,-17),W(13,-17),W(13,1),W(2,1)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      let dr=[W(-9,-12),W(-2,-12),W(-2,1),W(-9,1)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      dr=[W(2,-12),W(9,-12),W(9,1),W(2,1)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
       gfx.lineStyle(2,ddk,1);
-      dr=[W(-16,-17),W(16,-17),W(16,17),W(-16,17)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
-      const ind=W(0,9); gfx.fillStyle(mine?0x27ae60:0xe74c3c,0.9).fillCircle(ind.x,ind.y,5);
+      dr=[W(-11,-12),W(11,-12),W(11,12),W(-11,12)];gfx.beginPath().moveTo(dr[0].x,dr[0].y);dr.slice(1).forEach(p=>gfx.lineTo(p.x,p.y));gfx.closePath().strokePath();
+      const ind=W(0,6); gfx.fillStyle(mine?0x27ae60:0xe74c3c,0.9).fillCircle(ind.x,ind.y,4);
       if(mine)gfx.lineStyle(1,0x27ae60,0.22).strokeCircle(x,y,TC_ZONE);
     } else if(type==='campfire'){
       for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2;gfx.fillStyle(0x8796a0,1).fillCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5);gfx.lineStyle(1,0x4a5560,1).strokeCircle(x+Math.cos(a)*14,y+Math.sin(a)*14,5.5);}
@@ -2116,6 +2198,7 @@ class Game extends Phaser.Scene {
       const finalDmg=Math.max(1,Math.round(rawDelta*(1-armorPct)));
       state.hp=Math.max(0,state.hp-finalDmg);
       sc.updateHUD(); sc.redrawMe(); sc.flashDamage();
+      SFX.hurt();
       sc.pop(state.x,state.y-24,'-'+finalDmg+(armorPct>0?' 🛡':''),'#e74c3c');
       if(state.hp<=0)sc.handleDeath('⚔️ Killed by a player');
     });
@@ -2238,6 +2321,7 @@ class Game extends Phaser.Scene {
         for(const[k,v]of Object.entries(upgCost))invRemove(k,v);
         update(sref('buildings/'+id),{tier:tier+1,hp:next.hp});
         const mat=tier===0?'Stone':'Iron';
+        SFX.upgrade();
         this.pop(d.x,d.y-32,'→ '+mat,'#2ecc71');
       } else {
         const needed=Object.entries(upgCost).map(([k,v])=>v+ITEM_ICON[k]).join(' ');
@@ -2267,6 +2351,7 @@ class Game extends Phaser.Scene {
     for(const[res,amt]of Object.entries(cost)){const r2=Math.max(1,Math.floor(amt*0.5));bag[res]=(bag[res]||0)+r2;hasDrop=true;}
     if(hasDrop)set(sref('loot/demo_'+id),bag);
     remove(sref('buildings/'+id));
+    SFX.demolish();
     this.pop(d.x,d.y-28,'Demolished','#aaa');
   }
 
@@ -2285,7 +2370,7 @@ class Game extends Phaser.Scene {
       state.score+=5; this.updateHUD();
       spr.g.destroy(); if(spr.txt)spr.txt.destroy();
       delete lootSpr[id]; remove(sref('loot/'+id));
-      if(picked.length)this.pop(d.x,d.y-30,'Looted! '+picked.join(' '),'#f0c040');
+      if(picked.length){SFX.pickup();this.pop(d.x,d.y-30,'Looted! '+picked.join(' '),'#f0c040');}
       return true;
     }
     return false;
@@ -2307,6 +2392,7 @@ class Game extends Phaser.Scene {
       const cd=wrongTool?HIT_CD*2.5:HIT_CD;
       if(resHitTime[id]&&now-resHitTime[id]<cd)continue;
       resHitTime[id]=now;
+      SFX[d.type==='tree'?'axeHit':d.type==='bush'?'bushHit':'pickHit']();
       const hp=d.hp??1;
       if(hp-1<=0){
         const loot=RES_DEF[d.type].loot;
@@ -2316,6 +2402,7 @@ class Game extends Phaser.Scene {
         this.updateHUD();
         g.destroy(); delete resSpr[id]; delete resHitTime[id];
         remove(sref('resources/'+id));
+        SFX.gather();
         this.pop(d.x,d.y-44,'+'+amt+' '+ITEM_ICON[loot],'#a8d8a8');
         // Respawn after 30-60s
         const _rx=d.x,_ry=d.y,_rt=d.type,_def=RES_DEF[_rt];
@@ -2348,6 +2435,7 @@ class Game extends Phaser.Scene {
       // Write HP directly (works even if target is tabbed out / disconnecting)
       update(sref('players/'+id),{hp:newHp,_hitBy:PID,_hitT:now});
       state.score+=5;this.updateHUD();
+      SFX.swing();SFX.hit();
       this.pop(od.x,od.y-24,'-'+dmg,'#e74c3c');
       return true;
     }
@@ -2387,6 +2475,7 @@ class Game extends Phaser.Scene {
         this.pop(d.x,d.y-28,'🔒 Raid the base to loot!','#e74c3c'); return true;
       }
       activeChestId=id;
+      SFX.chestOpen();
       if(document.getElementById('inv-panel').style.display!=='block'){
         renderInvPanel(); document.getElementById('inv-panel').style.display='block'; setToolbarInvMode(true);
       } else { renderInvPanel(); }
@@ -2416,7 +2505,7 @@ class Game extends Phaser.Scene {
       // Can't attack through walls
       if(pathBlocked(px,py,d.x,d.y)){this.pop(d.x,d.y-24,'Destroy the wall first!','#e67e22');lastBldgAtkTime=now;return;}
       lastBldgAtkTime=now;
-      if(isExplosive){ invRemove('explosive',1); this.pop(d.x,d.y-20,'💥 BOOM!','#e67e22'); }
+      if(isExplosive){ invRemove('explosive',1); SFX.explosion(); this.pop(d.x,d.y-20,'💥 BOOM!','#e67e22'); }
       const newHp=d.hp-dmg;
       if(newHp<=0){
         if(d.type==='chest'){
@@ -2463,6 +2552,7 @@ class Game extends Phaser.Scene {
     state.score+=3; this.updateHUD();
     const id=t[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
     set(sref('buildings/'+id),{x:placeX,y:placeY,type:t,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[t],placedAt:Date.now(),...extra});
+    SFX.place();
     if(t==='tc')this.pop(placeX,placeY-40,'Cabinet placed!','#27ae60');
     if(t==='sleeping_bag')this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');
     return true;
@@ -2539,6 +2629,7 @@ class Game extends Phaser.Scene {
     state.score+=3; this.updateHUD();
     const id=buildType[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
     set(sref('buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],placedAt:Date.now(),...extra});
+    SFX.place();
     if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed!','#27ae60');
     if(buildType==='monument')this.pop(placeX,placeY-40,'Monument! Stand on it 90s to win!','#f0c040');
     if(buildType==='sleeping_bag'){this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');}
@@ -2562,6 +2653,11 @@ class Game extends Phaser.Scene {
       if(d.type==='door'&&(d.open||d.ownerId===PID||(state.teamId&&d.teamId===state.teamId)))continue;
       if(d.type==='chest'){
         const p2=obbPush(px,py,d.x,d.y,d.angle||0,13,13,P_RAD);
+        if(p2){hitWall=true;px+=p2.dx;py+=p2.dy;const dot=vx*p2.nx+vy*p2.ny;if(dot<0){vx-=dot*p2.nx;vy-=dot*p2.ny;}}
+        continue;
+      }
+      if(d.type==='tc'){
+        const p2=obbPush(px,py,d.x,d.y,d.angle||0,11,12,P_RAD);
         if(p2){hitWall=true;px+=p2.dx;py+=p2.dy;const dot=vx*p2.nx+vy*p2.ny;if(dot<0){vx-=dot*p2.nx;vy-=dot*p2.ny;}}
         continue;
       }
@@ -2627,6 +2723,7 @@ class Game extends Phaser.Scene {
   handleDeath(cause='Unknown cause'){
     if(isDead)return;
     isDead=true;
+    SFX.death();
     // Cancel sleeping disconnect handler so dead players don't appear sleeping
     try{onDisconnect(sref('sleeping/'+PID)).remove();}catch(e){}
     remove(sref('sleeping/'+PID));
@@ -2663,6 +2760,7 @@ class Game extends Phaser.Scene {
       wolves.push({x,y,hp:WOLF_HP,maxHp:WOLF_HP,atkTimer:0,alive:true});
     }
     wolvesSpawned=true;
+    SFX.wolfWarn();
     this.pop(state.x,state.y-50,'🐺 Wolves are coming!','#c0392b');
     const wd={}; wolves.forEach((w,i)=>{wd[i]={x:Math.round(w.x),y:Math.round(w.y),hp:w.hp,maxHp:w.maxHp};});
     set(sref('wolves/'+PID),wd);
@@ -2718,6 +2816,7 @@ class Game extends Phaser.Scene {
         const bd=g._d; if(!bd)continue;
         if(bd.type!=='wall'&&bd.type!=='door'&&bd.type!=='chest'&&bd.type!=='tc')continue;
         if(bd.type==='door'&&bd.open)continue;
+        if(bd.type==='tc'){const p2=obbPush(w.x,w.y,bd.x,bd.y,bd.angle||0,11,12,15);if(p2){w.x+=p2.dx;w.y+=p2.dy;}continue;}
         const rot=bd.rot||0;
         const hw=bd.type==='wall'?(rot?4:30):(rot?20:30), hh=bd.type==='wall'?(rot?30:4):(rot?30:20);
         const nx=Math.max(bd.x-hw,Math.min(w.x,bd.x+hw)),ny=Math.max(bd.y-hh,Math.min(w.y,bd.y+hh));
@@ -2743,6 +2842,7 @@ class Game extends Phaser.Scene {
         w.atkTimer=0;
         state.hp=Math.max(0,state.hp-WOLF_DMG);
         this.updateHUD();this.redrawMe();this.flashDamage();
+        SFX.wolfAttack();SFX.hurt();
         this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
         if(state.hp<=0)this.handleDeath('🐺 Killed by a wolf');
       }
@@ -2758,6 +2858,7 @@ class Game extends Phaser.Scene {
           _rwAtkTime[key]=now;
           state.hp=Math.max(0,state.hp-WOLF_DMG);
           this.updateHUD();this.redrawMe();this.flashDamage();
+          SFX.wolfAttack();SFX.hurt();
           this.pop(state.x,state.y-24,'-'+WOLF_DMG+' 🐺','#c0392b');
           if(state.hp<=0)this.handleDeath('🐺 Killed by a wolf');
         }
@@ -2781,8 +2882,9 @@ class Game extends Phaser.Scene {
       if(!w.alive)continue;
       if(dist2(ptr.worldX,ptr.worldY,w.x,w.y)>22)continue;
       if(dist2(state.x,state.y,w.x,w.y)>ATK_RNG+10)continue;
+      SFX.swing();SFX.hit();
       w.hp-=dmg; this.pop(w.x,w.y-22,'-'+dmg,'#f0c040');
-      if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
+      if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();SFX.wolfDie();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
       return true;
     }
     // Hit remote wolves — push hit event so owner processes HP reduction
@@ -2792,6 +2894,7 @@ class Game extends Phaser.Scene {
         if(dist2(ptr.worldX,ptr.worldY,w.x,w.y)>22)continue;
         if(dist2(state.x,state.y,w.x,w.y)>ATK_RNG+10)continue;
         push(sref('wolf_hits/'+ownerPid),{wi:i,dmg,t:Date.now()});
+        SFX.swing();SFX.hit();
         this.pop(w.x,w.y-22,'-'+dmg,'#f0c040');
         return true;
       }
@@ -2818,6 +2921,7 @@ class Game extends Phaser.Scene {
     let dx=ptr.worldX-px,dy=ptr.worldY-py;
     const dlen=Math.sqrt(dx*dx+dy*dy);
     if(dlen<1){dx=state.dirX;dy=state.dirY;}else{dx/=dlen;dy/=dlen;}
+    isCrossbow?SFX.crossbowFire():SFX.arrowFire();
     projectiles.push({x:px,y:py,dirX:dx,dirY:dy,
       speed:isCrossbow?360:280,
       maxDist:isCrossbow?CROSSBOW_RNG*1.4:BOW_RNG*1.4,
@@ -2861,6 +2965,7 @@ class Game extends Phaser.Scene {
           const now=Date.now();
           set(sref('players/'+id+'/hits/'+now),{dmg:p.dmg,from:PID});
           state.score+=5;this.updateHUD();
+          SFX.projHit();
           this.pop(o.rx,o.ry-24,'-'+p.dmg,'#e74c3c');
           projectiles.splice(i,1);removed=true;break;
         }
@@ -2884,8 +2989,9 @@ class Game extends Phaser.Scene {
         if(!w.alive)continue;
         if(dist2(p.x,p.y,w.x,w.y)<14){
           w.hp-=p.dmg;
+          SFX.projHit();
           this.pop(w.x,w.y-22,'-'+p.dmg,'#f0c040');
-          if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
+          if(w.hp<=0){w.alive=false;state.score+=10;invAdd('food',2);this.updateHUD();SFX.wolfDie();this.pop(w.x,w.y-34,'🐺 killed! +2🍎','#f0c040');}
           projectiles.splice(i,1);removed=true;break;
         }
       }
@@ -3065,6 +3171,7 @@ class Game extends Phaser.Scene {
         if(dist2(state.x,state.y,d.x,d.y)>(d.type==='ewgate'?65:55))continue;
         if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId)){nearEnemyDoor=true;continue;}
         update(sref('buildings/'+id),{open:!d.open});
+        SFX.doorToggle();
         this.pop(state.x,state.y-30,d.open?(d.type==='ewgate'?'Gate closed':'Door closed'):(d.type==='ewgate'?'Gate opened':'Door opened'),'#f0c040');
         doorToggled=true; break;
       }
@@ -3072,8 +3179,8 @@ class Game extends Phaser.Scene {
         if(nearEnemyDoor){this.pop(state.x,state.y-30,"🔒 Not your door!",'#e74c3c');}
         else{
           let drank=false;
-          for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
-          if(!drank&&isInRiver(state.x,state.y)){if(state.thirst<MAX_THIRST){state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank from river!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;}
+          for(const w of WATER_SRCS){ if(dist2(state.x,state.y,w.x,w.y)<WATER_RNG){if(state.thirst<MAX_THIRST){SFX.drink();state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank water!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;break;} }
+          if(!drank&&isInRiver(state.x,state.y)){if(state.thirst<MAX_THIRST){SFX.drink();state.thirst=MAX_THIRST;this.updateHUD();this.pop(state.x,state.y-30,'💧 Drank from river!','#3498db');}else this.pop(state.x,state.y-30,'Not thirsty','#555');drank=true;}
           if(!drank)this.pop(state.x,state.y-30,'Find a pond first!','#555');
         }
       }
@@ -3084,10 +3191,10 @@ class Game extends Phaser.Scene {
       const slot=inv[selectedSlot];
       if(slot?.type==='bandage'&&slot.count>0){
         if(state.hp>=MAX_HP){this.pop(state.x,state.y-30,'Already full HP','#555');}
-        else{invRemove('bandage',1);state.hp=Math.min(MAX_HP,state.hp+25);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-30,'+25 ❤️ Bandaged!','#2ecc71');}
+        else{SFX.bandage();invRemove('bandage',1);state.hp=Math.min(MAX_HP,state.hp+25);this.updateHUD();this.redrawMe();this.pop(state.x,state.y-30,'+25 ❤️ Bandaged!','#2ecc71');}
       } else if(slot?.type==='food'&&slot.count>0){
         if(state.food_meter>=MAX_FOOD){this.pop(state.x,state.y-30,'Not hungry','#555');}
-        else{invRemove('food',1);state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);this.updateHUD();this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');}
+        else{SFX.eat();invRemove('food',1);state.food_meter=Math.min(MAX_FOOD,state.food_meter+3);this.updateHUD();this.pop(state.x,state.y-30,'+3 🍎 Ate food!','#2ecc71');}
       } else this.pop(state.x,state.y-30,'No food/bandage in slot!','#555');
     }
 
@@ -3185,7 +3292,7 @@ class Game extends Phaser.Scene {
         const col=(isBlocked||!inRange)?0xe74c3c:0x4ade80;
         const br=bldgAngle*Math.PI/180, bC=Math.cos(br), bS=Math.sin(br);
         const BW=(lx,ly)=>({x:wx+lx*bC-ly*bS, y:wy+lx*bS+ly*bC});
-        const SZ={chest:{hw:14,hh:14},sleeping_bag:{hw:16,hh:10},tc:{hw:17,hh:17},workbench:{hw:23,hh:9},furnace:{hw:19,hh:17}};
+        const SZ={chest:{hw:14,hh:14},sleeping_bag:{hw:16,hh:10},tc:{hw:11,hh:12},workbench:{hw:23,hh:9},furnace:{hw:19,hh:17}};
         const {hw,hh}=SZ[placeT]||{hw:14,hh:14};
         if(placeT==='furnace'){
           bPrev.fillStyle(col,0.25).fillRect(wx-hw,wy-hh,hw*2,hh*2);
@@ -3206,7 +3313,7 @@ class Game extends Phaser.Scene {
     this.hammerHintTxt.setVisible(hammerActive);
     if(hammerActive){
       this.hammerHintTxt.setPosition(state.x,state.y-52);
-      const SZ={tc:{hw:18,hh:18},chest:{hw:14,hh:14},workbench:{hw:24,hh:10},sleeping_bag:{hw:17,hh:11},furnace:{hw:20,hh:18}};
+      const SZ={tc:{hw:11,hh:12},chest:{hw:14,hh:14},workbench:{hw:24,hh:10},sleeping_bag:{hw:17,hh:11},furnace:{hw:20,hh:18}};
       for(const[,g] of Object.entries(bldgSpr)){
         const d=g._d;
         if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
@@ -3566,7 +3673,7 @@ function renderInvCraftList(){
     const wbMark=r.wb?`<span class="craft-cell-wb">WB</span>`:'';
     const checkMark=owned?`<span class="craft-cell-check">✓</span>`:'';
     const type=r.wb?'wb':'basic';
-    return`<div class="${cls}" onclick="selectInvCraft('${r.id}','${type}')" title="${r.name}">${checkMark}<span class="craft-cell-icon">${ITEM_ICON[r.id]||'?'}</span>${badge}${wbMark}</div>`;
+    return`<div class="${cls}" onclick="selectInvCraft('${r.id}','${type}')" title="${r.name}">${checkMark}<span class="craft-cell-icon">${getItemIcon(r.id)}</span>${badge}${wbMark}</div>`;
   }).join('');
 
   const el=document.getElementById('inv-craft-list');
@@ -3581,7 +3688,7 @@ window.selectInvCraft=function(id,type){
   const nearWB=!!activeWorkbenchId;
   const isTool=TOOLS.includes(id); const owned=isTool&&invHasTool(id);
   const locked=type==='wb'&&!nearWB;
-  document.getElementById('inv-sel-em').textContent=ITEM_ICON[id]||'?';
+  const _sie=document.getElementById('inv-sel-em');ITEM_SVG[id]?(_sie.innerHTML=ITEM_SVG[id]):(_sie.textContent=ITEM_ICON[id]||'?');
   document.getElementById('inv-sel-ct').textContent='';
   // Cost pills below the name
   const costPills=Object.entries(r.cost).map(([k,v])=>{
@@ -3612,6 +3719,7 @@ window.doInvCraft=function(){
     for(const[k,v]of Object.entries(r.cost))invRemove(k,v);
     invAdd(_selCraftId, r.count||1);
   }
+  SFX.craft();
   window._scene&&window._scene.pop(state.x,state.y-34,r.name+' crafted!','#2ecc71');
   renderInvPanel();
 };
@@ -3620,7 +3728,7 @@ function updateInvSelPanel(){
   if(_selCraftId) return;
   const slot=invPickedSlot;
   const item=slot!==null?inv[slot]:null;
-  document.getElementById('inv-sel-em').textContent=item?(ITEM_ICON[item.type]||'?'):'';
+  const _sie2=document.getElementById('inv-sel-em'),_sit=item?.type;ITEM_SVG[_sit]?(_sie2.innerHTML=ITEM_SVG[_sit]):(_sie2.textContent=item?(ITEM_ICON[_sit]||'?'):'');
   document.getElementById('inv-sel-ct').textContent=item&&item.count>1?'x'+item.count:'';
   document.getElementById('inv-sel-nm').textContent=item?item.type:'';
   document.getElementById('inv-act-craft').style.display='none';
@@ -3829,6 +3937,7 @@ window.craftWB=function(id){
   for(const[k,v]of Object.entries(r.cost))invRemove(k,v);
   const id2=r.id2||r.id, cnt=r.count||1;
   invAdd(id2,cnt);
+  SFX.craft();
   window._scene&&window._scene.pop(state.x,state.y-34,(ITEM_ICON[id2]||id2)+' crafted!','#3498db');
   renderWorkbenchPanel();
 };
