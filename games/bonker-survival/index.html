@@ -500,14 +500,8 @@
 </div>
 
 <div id="build-sub">
-  <span class="bopt bsel" id="bopt-ewwall"       onclick="setBuildType('ewwall')">[1] Ext. Wall 8🪵</span>
-  <span class="bopt"      id="bopt-ewgate"       onclick="setBuildType('ewgate')">[2] Gate 10🪵</span>
-  <span class="bopt"      id="bopt-tc"           onclick="setBuildType('tc')">[3] Cabinet 10🪵5🪨</span>
-  <span class="bopt"      id="bopt-chest"        onclick="setBuildType('chest')">[4] Chest 5🪵</span>
-  <span class="bopt"      id="bopt-sleeping_bag" onclick="setBuildType('sleeping_bag')">[5] Bed 3🪵</span>
-  <span class="bopt"      id="bopt-workbench"    onclick="setBuildType('workbench')">[6] Workbench 20🪵5🪨</span>
-  <span class="bopt"      id="bopt-furnace"      onclick="setBuildType('furnace')">[7] Furnace 15🪨5🔩</span>
-  <span class="bopt"      id="bopt-monument"     onclick="setBuildType('monument')">[8] Monument 20🪵20🪨10🍎</span>
+  <span class="bopt bsel" id="bopt-ewwall" onclick="setBuildType('ewwall')">[1] Ext. Wall 8🪵</span>
+  <span class="bopt"      id="bopt-ewgate" onclick="setBuildType('ewgate')">[2] Gate 10🪵</span>
 </div>
 
 <div id="team-panel" class="panel">
@@ -695,7 +689,7 @@
 <div id="hint">
   WASD: move &nbsp; Tab/I: inventory + crafting &nbsp; C: crafting &nbsp; G: map<br>
   E: eat food/bandage &nbsp; F: door / drink water &nbsp; Q: drop 1 &nbsp; Shift+Q: drop all<br>
-  Build: Ext.Wall (upgradeable)→Gate→Cabinet→Chest→Bed→Workbench→Furnace &nbsp; R: rotate<br>
+  Build mode: Ext.Wall (upgradeable) + Gate &nbsp; R: rotate &nbsp; Craft then hold Chest/Bed/Cabinet/Workbench/Furnace → click to place<br>
   ⛏ Iron/Coal/Sulfur nodes need a pick &nbsp; 🔥 Furnace smelts iron→metal<br>
   🔧 Workbench: armor, bow, crossbow, explosive &nbsp; 💣 Raid with explosives only<br>
   🔨 Hammer: highlight green=upgrade available &nbsp; click to upgrade Ext.Wall Wood→Stone→Iron
@@ -816,13 +810,19 @@ const RES_DROP ={
   coal:()=>2+Math.floor(Math.random()*3),
   sulfur:()=>1+Math.floor(Math.random()*3),
 };
+const PLACEABLE_BLDG=['chest','sleeping_bag','tc','workbench','furnace'];
 const RECIPES  =[
-  {id:'axe',     name:'🪓 Stone Axe',   cost:{wood:5,stone:3}},
-  {id:'pick',    name:'⛏ Stone Pick',  cost:{wood:3,stone:5}},
-  {id:'sword',   name:'⚔️ Stone Sword', cost:{wood:5,stone:5}},
-  {id:'msword',  name:'🗡️ Metal Sword', cost:{metal:8,stone:2}},
-  {id:'hammer',  name:'🔨 Hammer',      cost:{wood:2}},
-  {id:'bandage', name:'🩹 Bandage',     cost:{wood:2,food:1}},
+  {id:'axe',         name:'🪓 Stone Axe',    cost:{wood:5,stone:3}},
+  {id:'pick',        name:'⛏ Stone Pick',   cost:{wood:3,stone:5}},
+  {id:'sword',       name:'⚔️ Stone Sword',  cost:{wood:5,stone:5}},
+  {id:'msword',      name:'🗡️ Metal Sword',  cost:{metal:8,stone:2}},
+  {id:'hammer',      name:'🔨 Hammer',       cost:{wood:2}},
+  {id:'bandage',     name:'🩹 Bandage',      cost:{wood:2,food:1}},
+  {id:'chest',       name:'📦 Chest',        cost:{wood:5}},
+  {id:'sleeping_bag',name:'🛏 Bed',          cost:{wood:3}},
+  {id:'tc',          name:'🗄 Cabinet',      cost:{wood:10,stone:5}},
+  {id:'workbench',   name:'🪚 Workbench',    cost:{wood:20,stone:5}},
+  {id:'furnace',     name:'🔥 Furnace',      cost:{stone:15,metal:5}},
 ];
 const WB_RECIPES=[
   {id:'bow',         name:'🏹 Bow',          cost:{wood:10,stone:5},   ammo:'arrow'},
@@ -840,10 +840,11 @@ const ITEM_ICON={
   iron_ore:'🟤', coal:'⬛', sulfur:'🟡',
   explosive:'💣', bow:'🏹', crossbow:'🎯', arrow:'🏹', bolt:'🔩',
   armor_head:'⛑️', armor_chest:'🦺', armor_legs:'👖',
+  chest:'📦', sleeping_bag:'🛏', tc:'🗄', workbench:'🪚', furnace:'🔥',
 };
 const TOOLS=['axe','pick','sword','msword','hammer','bow','crossbow'];
-const RESOURCES=['wood','stone','metal','food','iron_ore','coal','sulfur','explosive','arrow','bolt','armor_head','armor_chest','armor_legs','bandage'];
-const STACK_MAX={food:8,wood:50,stone:50,metal:30,iron_ore:20,coal:20,sulfur:20,explosive:5,arrow:30,bolt:30,bandage:10,axe:1,pick:1,sword:1,msword:1,hammer:1,bow:1,crossbow:1,armor_head:1,armor_chest:1,armor_legs:1};
+const RESOURCES=['wood','stone','metal','food','iron_ore','coal','sulfur','explosive','arrow','bolt','armor_head','armor_chest','armor_legs','bandage','chest','sleeping_bag','tc','workbench','furnace'];
+const STACK_MAX={food:8,wood:50,stone:50,metal:30,iron_ore:20,coal:20,sulfur:20,explosive:5,arrow:30,bolt:30,bandage:10,axe:1,pick:1,sword:1,msword:1,hammer:1,bow:1,crossbow:1,armor_head:1,armor_chest:1,armor_legs:1,chest:1,sleeping_bag:1,tc:1,workbench:1,furnace:1};
 function getStackMax(t){return STACK_MAX[t]??30;}
 const BOW_RNG=ATK_RNG*2, CROSSBOW_RNG=ATK_RNG*2.4, BOW_DMG=18, CROSSBOW_DMG=28;
 const ARMOR_REDUCE={head:0.10,chest:0.20,legs:0.10};
@@ -2136,6 +2137,7 @@ class Game extends Phaser.Scene {
 
   handleClick(ptr){
     if(buildMode){this.placeBuilding(ptr);return;}
+    if(this.tryPlaceItemBldg(ptr))return;
     if(this.tryLootBag(ptr))return;
     if(this.tryFireProjectile(ptr))return;
     if(this.tryAtkWolf(ptr))return;
@@ -2375,6 +2377,40 @@ class Game extends Phaser.Scene {
       } else {if(bldgSpr[id])bldgSpr[id]._lastDmg=Date.now();update(sref('buildings/'+id),{hp:newHp});this.pop(d.x,d.y-24,'-'+dmg,isExplosive?'#e67e22':'#e74c3c');}
       return;
     }
+  }
+
+  tryPlaceItemBldg(ptr){
+    const heldItem=inv[selectedSlot];
+    if(!heldItem||heldItem.count<1)return false;
+    const t=heldItem.type;
+    if(!PLACEABLE_BLDG.includes(t))return false;
+    const px=this.pbody.x, py=this.pbody.y;
+    const placeX=Math.round(ptr.worldX), placeY=Math.round(ptr.worldY);
+    if(dist2(px,py,placeX,placeY)>ATK_RNG+60){this.pop(px,py-30,'Too far away!','#e74c3c');return true;}
+    if(isInRiver(placeX,placeY)){this.pop(px,py-30,"Can't build in the river!",'#3498db');return true;}
+    for(const[,tg] of Object.entries(bldgSpr)){
+      const td=tg._d; if(td.type!=='tc')continue;
+      if(td.ownerId===PID||(state.teamId&&td.teamId===state.teamId))continue;
+      if(dist2(placeX,placeY,td.x,td.y)<TC_ZONE){this.pop(px,py-30,'Enemy cabinet blocks building here!','#e74c3c');return true;}
+    }
+    for(const[,tg] of Object.entries(bldgSpr)){
+      const td=tg._d;
+      if(td.type===t&&dist2(placeX,placeY,td.x,td.y)<22){this.pop(px,py-30,'Something already here!','#e74c3c');return true;}
+    }
+    const extra={};
+    if(t==='sleeping_bag'){
+      const bagCount=Object.values(bldgSpr).filter(g=>g._d.type==='sleeping_bag'&&g._d.ownerId===PID).length;
+      if(bagCount>=MAX_BAGS){this.pop(px,py-30,'Max '+MAX_BAGS+' beds!','#e74c3c');return true;}
+      extra.name='Bed '+(bagCount+1);
+    }
+    if(['sleeping_bag','chest','workbench','tc'].includes(t))extra.angle=Math.round(bldgAngle);
+    invRemove(t,1); refreshHotbar();
+    state.score+=3; this.updateHUD();
+    const id=t[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
+    set(sref('buildings/'+id),{x:placeX,y:placeY,type:t,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[t],...extra});
+    if(t==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
+    if(t==='sleeping_bag')this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');
+    return true;
   }
 
   placeBuilding(ptr){
@@ -2951,6 +2987,9 @@ class Game extends Phaser.Scene {
     } else if(buildMode&&(buildType==='workbench'||buildType==='sleeping_bag'||buildType==='chest'||buildType==='tc')){
       if(k.r.isDown) bldgAngle=(bldgAngle+60*(delta/1000))%360;
     } else if(buildMode&&Phaser.Input.Keyboard.JustDown(k.r)){buildRot=buildRot?0:1;}
+    else if(!buildMode&&PLACEABLE_BLDG.includes(inv[selectedSlot]?.type)){
+      if(k.r.isDown) bldgAngle=(bldgAngle+60*(delta/1000))%360;
+    }
     if(Phaser.Input.Keyboard.JustDown(k.enter))openChat();
     if(Phaser.Input.Keyboard.JustDown(k.q))dropSelected(k.shift.isDown);
     if(Phaser.Input.Keyboard.JustDown(k.k1))selectSlot(0);
@@ -3078,7 +3117,26 @@ class Game extends Phaser.Scene {
         bPrev.beginPath().moveTo(wpts[0].x,wpts[0].y);wpts.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
       }
       else{bPrev.fillStyle(0xd4a96a,0.35).fillRoundedRect(p.worldX-20,p.worldY-13,40,26,3);bPrev.lineStyle(2,0xd4a96a,0.7).strokeRoundedRect(p.worldX-20,p.worldY-13,40,26,3);}
-    } else if(bPrev)bPrev.setVisible(false);
+    } else {
+      // Item-based placement preview (chest, bed, cabinet, workbench, furnace in hotbar)
+      const heldItem=inv[selectedSlot];
+      const placeT=heldItem?.type;
+      if(heldItem&&PLACEABLE_BLDG.includes(placeT)){
+        bPrev.clear().setVisible(true);
+        const inRange=dist2(state.x,state.y,p.worldX,p.worldY)<=ATK_RNG+60;
+        const col=inRange?0x4ade80:0xe74c3c;
+        const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
+        const BW=(lx,ly)=>({x:p.worldX+lx*bC-ly*bS,y:p.worldY+lx*bS+ly*bC});
+        if(placeT==='workbench'){
+          bPrev.fillStyle(col,0.28).fillPoints([BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)],true);
+          bPrev.lineStyle(2,col,0.8);const wpts=[BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)];
+          bPrev.beginPath().moveTo(wpts[0].x,wpts[0].y);wpts.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
+        } else {
+          bPrev.fillStyle(col,0.22).fillRoundedRect(p.worldX-18,p.worldY-14,36,28,4);
+          bPrev.lineStyle(2,col,0.8).strokeRoundedRect(p.worldX-18,p.worldY-14,36,28,4);
+        }
+      } else if(bPrev)bPrev.setVisible(false);
+    }
 
     // Hammer preview: colour-code nearby own buildings
     this.hammerGfx.clear();
@@ -3345,6 +3403,7 @@ window.toolbarSlotClick=function(n,e){
 let _selCraftId=null, _selCraftType=null, _craftCat='all';
 const CRAFT_CATS={
   all:    {label:'ALL',  icon:'📋', ids:null},
+  build:  {label:'BUILD',icon:'🏗', ids:['chest','sleeping_bag','tc','workbench','furnace']},
   weapons:{label:'WEAP', icon:'⚔️', ids:['axe','sword','msword','bow','crossbow']},
   tools:  {label:'TOOL', icon:'🔧', ids:['pick','hammer']},
   armor:  {label:'ARM',  icon:'🛡️',ids:['armor_head','armor_chest','armor_legs']},
