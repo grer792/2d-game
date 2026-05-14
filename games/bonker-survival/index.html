@@ -348,26 +348,36 @@
     .armor-vs:hover { border-color:#5a8aaa !important; }
     .armor-vs.equip-on { border-color:#2a6a3a !important; background:#0c1e10 !important; }
     .inv-ctr { display:flex; flex-direction:column; flex-shrink:0; width:250px; }
-    .inv-right { width:220px; flex-shrink:0; display:flex; flex-direction:column; padding-left:9px; border-left:1px solid #1e1e1e; margin-left:9px; max-height:360px; }
+    .inv-right { width:268px; flex-shrink:0; display:flex; flex-direction:column; padding-left:10px; border-left:1px solid #1e1e1e; margin-left:9px; max-height:380px; }
     .inv-tab-body { overflow-y:auto; flex:1; }
-    .craft-cat-bar { display:flex; flex-wrap:wrap; gap:3px; padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid #1e1e1e; position:sticky; top:0; background:rgba(12,12,14,0.98); padding-top:1px; z-index:1; }
-    .craft-cat-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:5px 4px 4px; border:1px solid #2a2a2a; border-radius:4px; background:#161616; cursor:pointer; font-family:inherit; min-width:30px; transition:border-color .1s, background .1s; }
+    .inv-tab-body::-webkit-scrollbar { width:3px; }
+    .inv-tab-body::-webkit-scrollbar-track { background:transparent; }
+    .inv-tab-body::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:2px; }
+    /* category bar — icon only */
+    .craft-cat-bar { display:flex; flex-wrap:wrap; gap:4px; padding-bottom:7px; margin-bottom:6px; border-bottom:1px solid #1e1e1e; position:sticky; top:0; background:rgba(12,12,14,0.98); padding-top:2px; z-index:1; }
+    .craft-cat-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid #2a2a2a; border-radius:6px; background:#161616; cursor:pointer; font-family:inherit; transition:border-color .1s, background .1s; }
     .craft-cat-btn:hover { border-color:#555; background:#222; }
     .craft-cat-btn.active { border-color:#c09030; background:#241a06; }
-    .craft-cat-icon { font-size:14px; line-height:1; }
-    .craft-cat-lbl { font-size:7px; color:#555; letter-spacing:.3px; line-height:1; }
-    .craft-cat-btn.active .craft-cat-lbl { color:#b08020; }
+    .craft-cat-icon { font-size:15px; line-height:1; }
+    .craft-cat-lbl { display:none; }
+    /* craft grid */
+    .craft-grid { display:grid; grid-template-columns:repeat(4,58px); gap:5px; padding:2px 1px 6px; }
+    .craft-cell { width:58px; height:58px; border:1.5px solid #242424; border-radius:7px; background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; transition:border-color .12s, background .12s; }
+    .craft-cell:hover { border-color:#444; background:#1a1a1a; }
+    .craft-cell.can-craft { border-color:#2d7a2d; background:#081508; }
+    .craft-cell.can-craft:hover { background:#0d1e0d; }
+    .craft-cell.icraft-sel { border-color:#f0c040 !important; background:#1a1400 !important; box-shadow:0 0 0 1px rgba(240,192,64,0.2); }
+    .craft-cell.wb-needed { opacity:0.45; }
+    .craft-cell-icon { font-size:26px; line-height:1; }
+    .craft-cell-badge { position:absolute; bottom:3px; right:5px; font-size:8px; color:#555; font-weight:700; line-height:1; }
+    .craft-cell.can-craft .craft-cell-badge { color:#3a8a3a; }
+    .craft-cell-wb { position:absolute; top:3px; right:4px; font-size:7px; color:#7a5a8a; font-weight:800; letter-spacing:-.3px; }
+    .craft-cell-check { position:absolute; top:2px; left:4px; font-size:9px; color:#2ecc71; }
     .inv-right-hdr { font-size:10px; color:#c0a030; letter-spacing:1px; font-weight:600; margin-bottom:5px; padding-bottom:4px; border-bottom:1px solid #2a2a2a; }
-    .inv-craft-sep { font-size:8px; color:#3a3a3a; letter-spacing:1.5px; text-transform:uppercase; padding:5px 2px 3px; border-bottom:1px solid #1a1a1a; }
-    .inv-craft-row { display:flex; align-items:center; gap:5px; padding:4px 3px; border-radius:3px; cursor:pointer; transition:background .08s; }
-    .inv-craft-row:hover { background:rgba(255,255,255,0.04); }
-    .inv-craft-row.icraft-sel { background:rgba(240,192,64,0.10); }
-    .inv-craft-icon { font-size:16px; min-width:18px; text-align:center; }
-    .inv-craft-info { flex:1; min-width:0; }
-    .inv-craft-name { font-size:11px; color:#bbb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .inv-craft-cost { font-size:9px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .inv-craft-cost.ok { color:#5a9a5a; }
-    .wb-locked { opacity:0.38; }
+    .inv-craft-cost-row { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+    .craft-cost-pill { font-size:9px; padding:2px 5px; border-radius:3px; background:#1a1a1a; border:1px solid #2a2a2a; color:#888; white-space:nowrap; }
+    .craft-cost-pill.ok { border-color:#2a4a2a; color:#6ab06a; background:#0c180c; }
+    .craft-cost-pill.no { border-color:#4a1a1a; color:#b05050; background:#180c0c; }
     .inv-container-grid { display:grid; grid-template-columns:repeat(4,42px); gap:4px; }
     .inv-act-panel { width:115px; flex-shrink:0; display:flex; flex-direction:column; padding-left:9px; border-left:1px solid #1e1e1e; margin-left:9px; gap:4px; min-height:160px; }
     .inv-sel-box { width:56px; height:56px; border:1px solid #2e2e3e; border-radius:5px; background:#141420; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0 auto; flex-shrink:0; }
@@ -3449,52 +3459,55 @@ window.closeInvContainer=function(){
 function renderInvCraftList(){
   const nearWB=!!activeWorkbenchId;
   const catIds=CRAFT_CATS[_craftCat]?.ids;
-  const allBasic=RECIPES.map(r=>({...r,wb:false}));
-  const allWB=WB_RECIPES.map(r=>({...r,wb:true}));
-  const basic=catIds?allBasic.filter(r=>catIds.includes(r.id)):allBasic;
-  const wb=catIds?allWB.filter(r=>catIds.includes(r.id)):allWB;
+  const all=[
+    ...RECIPES.map(r=>({...r,wb:false})),
+    ...WB_RECIPES.map(r=>({...r,wb:true})),
+  ];
+  const filtered=catIds?all.filter(r=>catIds.includes(r.id)):all;
 
-  // Category bar (sticky so it stays at top when scrolling)
   const catBar='<div class="craft-cat-bar">'+
     Object.entries(CRAFT_CATS).map(([key,cat])=>{
       const act=_craftCat===key?' active':'';
-      return`<button class="craft-cat-btn${act}" onclick="setCraftCat('${key}')">
-        <span class="craft-cat-icon">${cat.icon}</span>
-        <span class="craft-cat-lbl">${cat.label}</span>
-      </button>`;
+      return`<button class="craft-cat-btn${act}" title="${cat.label}" onclick="setCraftCat('${key}')"><span class="craft-cat-icon">${cat.icon}</span></button>`;
     }).join('')+'</div>';
 
-  function recipeRow(r){
-    const isTool=TOOLS.includes(r.id);
-    const owned=isTool&&invHasTool(r.id);
-    const canAfford=invCanAfford(r.cost);
-    const costTxt=Object.entries(r.cost).map(([k,v])=>v+(ITEM_ICON[k]||k)).join(' ');
-    const sel=_selCraftId===r.id?' icraft-sel':'';
-    const locked=r.wb&&!nearWB?' wb-locked':'';
-    const type=r.wb?'wb':'basic';
-    return`<div class="inv-craft-row${locked}${sel}" onclick="selectInvCraft('${r.id}','${type}')">
-      <span class="inv-craft-icon">${ITEM_ICON[r.id]||'?'}</span>
-      <div class="inv-craft-info">
-        <div class="inv-craft-name">${r.name}</div>
-        <div class="inv-craft-cost${canAfford?' ok':''}">${costTxt}${owned?' ✓':''}</div>
-      </div>
-    </div>`;
+  if(!filtered.length){
+    const el=document.getElementById('inv-craft-list'); if(el)el.innerHTML=catBar+'<div style="font-size:10px;color:#333;padding:20px 4px;text-align:center">Nothing here</div>';
+    return;
   }
 
-  let h=catBar;
-  if(basic.length){
-    if(_craftCat==='all') h+='<div class="inv-craft-sep">BASIC</div>';
-    h+=basic.map(recipeRow).join('');
-  }
-  if(wb.length){
-    if(_craftCat==='all') h+='<div class="inv-craft-sep">WORKBENCH'+(nearWB?'':' 🔧')+'</div>';
-    else if(!nearWB) h+='<div style="font-size:9px;color:#555;padding:3px 2px 5px">🔧 Workbench required</div>';
-    h+=wb.map(recipeRow).join('');
-  }
-  if(!basic.length&&!wb.length){
-    h+='<div style="font-size:11px;color:#3a3a3a;padding:16px 4px;text-align:center">Nothing in this category</div>';
-  }
-  const el=document.getElementById('inv-craft-list'); if(el)el.innerHTML=h;
+  // Sort: craftable now → basic can't afford → wb affordable → wb locked
+  const score=r=>{
+    const isTool=TOOLS.includes(r.id); const owned=isTool&&invHasTool(r.id);
+    if(owned)return 0;
+    const can=invCanAfford(r.cost);
+    if(can&&!r.wb)return 0;
+    if(can&&r.wb&&nearWB)return 1;
+    if(!r.wb)return 2;
+    if(r.wb&&nearWB)return 3;
+    return 4;
+  };
+  const sorted=[...filtered].sort((a,b)=>score(a)-score(b));
+
+  const cells=sorted.map(r=>{
+    const isTool=TOOLS.includes(r.id); const owned=isTool&&invHasTool(r.id);
+    const canAfford=invCanAfford(r.cost);
+    const craftable=(canAfford&&!r.wb)||(canAfford&&r.wb&&nearWB)||owned;
+    const wbLocked=r.wb&&!nearWB;
+    const sel=_selCraftId===r.id;
+    let cls='craft-cell';
+    if(sel) cls+=' icraft-sel';
+    else if(craftable) cls+=' can-craft';
+    if(wbLocked) cls+=' wb-needed';
+    const badge=r.count&&r.count>1?`<span class="craft-cell-badge">x${r.count}</span>`:'';
+    const wbMark=r.wb?`<span class="craft-cell-wb">WB</span>`:'';
+    const checkMark=owned?`<span class="craft-cell-check">✓</span>`:'';
+    const type=r.wb?'wb':'basic';
+    return`<div class="${cls}" onclick="selectInvCraft('${r.id}','${type}')" title="${r.name}">${checkMark}<span class="craft-cell-icon">${ITEM_ICON[r.id]||'?'}</span>${badge}${wbMark}</div>`;
+  }).join('');
+
+  const el=document.getElementById('inv-craft-list');
+  if(el)el.innerHTML=catBar+`<div class="craft-grid">${cells}</div>`;
 }
 
 window.setCraftCat=function(cat){ _craftCat=cat; renderInvCraftList(); };
@@ -3503,15 +3516,21 @@ window.selectInvCraft=function(id,type){
   _selCraftId=id; _selCraftType=type;
   const allR=[...RECIPES,...WB_RECIPES]; const r=allR.find(x=>x.id===id); if(!r)return;
   const nearWB=!!activeWorkbenchId;
-  const canAfford=invCanAfford(r.cost);
   const isTool=TOOLS.includes(id); const owned=isTool&&invHasTool(id);
   const locked=type==='wb'&&!nearWB;
   document.getElementById('inv-sel-em').textContent=ITEM_ICON[id]||'?';
   document.getElementById('inv-sel-ct').textContent='';
-  document.getElementById('inv-sel-nm').textContent=r.name;
+  // Cost pills below the name
+  const costPills=Object.entries(r.cost).map(([k,v])=>{
+    const have=invCount(k); const ok=have>=v;
+    return`<span class="craft-cost-pill${ok?' ok':' no'}">${v}${ITEM_ICON[k]||k}</span>`;
+  }).join('');
+  const wbNote=type==='wb'?`<span style="font-size:8px;color:${nearWB?'#9b59b6':'#555'};display:block;margin-top:3px">${nearWB?'🪚 Workbench':'🔧 Need workbench'}</span>`:'';
+  document.getElementById('inv-sel-nm').innerHTML=`<span style="font-size:10px;color:#bbb">${r.name}</span>${wbNote}<div class="inv-craft-cost-row">${costPills}</div>`;
   document.getElementById('inv-act-split').style.display='none';
   const craftDiv=document.getElementById('inv-act-craft');
   craftDiv.style.display='';
+  const canAfford=invCanAfford(r.cost);
   const btn=craftDiv.querySelector('button');
   if(btn){ btn.disabled=!canAfford||owned||locked; btn.textContent=owned?'✓ HAVE IT':locked?'🔧 NEED WB':'CRAFT'; }
   const qtyEl=document.getElementById('inv-cq'); if(qtyEl)qtyEl.value=1;
