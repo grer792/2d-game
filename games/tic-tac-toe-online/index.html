@@ -212,6 +212,51 @@ const fbApp = initializeApp({
 const db = getDatabase(fbApp);
 const auth = getAuth(fbApp);
 
+// --- Sound ---
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let _ctx;
+function _ac() { if (!_ctx) _ctx = new AudioCtx(); if (_ctx.state === 'suspended') _ctx.resume(); return _ctx; }
+
+function sfxPlace(mark) {
+  try {
+    const ctx = _ac(), o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    const f = mark === 'X' ? 660 : 440;
+    o.frequency.setValueAtTime(f, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f * 0.83, ctx.currentTime + 0.11);
+    g.gain.setValueAtTime(0.32, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.13);
+    o.start(); o.stop(ctx.currentTime + 0.13);
+  } catch(e) {}
+}
+
+function sfxWin() {
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => {
+    try {
+      const ctx = _ac(), o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.28, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+      o.start(); o.stop(ctx.currentTime + 0.38);
+    } catch(e) {}
+  }, i * 90));
+}
+
+function sfxDraw() {
+  [330, 262].forEach((f, i) => setTimeout(() => {
+    try {
+      const ctx = _ac(), o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.2, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+      o.start(); o.stop(ctx.currentTime + 0.45);
+    } catch(e) {}
+  }, i * 190));
+}
+
 // --- Game logic ---
 const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
@@ -241,6 +286,7 @@ function bestAiMove(board, aiMark) {
 
 // --- State ---
 let board = Array(9).fill(null);
+let prevBoard = Array(9).fill(null);
 let turn = 'X';
 let result = null;
 let scoreX = 0, scoreO = 0;
@@ -397,10 +443,14 @@ function handleCell(i) {
 }
 
 function applyMove(next) {
+  const prevTurn = turn;
   board = next;
   result = checkResult(board);
   if (!result) turn = turn === 'X' ? 'O' : 'X';
   else { if (result.winner === 'X') scoreX++; else if (result.winner === 'O') scoreO++; }
+  if (result?.winner) sfxWin();
+  else if (result?.draw) sfxDraw();
+  else sfxPlace(prevTurn);
   render();
 }
 
@@ -433,9 +483,18 @@ async function syncMove(next) {
 }
 
 function applyRoomState(state) {
-  board = state.board || Array(9).fill(null);
+  const newBoard = state.board || Array(9).fill(null);
+  let movedMark = null;
+  for (let i = 0; i < 9; i++) { if (newBoard[i] && !prevBoard[i]) { movedMark = newBoard[i]; break; } }
+  board = newBoard;
+  prevBoard = [...newBoard];
   turn = state.turn || 'X';
   const res = state.status === 'won' ? { winner: state.winner, line: state.winLine || [] } : state.status === 'draw' ? { winner: null, line: null, draw: true } : null;
+  if (movedMark) {
+    if (res?.winner) sfxWin();
+    else if (res?.draw) sfxDraw();
+    else sfxPlace(movedMark);
+  }
   result = res;
   scoreX = state.xScore || 0;
   scoreO = state.oScore || 0;
@@ -515,10 +574,11 @@ async function leaveOnline(updateUrl = true) {
 
 async function rematch() {
   if (onlineMode && currentRoomId) {
+    prevBoard = Array(9).fill(null);
     await update(rRef(currentRoomId), { board: Array(9).fill(null), turn: 'X', status: 'playing', winner: null, winLine: null, updatedAt: serverTimestamp() });
     return;
   }
-  board = Array(9).fill(null); turn = 'X'; result = null; aiThinking = false;
+  board = Array(9).fill(null); prevBoard = Array(9).fill(null); turn = 'X'; result = null; aiThinking = false;
   render();
   if (aiMode) scheduleAi();
 }
