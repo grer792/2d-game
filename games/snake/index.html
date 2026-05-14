@@ -78,6 +78,7 @@ canvas{position:absolute;inset:0;display:block;}
         <div class="pill" data-v="small">Small</div>
         <div class="pill on" data-v="medium">Medium</div>
         <div class="pill" data-v="large">Large</div>
+        <div class="pill" data-v="huge">Huge</div>
       </div>
     </div>
     <div class="srow">
@@ -151,8 +152,8 @@ canvas{position:absolute;inset:0;display:block;}
 </div>
 
 <script>
-const CELLS  = {small:28, medium:20, large:14};
-const SPEEDS = {slow:200, normal:120, fast:65};
+const MAP_TILES = {small:15, medium:25, large:35, huge:45};
+const SPEEDS    = {slow:200, normal:120, fast:65};
 const TOUCH  = 'ontouchstart' in window;
 
 const cfg = {mapSize:'medium', speed:'normal', fruits:1, mode:'classic'};
@@ -172,17 +173,21 @@ document.querySelectorAll('[data-g]').forEach(grp => {
 // canvas
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let W, H, CELL, cols, rows;
+let W, H, CELL, cols, rows, offsetX=0, offsetY=0;
 
 function resize() {
   W = canvas.width  = window.innerWidth;
   H = canvas.height = window.innerHeight;
-  if (CELL) calcGrid();
+  if (cols) calcGrid();
   if (gs === 'playing' || gs === 'paused') draw();
 }
 function calcGrid() {
-  cols = Math.floor(W / CELL);
-  rows = Math.floor((H - (TOUCH ? 152 : 0)) / CELL);
+  const tiles = MAP_TILES[cfg.mapSize];
+  cols = tiles; rows = tiles;
+  const availH = H - (TOUCH ? 152 : 0);
+  CELL = Math.min(Math.floor(W / cols), Math.floor(availH / rows));
+  offsetX = Math.floor((W       - cols * CELL) / 2);
+  offsetY = Math.floor((availH  - rows * CELL) / 2);
 }
 window.addEventListener('resize', resize);
 W = canvas.width  = window.innerWidth;
@@ -224,7 +229,6 @@ function placeFood(){
 }
 
 function initGame(){
-  CELL=CELLS[cfg.mapSize];
   calcGrid();
   const cx=Math.floor(cols/2), cy=Math.floor(rows/2);
   snake=[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
@@ -320,23 +324,30 @@ function rr(x,y,w,h,r){
 }
 
 function draw(){
-  ctx.fillStyle='#13131f';
+  // letterbox bg
+  ctx.fillStyle='#0e0e1a';
   ctx.fillRect(0,0,W,H);
-  // grid
-  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=0.5;
-  for(let x=0;x<=cols;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,H);ctx.stroke();}
-  for(let y=0;y<=rows;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(W,y*CELL);ctx.stroke();}
+  // game area bg
+  ctx.fillStyle='#13131f';
+  ctx.fillRect(offsetX,offsetY,cols*CELL,rows*CELL);
+  // grid lines
+  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=0.5;
+  for(let x=0;x<=cols;x++){ctx.beginPath();ctx.moveTo(offsetX+x*CELL,offsetY);ctx.lineTo(offsetX+x*CELL,offsetY+rows*CELL);ctx.stroke();}
+  for(let y=0;y<=rows;y++){ctx.beginPath();ctx.moveTo(offsetX,offsetY+y*CELL);ctx.lineTo(offsetX+cols*CELL,offsetY+y*CELL);ctx.stroke();}
+  // game area border
+  ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.lineWidth=1;
+  ctx.strokeRect(offsetX,offsetY,cols*CELL,rows*CELL);
   // obstacles
   if(cfg.mode==='obstacles'){
     ctx.fillStyle='#252540';
-    obstacles.forEach(k=>{const[c,r]=k.split(',').map(Number);rr(c*CELL+2,r*CELL+2,CELL-4,CELL-4,4);ctx.fill();});
+    obstacles.forEach(k=>{const[c,r]=k.split(',').map(Number);rr(offsetX+c*CELL+2,offsetY+r*CELL+2,CELL-4,CELL-4,4);ctx.fill();});
   }
   // food
   const pulse=0.78+Math.sin(Date.now()/200)*0.22;
   ctx.shadowColor='#ff6b7f'; ctx.shadowBlur=12; ctx.fillStyle='#ff6b7f';
   foods.forEach(f=>{
     ctx.beginPath();
-    ctx.arc(f.x*CELL+CELL/2,f.y*CELL+CELL/2,CELL/2*0.65*pulse,0,Math.PI*2);
+    ctx.arc(offsetX+f.x*CELL+CELL/2,offsetY+f.y*CELL+CELL/2,CELL/2*0.65*pulse,0,Math.PI*2);
     ctx.fill();
   });
   ctx.shadowBlur=0;
@@ -346,7 +357,7 @@ function draw(){
     ctx.shadowColor='#7c5cfc'; ctx.shadowBlur=i===0?14:0;
     ctx.fillStyle=i===0?'#b090ff':`rgba(124,92,252,${0.3+ratio*0.7})`;
     const pd=i===0?1:2, r=i===0?6:4;
-    rr(s.x*CELL+pd,s.y*CELL+pd,CELL-pd*2,CELL-pd*2,r);
+    rr(offsetX+s.x*CELL+pd,offsetY+s.y*CELL+pd,CELL-pd*2,CELL-pd*2,r);
     ctx.fill();
   });
   ctx.shadowBlur=0;
@@ -355,7 +366,7 @@ function draw(){
 // raf loop — 60fps draw when active
 (function raf(){
   if(gs==='playing'||gs==='paused') draw();
-  else{ctx.fillStyle='#13131f';ctx.fillRect(0,0,W,H);}
+  else{ctx.fillStyle='#0e0e1a';ctx.fillRect(0,0,W,H);}
   requestAnimationFrame(raf);
 })();
 
