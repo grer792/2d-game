@@ -225,17 +225,35 @@ ensureCSS();
 ensurePanels();
 
 // ── Panel open/close ──
+function closeAllPanels(){
+  ['fav-overlay','fav-panel','profile-overlay','profile-panel','auth-overlay','auth-panel','notif-overlay','notif-panel']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('open'); });
+  cancelUsernameEdit();
+  // Reset auth form state
+  const s1=document.getElementById('auth-step-1'); if(s1) s1.style.display='';
+  const s2=document.getElementById('auth-step-2'); if(s2) s2.style.display='none';
+  const ei=document.getElementById('auth-email-input'); if(ei) ei.value='';
+  const ec=document.getElementById('auth-email-continue'); if(ec) ec.disabled=true;
+  const ae=document.getElementById('auth-err'); if(ae) ae.textContent='';
+  document.body.style.overflow='';
+}
 function openAuthPanel(){
+  closeAllPanels();
   document.getElementById('auth-overlay').classList.add('open');
   document.getElementById('auth-panel').classList.add('open');
   document.body.style.overflow='hidden';
 }
 function closeAuthPanel(){
-  document.getElementById('auth-overlay').classList.remove('open');
-  document.getElementById('auth-panel').classList.remove('open');
+  ['auth-overlay','auth-panel'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('open'); });
+  const s1=document.getElementById('auth-step-1'); if(s1) s1.style.display='';
+  const s2=document.getElementById('auth-step-2'); if(s2) s2.style.display='none';
+  const ei=document.getElementById('auth-email-input'); if(ei) ei.value='';
+  const ec=document.getElementById('auth-email-continue'); if(ec) ec.disabled=true;
+  const ae=document.getElementById('auth-err'); if(ae) ae.textContent='';
   document.body.style.overflow='';
 }
 function openProfilePanel(){
+  closeAllPanels();
   document.getElementById('profile-overlay').classList.add('open');
   document.getElementById('profile-panel').classList.add('open');
   document.body.style.overflow='hidden';
@@ -247,6 +265,7 @@ function closeProfilePanel(){
   cancelUsernameEdit();
 }
 function openFavPanel(){
+  closeAllPanels();
   document.getElementById('fav-overlay').classList.add('open');
   document.getElementById('fav-panel').classList.add('open');
   document.body.style.overflow='hidden';
@@ -263,6 +282,7 @@ window._openProfilePanel=openProfilePanel;
 window._closeProfilePanel=closeProfilePanel;
 window._openFavPanel=openFavPanel;
 window._closeFavPanel=closeFavPanel;
+window._closeAllPanels=closeAllPanels;
 
 // ── Auth ──
 let _authTab='signin';
