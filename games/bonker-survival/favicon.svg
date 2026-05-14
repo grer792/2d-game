@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- dark rounded background -->
+  <rect width="32" height="32" rx="7" fill="#0d0d0d"/>
+  <!-- bomb body -->
+  <circle cx="16" cy="21" r="8.5" fill="#f0c040"/>
+  <!-- subtle highlight -->
+  <circle cx="13.2" cy="17.8" r="2.8" fill="#ffffff" opacity="0.14"/>
+  <!-- fuse -->
+  <path d="M16 12.2 C17.5 9.5 20.5 8.5 19.5 5.5" stroke="#999" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- spark cross -->
+  <line x1="19.5" y1="3" x2="19.5" y2="7.5" stroke="#ffe566" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="17.2" y1="5.2" x2="21.8" y2="5.2" stroke="#ffe566" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- spark diagonals -->
+  <line x1="18"   y1="3.8" x2="21"   y2="6.8" stroke="#ffe566" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="21"   y1="3.8" x2="18"   y2="6.8" stroke="#ffe566" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- "B" brand mark on bomb -->
+  <text x="15.8" y="24.5" font-family="Arial Black,Helvetica,sans-serif" font-size="10" font-weight="900" fill="#0d0d0d" text-anchor="middle" letter-spacing="-0.5">B</text>
+</svg>
