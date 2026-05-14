@@ -3122,18 +3122,19 @@ class Game extends Phaser.Scene {
       const heldItem=inv[selectedSlot];
       const placeT=heldItem?.type;
       if(heldItem&&PLACEABLE_BLDG.includes(placeT)){
+        const p2=this.input.activePointer;
         bPrev.clear().setVisible(true);
-        const inRange=dist2(state.x,state.y,p.worldX,p.worldY)<=ATK_RNG+60;
+        const inRange=dist2(state.x,state.y,p2.worldX,p2.worldY)<=ATK_RNG+60;
         const col=inRange?0x4ade80:0xe74c3c;
         const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
-        const BW=(lx,ly)=>({x:p.worldX+lx*bC-ly*bS,y:p.worldY+lx*bS+ly*bC});
+        const BW=(lx,ly)=>({x:p2.worldX+lx*bC-ly*bS,y:p2.worldY+lx*bS+ly*bC});
         if(placeT==='workbench'){
           bPrev.fillStyle(col,0.28).fillPoints([BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)],true);
           bPrev.lineStyle(2,col,0.8);const wpts=[BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)];
           bPrev.beginPath().moveTo(wpts[0].x,wpts[0].y);wpts.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
         } else {
-          bPrev.fillStyle(col,0.22).fillRoundedRect(p.worldX-18,p.worldY-14,36,28,4);
-          bPrev.lineStyle(2,col,0.8).strokeRoundedRect(p.worldX-18,p.worldY-14,36,28,4);
+          bPrev.fillStyle(col,0.22).fillRoundedRect(p2.worldX-18,p2.worldY-14,36,28,4);
+          bPrev.lineStyle(2,col,0.8).strokeRoundedRect(p2.worldX-18,p2.worldY-14,36,28,4);
         }
       } else if(bPrev)bPrev.setVisible(false);
     }
