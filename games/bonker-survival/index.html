@@ -377,9 +377,66 @@
     .craft-act:hover:not(:disabled) { background:#1e2e1e !important; color:#9ad09a !important; }
     .split-act { background:#141422 !important; color:#7080b0 !important; border-color:#2a2a4a !important; }
     .split-act:hover:not(:disabled) { background:#1e1e32 !important; color:#9090c8 !important; }
+    /* ── NOTIFICATION TOAST ── */
+    @keyframes notif-slide-in { from{transform:translateX(calc(100% + 24px));opacity:0} to{transform:translateX(0);opacity:1} }
+    @keyframes notif-slide-out { from{transform:translateX(0);opacity:1} to{transform:translateX(calc(100% + 24px));opacity:0} }
+    #notif-toast {
+      position:fixed; bottom:28px; right:24px; z-index:9999;
+      width:290px; background:rgba(14,16,14,0.97);
+      border:1px solid rgba(240,192,64,0.25); border-radius:12px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03);
+      overflow:hidden; display:none;
+    }
+    #notif-toast.show { display:block; animation:notif-slide-in .38s cubic-bezier(.22,.88,.36,1) forwards; }
+    #notif-toast.hide { display:block; animation:notif-slide-out .3s ease-in forwards; }
+    .notif-img {
+      width:100%; height:130px; object-fit:cover;
+      display:block; border-bottom:1px solid rgba(240,192,64,0.12);
+      background:linear-gradient(135deg,#0d1a0d 0%,#1a2a1a 40%,#0d180d 100%);
+      position:relative; overflow:hidden;
+    }
+    .notif-img-inner {
+      width:100%; height:130px; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,#0d1a0d 0%,#1a2a1a 50%,#0d150d 100%);
+      font-size:52px; letter-spacing:-2px;
+    }
+    .notif-body { padding:13px 14px 14px; }
+    .notif-tag { font-size:9px; letter-spacing:2px; color:#f0c040; font-weight:700; text-transform:uppercase; margin-bottom:5px; }
+    .notif-title { font-size:15px; font-weight:800; color:#fff; line-height:1.25; margin-bottom:4px; }
+    .notif-desc { font-size:11px; color:#777; line-height:1.5; margin-bottom:12px; }
+    .notif-actions { display:flex; align-items:center; justify-content:space-between; }
+    .notif-play-btn {
+      background:#f0c040; color:#111; border:none;
+      padding:8px 18px; border-radius:7px;
+      font-size:12px; font-weight:800; cursor:pointer;
+      font-family:'Segoe UI',sans-serif; letter-spacing:0.5px;
+      transition:background .15s, transform .1s;
+      text-decoration:none; display:inline-block;
+    }
+    .notif-play-btn:hover { background:#ffd060; transform:scale(1.04); }
+    .notif-close {
+      background:none; border:none; color:#444; font-size:18px;
+      cursor:pointer; padding:2px 6px; line-height:1;
+      transition:color .15s;
+    }
+    .notif-close:hover { color:#aaa; }
   </style>
 </head>
 <body>
+
+<!-- Slide-in notification toast -->
+<div id="notif-toast">
+  <div class="notif-img-inner">⚔ 🌲 🪨</div>
+  <div class="notif-body">
+    <div class="notif-tag">New Release</div>
+    <div class="notif-title">Bonker Survival is here!</div>
+    <div class="notif-desc">Fight, craft, raid and survive. The full game is now live on BonkerGames.</div>
+    <div class="notif-actions">
+      <a class="notif-play-btn" href="https://bonkergames.com/game/bonker-survival" target="_blank" rel="noopener">PLAY NOW</a>
+      <button class="notif-close" onclick="closeNotif()">✕</button>
+    </div>
+  </div>
+</div>
 
 <div id="menu">
   <div class="menu-wrap">
@@ -734,6 +791,23 @@ function sref(path){ return ref(db,'servers/'+SERVER_KEY+'/'+path); }
   });
 });
 
+// Notification toast
+(function(){
+  const KEY='notif_bonker_release_v1';
+  if(sessionStorage.getItem(KEY))return;
+  setTimeout(function(){
+    const t=document.getElementById('notif-toast');
+    if(t&&document.getElementById('menu').style.display!=='none'){t.classList.add('show');}
+  },1800);
+})();
+window.closeNotif=function(){
+  const t=document.getElementById('notif-toast');
+  if(!t)return;
+  t.classList.remove('show'); t.classList.add('hide');
+  setTimeout(function(){t.classList.remove('hide');t.style.display='none';},320);
+  sessionStorage.setItem('notif_bonker_release_v1','1');
+};
+
 window.menuTab=function(tab){
   ['servers','store','account'].forEach(t=>{
     document.getElementById('menu-panel-'+t).style.display=t===tab?'':'none';
@@ -763,6 +837,7 @@ window._refreshMenuAccount=function(){
 window.joinServer=function(key){
   SERVER_KEY=key;
   document.getElementById('menu').style.display='none';
+  const nt=document.getElementById('notif-toast'); if(nt)nt.style.display='none';
   startGame();
 };
 
@@ -3339,7 +3414,7 @@ const CRAFT_CATS={
   armor:  {label:'ARM',  icon:'🛡️',ids:['armor_head','armor_chest','armor_legs']},
   ammo:   {label:'AMMO', icon:'🏹', ids:['arrow','bolt']},
   medical:{label:'MED',  icon:'🩹', ids:['bandage']},
-  misc:   {label:'MISC', icon:'💣', ids:['explosive']},
+  misc:   {label:'MISC', icon:'💥', ids:['explosive']},
 };
 
 function _invSlotHtml(item,i,cls){
