@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REPLACE:GAME_TITLE</title>
+<style>
+/* Use these CSS variables to match BonkerGames style */
+:root {
+  --bg: #13131f;
+  --bg2: #1c1c2e;
+  --bg3: #252538;
+  --bg4: #2e2e45;
+  --accent: #7c5cfc;
+  --accent-h: #6a4de0;
+  --text: #ffffff;
+  --text2: #9898b8;
+  --border: rgba(255,255,255,0.07);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+canvas { display: block; }
+button { font: inherit; }
+</style>
+</head>
+<body>
+<!--
+  GAME LOGIC GOES HERE.
+  This file is loaded inside an iframe in play.html.
+  Do NOT add BonkerGames header/sidebar/chrome here.
+  Keep this file self-contained — no external dependencies unless absolutely needed.
+
+  Sound: use Web Audio API (see tic-tac-toe-online/index.html for pattern).
+  Canvas games: make canvas fill 100% of viewport, handle resize.
+-->
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// TODO: game logic here
+</script>
+</body>
+</html>
