@@ -377,6 +377,20 @@
     .craft-act:hover:not(:disabled) { background:#1e2e1e !important; color:#9ad09a !important; }
     .split-act { background:#141422 !important; color:#7080b0 !important; border-color:#2a2a4a !important; }
     .split-act:hover:not(:disabled) { background:#1e1e32 !important; color:#9090c8 !important; }
+    /* ── SOCIAL LINKS ── */
+    .menu-social { display:flex; gap:10px; margin-top:22px; align-items:center; justify-content:center; }
+    .soc-btn {
+      display:flex; align-items:center; justify-content:center;
+      width:38px; height:38px; border-radius:10px;
+      text-decoration:none; font-size:17px; line-height:1;
+      transition:transform .15s, opacity .15s; opacity:0.75;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .soc-btn:hover { transform:scale(1.12); opacity:1; }
+    .soc-ig  { background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); }
+    .soc-yt  { background:#ff0000; }
+    .soc-fb  { background:#1877f2; }
+    .soc-tt  { background:#010101; border-color:rgba(255,255,255,0.15); }
     /* ── NOTIFICATION TOAST ── */
     @keyframes notif-slide-in { from{transform:translateX(calc(100% + 24px));opacity:0} to{transform:translateX(0);opacity:1} }
     @keyframes notif-slide-out { from{transform:translateX(0);opacity:1} to{transform:translateX(calc(100% + 24px));opacity:0} }
@@ -502,6 +516,12 @@
           <div class="acct-signed off" id="menu-acct-status">Checking…</div>
         </div>
       </div>
+    </div>
+    <div class="menu-social">
+      <a class="soc-btn soc-ig" href="https://www.instagram.com/bonkergames/" target="_blank" rel="noopener" title="Instagram">📸</a>
+      <a class="soc-btn soc-yt" href="https://www.youtube.com/@bonkergames" target="_blank" rel="noopener" title="YouTube">▶</a>
+      <a class="soc-btn soc-fb" href="https://www.facebook.com/profile.php?id=61589739772355" target="_blank" rel="noopener" title="Facebook">f</a>
+      <a class="soc-btn soc-tt" href="https://www.tiktok.com/@bonkergames" target="_blank" rel="noopener" title="TikTok">♪</a>
     </div>
   </div>
 </div>
