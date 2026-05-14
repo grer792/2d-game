@@ -205,9 +205,8 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 .game-bar-left { display: flex; align-items: center; gap: 10px; }
 .bar-logo-wrap {
   width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  background: transparent;
 }
-.bar-logo { height: 40px; width: 40px; object-fit: contain; display: block; background: transparent; }
+.bar-logo-emoji { font-size: 30px; line-height: 1; }
 .bar-game-title { font-size: 0.95rem; font-weight: 700; }
 .game-bar-actions { display: flex; align-items: center; gap: 4px; }
 .bar-btn {
@@ -350,7 +349,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="game-bar">
         <div class="game-bar-left">
           <div class="bar-logo-wrap">
-            <img src="../../assets/bomb.png" alt="BonkerGames" class="bar-logo">
+            <span class="bar-logo-emoji">💣</span>
           </div>
           <span class="bar-game-title">Bonker Survival</span>
         </div>
