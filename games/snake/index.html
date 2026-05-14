@@ -5,37 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Snake</title>
 <style>
-:root {
-  --bg:#13131f; --bg2:#1c1c2e; --bg3:#252538; --bg4:#2e2e45;
-  --accent:#7c5cfc; --accent-h:#6a4de0;
-  --text:#ffffff; --text2:#9898b8;
-  --border:rgba(255,255,255,0.07);
-}
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;user-select:none;-webkit-user-select:none;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0e0e1a;color:var(--text);font-family:Inter,system-ui,sans-serif;user-select:none;-webkit-user-select:none;}
 button{font:inherit;cursor:pointer;border:none;}
 canvas{position:absolute;inset:0;display:block;}
 
 /* overlays */
-.ov{position:absolute;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(13,13,25,0.93);backdrop-filter:blur(6px);padding:16px;overflow-y:auto;}
+.ov{position:absolute;inset:0;z-index:10;display:none;align-items:center;justify-content:center;padding:16px;}
 .ov.open{display:flex;}
+#menu{background:rgba(13,13,25,0.68);backdrop-filter:blur(1px);}
+#settings,#pause,#gameover{background:rgba(13,13,25,0.94);backdrop-filter:blur(6px);}
 
-/* menu */
-#menu h1{font-size:clamp(1.9rem,7vw,3rem);font-weight:950;letter-spacing:-0.03em;margin-bottom:2px;}
-#menu h1 span{color:var(--accent);}
-.sub{color:var(--text2);font-size:0.85rem;margin-bottom:18px;}
-.settings{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
-.srow{display:flex;flex-direction:column;gap:5px;}
-.slabel{font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text2);}
-.pills{display:flex;gap:5px;}
-.pill{flex:1;padding:8px 4px;border-radius:8px;text-align:center;background:var(--bg3);border:1.5px solid var(--border);color:var(--text2);font-size:clamp(0.68rem,2.4vw,0.8rem);font-weight:700;cursor:pointer;transition:all 0.13s;}
-.pill:hover{border-color:var(--accent);color:var(--text);}
-.pill.on{background:var(--accent);border-color:var(--accent);color:#fff;}
-.btn-play{background:var(--accent);color:#fff;padding:13px 50px;border-radius:12px;font-size:1.05rem;font-weight:900;transition:background 0.15s;}
-.btn-play:hover{background:var(--accent-h);}
-.hint{font-size:0.7rem;color:var(--text2);margin-top:10px;text-align:center;}
+/* ── MENU CARD ── */
+.menu-card{background:rgba(22,22,36,0.97);border:1px solid rgba(124,92,252,0.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,0.5),0 0 48px rgba(124,92,252,0.07);}
+.game-title{font-size:clamp(2.1rem,8vw,3rem);font-weight:950;letter-spacing:-0.03em;}
+.game-title span{color:var(--accent);}
+.stat-row{display:flex;align-items:center;gap:28px;}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.stat-ico{font-size:2rem;line-height:1;}
+.stat-val{font-size:1.9rem;font-weight:900;line-height:1;}
+.stat-div{width:1px;height:44px;background:var(--border);}
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:0.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background 0.15s,transform 0.1s;}
+.gbtn:active{transform:scale(0.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:0.69rem;color:var(--text2);text-align:center;line-height:1.5;}
 
-/* hud */
+/* ── SETTINGS CARD ── */
+.s-card{background:rgba(22,22,36,0.98);border:1px solid rgba(124,92,252,0.18);border-radius:20px;width:min(420px,96vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 56px rgba(0,0,0,0.5);}
+.s-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:16px 14px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.s-title{font-size:1rem;font-weight:800;text-align:center;}
+.back-btn{width:36px;height:36px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:background 0.13s;}
+.back-btn:hover{background:var(--bg4);}
+.s-body{flex:1;overflow-y:auto;padding:14px 14px 4px;display:flex;flex-direction:column;gap:14px;}
+.s-body::-webkit-scrollbar{width:0;}
+.scat{display:flex;flex-direction:column;gap:7px;}
+.scat-label{font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all 0.13s;}
+.sopt:hover{border-color:rgba(124,92,252,0.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,0.13);}
+.sopt-ico{font-size:1.65rem;line-height:1.15;text-align:center;}
+.sopt-lbl{font-size:0.63rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.4;}
+.sopt-lbl em{font-style:normal;color:rgba(255,255,255,0.32);font-size:0.9em;}
+.sopt.on .sopt-lbl{color:var(--text);}
+/* mini grid icons */
+.mg{display:grid;gap:2px;}
+.mg2{grid-template-columns:repeat(2,7px);}
+.mg3{grid-template-columns:repeat(3,6px);}
+.mg4{grid-template-columns:repeat(4,5px);}
+.mg5{grid-template-columns:repeat(5,4px);}
+.mg i{display:block;border-radius:1px;background:var(--text2);}
+.mg2 i{width:7px;height:7px;}.mg3 i{width:6px;height:6px;}.mg4 i{width:5px;height:5px;}.mg5 i{width:4px;height:4px;}
+.sopt.on .mg i{background:var(--accent);}
+.s-foot{padding:12px 14px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.s-foot .gbtn{flex:1;}
+
+/* ── HUD ── */
 #hud{position:absolute;top:0;left:0;right:0;z-index:5;display:none;align-items:center;justify-content:space-between;padding:10px 14px;pointer-events:none;}
 #hud.open{display:flex;}
 .hud-l{display:flex;gap:20px;}
@@ -44,20 +73,15 @@ canvas{position:absolute;inset:0;display:block;}
 #pauseBtn{pointer-events:auto;width:34px;height:34px;border-radius:8px;background:rgba(37,37,56,0.85);border:1px solid var(--border);color:var(--text2);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background 0.13s,color 0.13s;}
 #pauseBtn:hover{background:var(--bg4);color:var(--text);}
 
-/* pause & gameover shared */
-#pause h2,#gameover h2{font-size:clamp(1.6rem,5vw,2.2rem);font-weight:950;margin-bottom:6px;}
-#pause p{color:var(--text2);margin-bottom:20px;}
-.go-score{font-size:1.4rem;font-weight:900;color:var(--accent);margin-bottom:3px;}
-.go-best{font-size:0.85rem;color:var(--text2);margin-bottom:12px;}
-.go-rec{font-size:0.88rem;font-weight:800;color:#ffd166;margin-bottom:16px;display:none;}
-.brow{display:flex;gap:10px;}
-.btn{padding:11px 26px;border-radius:10px;font-size:0.92rem;font-weight:800;}
-.btn.p{background:var(--accent);color:#fff;}
-.btn.p:hover{background:var(--accent-h);}
-.btn.g{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
-.btn.g:hover{background:var(--bg4);color:var(--text);}
+/* ── PAUSE / GAMEOVER CARDS ── */
+.p-card,.go-card{background:rgba(22,22,36,0.97);border:1px solid rgba(124,92,252,0.22);border-radius:20px;padding:26px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;width:min(320px,90vw);box-shadow:0 20px 56px rgba(0,0,0,0.5);}
+.p-card h2,.go-card h2{font-size:clamp(1.5rem,5vw,2rem);font-weight:950;}
+.p-card p{color:var(--text2);font-size:0.9rem;}
+.go-rec{font-size:0.88rem;font-weight:800;color:#ffd166;display:none;}
+.brow{display:flex;gap:8px;width:100%;}
+.brow .gbtn{flex:1;}
 
-/* dpad */
+/* ── DPAD ── */
 #dpad{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:8;display:none;flex-direction:column;align-items:center;gap:4px;}
 .dr{display:flex;gap:4px;}
 .dp{width:56px;height:56px;border-radius:12px;background:rgba(37,37,56,0.88);border:1px solid var(--border);color:var(--text2);font-size:1.2rem;display:flex;align-items:center;justify-content:center;touch-action:none;transition:background 0.1s,color 0.1s;}
@@ -69,45 +93,67 @@ canvas{position:absolute;inset:0;display:block;}
 
 <!-- MENU -->
 <div id="menu" class="ov open">
-  <h1>Bonker <span>Snake</span></h1>
-  <p class="sub">Eat the food. Don't hit anything bad.</p>
-  <div class="settings">
-    <div class="srow">
-      <div class="slabel">Map size</div>
-      <div class="pills" data-g="mapSize">
-        <div class="pill" data-v="small">Small</div>
-        <div class="pill on" data-v="medium">Medium</div>
-        <div class="pill" data-v="large">Large</div>
-        <div class="pill" data-v="huge">Huge</div>
+  <div class="menu-card">
+    <h1 class="game-title">Bonker <span>Snake</span></h1>
+    <div class="stat-row">
+      <div class="stat-item"><div class="stat-ico">🍎</div><div class="stat-val" id="menuScore">0</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-ico">🏆</div><div class="stat-val" id="menuBest">0</div></div>
+    </div>
+    <button class="gbtn accent" id="playBtn">▶&ensp;Play</button>
+    <button class="gbtn ghost" id="settingsBtn">⚙&ensp;Settings</button>
+    <p class="hint">Arrow keys / WASD &nbsp;·&nbsp; Swipe on mobile &nbsp;·&nbsp; P = pause</p>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="ov">
+  <div class="s-card">
+    <div class="s-head">
+      <button class="back-btn" id="backBtn">←</button>
+      <div class="s-title">Settings</div>
+      <div></div>
+    </div>
+    <div class="s-body">
+      <div class="scat">
+        <div class="scat-label">Food on map</div>
+        <div class="scat-row" data-g="fruits">
+          <div class="sopt on" data-v="1"><div class="sopt-ico">🍎</div><div class="sopt-lbl">1</div></div>
+          <div class="sopt" data-v="3"><div class="sopt-ico" style="font-size:1rem;letter-spacing:-2px;">🍎🍎🍎</div><div class="sopt-lbl">3</div></div>
+          <div class="sopt" data-v="5"><div class="sopt-ico" style="font-size:0.9rem;line-height:1.3;letter-spacing:-2px;">🍎🍎🍎<br>🍎🍎</div><div class="sopt-lbl">5</div></div>
+        </div>
+      </div>
+      <div class="scat">
+        <div class="scat-label">Map size</div>
+        <div class="scat-row" data-g="mapSize">
+          <div class="sopt" data-v="small"><div class="sopt-ico"><div class="mg mg2"></div></div><div class="sopt-lbl">Small<br><em>15×15</em></div></div>
+          <div class="sopt on" data-v="medium"><div class="sopt-ico"><div class="mg mg3"></div></div><div class="sopt-lbl">Medium<br><em>25×25</em></div></div>
+          <div class="sopt" data-v="large"><div class="sopt-ico"><div class="mg mg4"></div></div><div class="sopt-lbl">Large<br><em>35×35</em></div></div>
+          <div class="sopt" data-v="huge"><div class="sopt-ico"><div class="mg mg5"></div></div><div class="sopt-lbl">Huge<br><em>45×45</em></div></div>
+        </div>
+      </div>
+      <div class="scat">
+        <div class="scat-label">Speed</div>
+        <div class="scat-row" data-g="speed">
+          <div class="sopt" data-v="slow"><div class="sopt-ico">🐢</div><div class="sopt-lbl">Slow</div></div>
+          <div class="sopt on" data-v="normal"><div class="sopt-ico">🐇</div><div class="sopt-lbl">Normal</div></div>
+          <div class="sopt" data-v="fast"><div class="sopt-ico">⚡</div><div class="sopt-lbl">Fast</div></div>
+        </div>
+      </div>
+      <div class="scat">
+        <div class="scat-label">Mode</div>
+        <div class="scat-row" data-g="mode">
+          <div class="sopt on" data-v="classic"><div class="sopt-ico">⬜</div><div class="sopt-lbl">Classic</div></div>
+          <div class="sopt" data-v="wrap"><div class="sopt-ico">↩️</div><div class="sopt-lbl">Wrap</div></div>
+          <div class="sopt" data-v="obstacles"><div class="sopt-ico">🧱</div><div class="sopt-lbl">Obstacles</div></div>
+        </div>
       </div>
     </div>
-    <div class="srow">
-      <div class="slabel">Speed</div>
-      <div class="pills" data-g="speed">
-        <div class="pill" data-v="slow">Slow</div>
-        <div class="pill on" data-v="normal">Normal</div>
-        <div class="pill" data-v="fast">Fast</div>
-      </div>
-    </div>
-    <div class="srow">
-      <div class="slabel">Fruits on map</div>
-      <div class="pills" data-g="fruits">
-        <div class="pill on" data-v="1">1</div>
-        <div class="pill" data-v="3">3</div>
-        <div class="pill" data-v="5">5</div>
-      </div>
-    </div>
-    <div class="srow">
-      <div class="slabel">Mode</div>
-      <div class="pills" data-g="mode">
-        <div class="pill on" data-v="classic">Classic</div>
-        <div class="pill" data-v="wrap">Wrap</div>
-        <div class="pill" data-v="obstacles">Obstacles</div>
-      </div>
+    <div class="s-foot">
+      <button class="gbtn accent" id="sPlayBtn">▶&ensp;Play</button>
+      <button class="gbtn ghost" id="resetBtn">↺&ensp;Reset</button>
     </div>
   </div>
-  <button class="btn-play" id="playBtn">Play</button>
-  <p class="hint">Arrow keys / WASD &nbsp;·&nbsp; Swipe on mobile &nbsp;·&nbsp; P = pause</p>
 </div>
 
 <!-- HUD -->
@@ -121,27 +167,34 @@ canvas{position:absolute;inset:0;display:block;}
 
 <!-- PAUSE -->
 <div id="pause" class="ov">
-  <h2>Paused</h2>
-  <p>Take a breather 🧘</p>
-  <div class="brow">
-    <button class="btn p" id="resumeBtn">Resume</button>
-    <button class="btn g" id="quitBtn">Menu</button>
+  <div class="p-card">
+    <h2>Paused</h2>
+    <p>Take a breather 🧘</p>
+    <div class="brow">
+      <button class="gbtn accent" id="resumeBtn">▶&ensp;Resume</button>
+      <button class="gbtn ghost" id="quitBtn">Menu</button>
+    </div>
   </div>
 </div>
 
-<!-- GAME OVER -->
+<!-- GAMEOVER -->
 <div id="gameover" class="ov">
-  <h2 id="goTitle">Game Over</h2>
-  <div class="go-score" id="goScore"></div>
-  <div class="go-best" id="goBest"></div>
-  <div class="go-rec" id="goRec">🏆 New record!</div>
-  <div class="brow">
-    <button class="btn p" id="playAgainBtn">Play again</button>
-    <button class="btn g" id="menuBtn">Menu</button>
+  <div class="go-card">
+    <h2 id="goTitle">Game Over</h2>
+    <div class="stat-row">
+      <div class="stat-item"><div class="stat-ico">🍎</div><div class="stat-val" id="goScore">0</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-ico">🏆</div><div class="stat-val" id="goBest">0</div></div>
+    </div>
+    <div class="go-rec" id="goRec">🏆 New record!</div>
+    <div class="brow">
+      <button class="gbtn accent" id="playAgainBtn">▶&ensp;Play again</button>
+      <button class="gbtn ghost" id="menuBtn">Menu</button>
+    </div>
   </div>
 </div>
 
-<!-- D-PAD -->
+<!-- DPAD -->
 <div id="dpad">
   <div class="dr"><button class="dp" data-d="UP">▲</button></div>
   <div class="dr">
@@ -152,51 +205,56 @@ canvas{position:absolute;inset:0;display:block;}
 </div>
 
 <script>
-const MAP_TILES = {small:15, medium:25, large:35, huge:45};
-const SPEEDS    = {slow:200, normal:120, fast:65};
-const TOUCH  = 'ontouchstart' in window;
+const MAP_TILES={small:15,medium:25,large:35,huge:45};
+const SPEEDS={slow:200,normal:120,fast:65};
+const TOUCH='ontouchstart' in window;
+const cfg={mapSize:'medium',speed:'normal',fruits:1,mode:'classic'};
 
-const cfg = {mapSize:'medium', speed:'normal', fruits:1, mode:'classic'};
+// populate mini grid icons
+document.querySelectorAll('.mg').forEach(el=>{
+  const n=+el.className.match(/mg(\d)/)[1];
+  el.innerHTML=Array(n*n).fill('<i></i>').join('');
+});
 
-// pill settings UI
-document.querySelectorAll('[data-g]').forEach(grp => {
-  grp.addEventListener('click', e => {
-    const pill = e.target.closest('.pill');
-    if (!pill) return;
-    grp.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
-    pill.classList.add('on');
-    const k = grp.dataset.g;
-    cfg[k] = k === 'fruits' ? +pill.dataset.v : pill.dataset.v;
+// settings pill interaction
+document.querySelectorAll('[data-g]').forEach(grp=>{
+  grp.addEventListener('click',e=>{
+    const opt=e.target.closest('.sopt');
+    if(!opt) return;
+    grp.querySelectorAll('.sopt').forEach(o=>o.classList.remove('on'));
+    opt.classList.add('on');
+    const k=grp.dataset.g;
+    cfg[k]=k==='fruits'?+opt.dataset.v:opt.dataset.v;
   });
 });
 
 // canvas
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-let W, H, CELL, cols, rows, offsetX=0, offsetY=0;
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H,CELL,cols,rows,offsetX=0,offsetY=0;
 
-function resize() {
-  W = canvas.width  = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-  if (cols) calcGrid();
-  if (gs === 'playing' || gs === 'paused') draw();
+function resize(){
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+  if(cols) calcGrid();
+  if(gs==='playing'||gs==='paused') draw();
 }
-function calcGrid() {
-  const tiles = MAP_TILES[cfg.mapSize];
-  cols = tiles; rows = tiles;
-  const availH = H - (TOUCH ? 152 : 0);
-  CELL = Math.min(Math.floor(W / cols), Math.floor(availH / rows));
-  offsetX = Math.floor((W       - cols * CELL) / 2);
-  offsetY = Math.floor((availH  - rows * CELL) / 2);
+function calcGrid(){
+  const t=MAP_TILES[cfg.mapSize];
+  cols=t; rows=t;
+  const avH=H-(TOUCH?152:0);
+  CELL=Math.min(Math.floor(W/cols),Math.floor(avH/rows));
+  offsetX=Math.floor((W-cols*CELL)/2);
+  offsetY=Math.floor((avH-rows*CELL)/2);
 }
-window.addEventListener('resize', resize);
-W = canvas.width  = window.innerWidth;
-H = canvas.height = window.innerHeight;
+window.addEventListener('resize',resize);
+W=canvas.width=window.innerWidth;
+H=canvas.height=window.innerHeight;
 
 // sound
-const AC = window.AudioContext || window.webkitAudioContext;
+const AC=window.AudioContext||window.webkitAudioContext;
 let _ac;
-function ac() { if (!_ac) _ac = new AC(); if (_ac.state==='suspended') _ac.resume(); return _ac; }
+function ac(){if(!_ac)_ac=new AC();if(_ac.state==='suspended')_ac.resume();return _ac;}
 function beep(f,d,t='square',v=0.15){
   try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);
   o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);
@@ -206,34 +264,64 @@ function sfxEat(){beep(440,.07,'square',.18);setTimeout(()=>beep(660,.07,'square
 function sfxDie(){[220,180,140].forEach((f,i)=>setTimeout(()=>beep(f,.18,'sawtooth',.2),i*100));}
 function sfxMove(){beep(300,.02,'square',.03);}
 
-// state
-let gs='menu'; // menu | playing | paused | dead
-let snake, dir, nextDir, foods, obstacles, score, best, prevBest, loopId;
-let tx0, ty0;
+// game state
+let gs='menu';
+let snake,dir,nextDir,foods,obstacles,score,best,prevBest,loopId;
+let lastScore=0,tx0,ty0;
+
+// demo snake
+let demo=null,demoTick=null;
 
 function loadBest(){return +(localStorage.getItem('bgSnakeBest')||0);}
 function saveBest(v){localStorage.setItem('bgSnakeBest',String(v));}
-
 function rand(n){return Math.floor(Math.random()*n);}
 
+// ── DEMO ──
+function startDemo(){
+  calcGrid();
+  const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
+  demo={
+    snake:[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy},{x:cx-3,y:cy},{x:cx-4,y:cy}],
+    dir:{x:1,y:0},
+    food:{x:rand(cols),y:rand(rows)}
+  };
+  clearInterval(demoTick);
+  demoTick=setInterval(()=>{
+    if(gs!=='menu'){clearInterval(demoTick);return;}
+    const d=demo;
+    if(Math.random()<0.18){
+      d.dir=d.dir.x!==0
+        ?(Math.random()<0.5?{x:0,y:-1}:{x:0,y:1})
+        :(Math.random()<0.5?{x:-1,y:0}:{x:1,y:0});
+    }
+    const hd={
+      x:(d.snake[0].x+d.dir.x+cols)%cols,
+      y:(d.snake[0].y+d.dir.y+rows)%rows
+    };
+    d.snake.unshift(hd);
+    if(hd.x===d.food.x&&hd.y===d.food.y){
+      d.food={x:rand(cols),y:rand(rows)};
+      if(d.snake.length>10) d.snake.pop();
+    }else{
+      d.snake.pop();
+    }
+  },200);
+}
+
+// ── GAME LOGIC ──
 function placeFood(){
-  const occ=new Set([
-    ...snake.map(s=>`${s.x},${s.y}`),
-    ...foods.map(f=>`${f.x},${f.y}`),
-    ...obstacles
-  ]);
+  const occ=new Set([...snake.map(s=>`${s.x},${s.y}`),...foods.map(f=>`${f.x},${f.y}`),...obstacles]);
   let p,t=0;
-  do{p={x:rand(cols),y:rand(rows)};t++;}
-  while(occ.has(`${p.x},${p.y}`)&&t<600);
+  do{p={x:rand(cols),y:rand(rows)};t++;}while(occ.has(`${p.x},${p.y}`)&&t<600);
   return p;
 }
 
 function initGame(){
   calcGrid();
-  const cx=Math.floor(cols/2), cy=Math.floor(rows/2);
+  const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
   snake=[{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
-  dir={x:1,y:0}; nextDir={x:1,y:0};
-  foods=[]; obstacles=new Set();
+  dir={x:1,y:0};nextDir={x:1,y:0};
+  foods=[];obstacles=new Set();
   if(cfg.mode==='obstacles'){
     for(let r=0;r<rows;r++)
       for(let c=0;c<cols;c++){
@@ -242,13 +330,13 @@ function initGame(){
       }
   }
   for(let i=0;i<cfg.fruits;i++) foods.push(placeFood());
-  prevBest=loadBest(); score=0; best=prevBest;
+  prevBest=loadBest();score=0;best=prevBest;
 }
 
 function startGame(){
   initGame();
   gs='playing';
-  setUI(); updateHUD();
+  setUI();updateHUD();
   clearInterval(loopId);
   loopId=setInterval(tick,SPEEDS[cfg.speed]);
 }
@@ -256,11 +344,10 @@ function startGame(){
 function tick(){
   if(gs!=='playing') return;
   dir={...nextDir};
-  let hd={x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+  let hd={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
   if(cfg.mode==='wrap'){
-    hd.x=(hd.x+cols)%cols;
-    hd.y=(hd.y+rows)%rows;
-  } else {
+    hd.x=(hd.x+cols)%cols;hd.y=(hd.y+rows)%rows;
+  }else{
     if(hd.x<0||hd.x>=cols||hd.y<0||hd.y>=rows){die();return;}
   }
   if(cfg.mode==='obstacles'&&obstacles.has(`${hd.x},${hd.y}`)){die();return;}
@@ -270,17 +357,15 @@ function tick(){
   if(fi!==-1){
     score++;
     if(score>best){best=score;saveBest(best);}
-    updateHUD();
-    foods[fi]=placeFood();
-    sfxEat();
-  } else {
-    snake.pop();
-    sfxMove();
+    updateHUD();foods[fi]=placeFood();sfxEat();
+  }else{
+    snake.pop();sfxMove();
   }
 }
 
 function die(){
   clearInterval(loopId);
+  lastScore=score;
   gs='dead';
   sfxDie();
   setTimeout(()=>{
@@ -290,19 +375,36 @@ function die(){
     if(score>=30){t.textContent='🔥 Incredible!';t.style.color='#4ade80';}
     else if(score>=15){t.textContent='🎉 Great run!';t.style.color='#7c5cfc';}
     else{t.textContent='Game Over';}
-    document.getElementById('goScore').textContent=`Score: ${score}`;
-    document.getElementById('goBest').textContent=`Best: ${best}`;
+    document.getElementById('goScore').textContent=score;
+    document.getElementById('goBest').textContent=best;
     document.getElementById('goRec').style.display=nr?'block':'none';
     setUI();
   },350);
 }
 
-function pauseGame() {if(gs!=='playing')return;gs='paused';setUI();}
+function pauseGame(){if(gs!=='playing')return;gs='paused';setUI();}
 function resumeGame(){if(gs!=='paused')return;gs='playing';setUI();}
-function goMenu()    {clearInterval(loopId);gs='menu';setUI();}
+
+function goMenu(){
+  clearInterval(loopId);
+  gs='menu';
+  document.getElementById('menuScore').textContent=lastScore;
+  document.getElementById('menuBest').textContent=loadBest();
+  startDemo();
+  setUI();
+}
+
+function resetSettings(){
+  cfg.mapSize='medium';cfg.speed='normal';cfg.fruits=1;cfg.mode='classic';
+  document.querySelectorAll('[data-g]').forEach(grp=>{
+    const val=String(cfg[grp.dataset.g]);
+    grp.querySelectorAll('.sopt').forEach(o=>o.classList.toggle('on',o.dataset.v===val));
+  });
+}
 
 function setUI(){
   document.getElementById('menu').classList.toggle('open',     gs==='menu');
+  document.getElementById('settings').classList.toggle('open', gs==='settings');
   document.getElementById('pause').classList.toggle('open',    gs==='paused');
   document.getElementById('gameover').classList.toggle('open', gs==='dead');
   document.getElementById('hud').classList.toggle('open',      gs==='playing'||gs==='paused');
@@ -314,63 +416,56 @@ function updateHUD(){
   document.getElementById('bVal').textContent=best;
 }
 
-// draw
+// ── DRAW ──
 function rr(x,y,w,h,r){
   r=Math.min(r,w/2,h/2);
   ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
-  ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.arcTo(x,y+h,x,y+h-r,r);
-  ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
 }
 
-function draw(){
-  // letterbox bg
-  ctx.fillStyle='#0e0e1a';
-  ctx.fillRect(0,0,W,H);
-  // game area bg
-  ctx.fillStyle='#13131f';
-  ctx.fillRect(offsetX,offsetY,cols*CELL,rows*CELL);
-  // grid lines
-  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=0.5;
+function drawScene(snakeArr,foodArr,obsSet){
+  ctx.fillStyle='#0e0e1a';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#13131f';ctx.fillRect(offsetX,offsetY,cols*CELL,rows*CELL);
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=0.5;
   for(let x=0;x<=cols;x++){ctx.beginPath();ctx.moveTo(offsetX+x*CELL,offsetY);ctx.lineTo(offsetX+x*CELL,offsetY+rows*CELL);ctx.stroke();}
   for(let y=0;y<=rows;y++){ctx.beginPath();ctx.moveTo(offsetX,offsetY+y*CELL);ctx.lineTo(offsetX+cols*CELL,offsetY+y*CELL);ctx.stroke();}
-  // game area border
-  ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(255,255,255,0.09)';ctx.lineWidth=1;
   ctx.strokeRect(offsetX,offsetY,cols*CELL,rows*CELL);
-  // obstacles
-  if(cfg.mode==='obstacles'){
+  if(obsSet&&obsSet.size){
     ctx.fillStyle='#252540';
-    obstacles.forEach(k=>{const[c,r]=k.split(',').map(Number);rr(offsetX+c*CELL+2,offsetY+r*CELL+2,CELL-4,CELL-4,4);ctx.fill();});
+    obsSet.forEach(k=>{const[c,r]=k.split(',').map(Number);rr(offsetX+c*CELL+2,offsetY+r*CELL+2,CELL-4,CELL-4,4);ctx.fill();});
   }
-  // food
   const pulse=0.78+Math.sin(Date.now()/200)*0.22;
-  ctx.shadowColor='#ff6b7f'; ctx.shadowBlur=12; ctx.fillStyle='#ff6b7f';
-  foods.forEach(f=>{
+  ctx.shadowColor='#ff6b7f';ctx.shadowBlur=12;ctx.fillStyle='#ff6b7f';
+  foodArr.forEach(f=>{
     ctx.beginPath();
     ctx.arc(offsetX+f.x*CELL+CELL/2,offsetY+f.y*CELL+CELL/2,CELL/2*0.65*pulse,0,Math.PI*2);
     ctx.fill();
   });
   ctx.shadowBlur=0;
-  // snake
-  snake.forEach((s,i)=>{
-    const ratio=1-i/snake.length;
-    ctx.shadowColor='#7c5cfc'; ctx.shadowBlur=i===0?14:0;
+  snakeArr.forEach((s,i)=>{
+    const ratio=1-i/snakeArr.length;
+    ctx.shadowColor='#7c5cfc';ctx.shadowBlur=i===0?14:0;
     ctx.fillStyle=i===0?'#b090ff':`rgba(124,92,252,${0.3+ratio*0.7})`;
-    const pd=i===0?1:2, r=i===0?6:4;
+    const pd=i===0?1:2,r=i===0?6:4;
     rr(offsetX+s.x*CELL+pd,offsetY+s.y*CELL+pd,CELL-pd*2,CELL-pd*2,r);
     ctx.fill();
   });
   ctx.shadowBlur=0;
 }
 
-// raf loop — 60fps draw when active
+function draw(){drawScene(snake,foods,obstacles);}
+
 (function raf(){
   if(gs==='playing'||gs==='paused') draw();
+  else if(gs==='menu'&&demo) drawScene(demo.snake,[demo.food],null);
   else{ctx.fillStyle='#0e0e1a';ctx.fillRect(0,0,W,H);}
   requestAnimationFrame(raf);
 })();
 
-// controls
+// ── CONTROLS ──
 const ODIR={UP:'DOWN',DOWN:'UP',LEFT:'RIGHT',RIGHT:'LEFT'};
 const DVEC={UP:{x:0,y:-1},DOWN:{x:0,y:1},LEFT:{x:-1,y:0},RIGHT:{x:1,y:0}};
 const KMAP={ArrowUp:'UP',ArrowDown:'DOWN',ArrowLeft:'LEFT',ArrowRight:'RIGHT',
@@ -381,27 +476,27 @@ function tryDir(n){if(n!==ODIR[curName()]) nextDir=DVEC[n];}
 
 document.addEventListener('keydown',e=>{
   if(e.key==='p'||e.key==='P'||e.key==='Escape'){
-    gs==='playing'?pauseGame():gs==='paused'&&resumeGame(); return;
+    gs==='playing'?pauseGame():gs==='paused'&&resumeGame();return;
   }
   if(gs!=='playing') return;
-  const d=KMAP[e.key]; if(d){e.preventDefault();tryDir(d);}
+  const d=KMAP[e.key];if(d){e.preventDefault();tryDir(d);}
 });
 
 document.addEventListener('touchstart',e=>{
-  tx0=e.touches[0].clientX; ty0=e.touches[0].clientY;
+  tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;
   if(gs==='playing') e.preventDefault();
 },{passive:false});
 
 document.addEventListener('touchend',e=>{
   if(gs!=='playing') return;
-  const dx=e.changedTouches[0].clientX-tx0, dy=e.changedTouches[0].clientY-ty0;
+  const dx=e.changedTouches[0].clientX-tx0,dy=e.changedTouches[0].clientY-ty0;
   if(Math.max(Math.abs(dx),Math.abs(dy))<20) return;
   Math.abs(dx)>Math.abs(dy)?tryDir(dx>0?'RIGHT':'LEFT'):tryDir(dy>0?'DOWN':'UP');
 },{passive:true});
 
 document.querySelectorAll('.dp').forEach(btn=>{
   btn.addEventListener('touchstart',e=>{
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();e.stopPropagation();
     btn.classList.add('pr');
     if(gs==='playing') tryDir(btn.dataset.d);
   },{passive:false});
@@ -410,11 +505,19 @@ document.querySelectorAll('.dp').forEach(btn=>{
 });
 
 document.getElementById('playBtn').addEventListener('click',startGame);
+document.getElementById('settingsBtn').addEventListener('click',()=>{gs='settings';setUI();});
+document.getElementById('backBtn').addEventListener('click',()=>{gs='menu';startDemo();setUI();});
+document.getElementById('sPlayBtn').addEventListener('click',startGame);
+document.getElementById('resetBtn').addEventListener('click',resetSettings);
 document.getElementById('pauseBtn').addEventListener('click',pauseGame);
 document.getElementById('resumeBtn').addEventListener('click',resumeGame);
 document.getElementById('quitBtn').addEventListener('click',goMenu);
 document.getElementById('playAgainBtn').addEventListener('click',startGame);
 document.getElementById('menuBtn').addEventListener('click',goMenu);
+
+// init
+document.getElementById('menuBest').textContent=loadBest();
+startDemo();
 </script>
 </body>
 </html>
