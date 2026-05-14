@@ -875,6 +875,23 @@ function segIntersectsRect(ax,ay,bx,by,rx1,ry1,rx2,ry2){
   else{let t1=(ry1-ay)/dy,t2=(ry2-ay)/dy;if(t1>t2){const t=t1;t1=t2;t2=t;}tmin=Math.max(tmin,t1);tmax=Math.min(tmax,t2);if(tmin>tmax)return false;}
   return true;
 }
+function _itemPlaceBlocked(t,wx,wy){
+  if(isInRiver(wx,wy))return'river';
+  for(const[,tg]of Object.entries(bldgSpr)){
+    const td=tg._d;
+    // enemy cabinet zone
+    if(td.type==='tc'&&td.ownerId!==PID&&!(state.teamId&&td.teamId===state.teamId)){
+      if(dist2(wx,wy,td.x,td.y)<TC_ZONE)return'tc';
+    }
+    // can't place inside ext walls or gates
+    if(td.type==='ewwall'||td.type==='ewgate'){
+      if(obbPush(wx,wy,td.x,td.y,td.angle||0,40,8,18))return'wall';
+    }
+    // general overlap with any building
+    if(dist2(wx,wy,td.x,td.y)<26)return'overlap';
+  }
+  return null;
+}
 function pathBlocked(ax,ay,bx,by){
   for(const g of Object.values(bldgSpr)){
     const d=g._d; if(d.type!=='wall'&&d.type!=='door'&&d.type!=='ewwall'&&d.type!=='ewgate')continue;
@@ -2397,16 +2414,11 @@ class Game extends Phaser.Scene {
     const px=this.pbody.x, py=this.pbody.y;
     const placeX=Math.round(ptr.worldX), placeY=Math.round(ptr.worldY);
     if(dist2(px,py,placeX,placeY)>ATK_RNG+60){this.pop(px,py-30,'Too far away!','#e74c3c');return true;}
-    if(isInRiver(placeX,placeY)){this.pop(px,py-30,"Can't build in the river!",'#3498db');return true;}
-    for(const[,tg] of Object.entries(bldgSpr)){
-      const td=tg._d; if(td.type!=='tc')continue;
-      if(td.ownerId===PID||(state.teamId&&td.teamId===state.teamId))continue;
-      if(dist2(placeX,placeY,td.x,td.y)<TC_ZONE){this.pop(px,py-30,'Enemy cabinet blocks building here!','#e74c3c');return true;}
-    }
-    for(const[,tg] of Object.entries(bldgSpr)){
-      const td=tg._d;
-      if(td.type===t&&dist2(placeX,placeY,td.x,td.y)<22){this.pop(px,py-30,'Something already here!','#e74c3c');return true;}
-    }
+    const blocked=_itemPlaceBlocked(t,placeX,placeY);
+    if(blocked==='river'){this.pop(px,py-30,"Can't build in the river!",'#3498db');return true;}
+    if(blocked==='tc'){this.pop(px,py-30,'Enemy cabinet blocks building here!','#e74c3c');return true;}
+    if(blocked==='wall'){this.pop(px,py-30,"Can't place inside a wall!",'#e74c3c');return true;}
+    if(blocked==='overlap'){this.pop(px,py-30,'Something already here!','#e74c3c');return true;}
     const extra={};
     if(t==='sleeping_bag'){
       const bagCount=Object.values(bldgSpr).filter(g=>g._d.type==='sleeping_bag'&&g._d.ownerId===PID).length;
@@ -3134,17 +3146,23 @@ class Game extends Phaser.Scene {
       if(heldItem&&PLACEABLE_BLDG.includes(placeT)){
         const p2=this.input.activePointer;
         bPrev.clear().setVisible(true);
-        const inRange=dist2(state.x,state.y,p2.worldX,p2.worldY)<=ATK_RNG+60;
-        const col=inRange?0x4ade80:0xe74c3c;
-        const br=bldgAngle*Math.PI/180,bC=Math.cos(br),bS=Math.sin(br);
-        const BW=(lx,ly)=>({x:p2.worldX+lx*bC-ly*bS,y:p2.worldY+lx*bS+ly*bC});
-        if(placeT==='workbench'){
-          bPrev.fillStyle(col,0.28).fillPoints([BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)],true);
-          bPrev.lineStyle(2,col,0.8);const wpts=[BW(-22,-10),BW(22,-10),BW(22,6),BW(-22,6)];
-          bPrev.beginPath().moveTo(wpts[0].x,wpts[0].y);wpts.slice(1).forEach(pt=>bPrev.lineTo(pt.x,pt.y));bPrev.closePath().strokePath();
+        const wx=p2.worldX, wy=p2.worldY;
+        const inRange=dist2(state.x,state.y,wx,wy)<=ATK_RNG+60;
+        const isBlocked=!!_itemPlaceBlocked(placeT,wx,wy);
+        const col=(isBlocked||!inRange)?0xe74c3c:0x4ade80;
+        const br=bldgAngle*Math.PI/180, bC=Math.cos(br), bS=Math.sin(br);
+        const BW=(lx,ly)=>({x:wx+lx*bC-ly*bS, y:wy+lx*bS+ly*bC});
+        const SZ={chest:{hw:14,hh:14},sleeping_bag:{hw:16,hh:10},tc:{hw:17,hh:17},workbench:{hw:23,hh:9},furnace:{hw:19,hh:17}};
+        const {hw,hh}=SZ[placeT]||{hw:14,hh:14};
+        if(placeT==='furnace'){
+          bPrev.fillStyle(col,0.25).fillRect(wx-hw,wy-hh,hw*2,hh*2);
+          bPrev.lineStyle(2,col,0.85).strokeRect(wx-hw,wy-hh,hw*2,hh*2);
         } else {
-          bPrev.fillStyle(col,0.22).fillRoundedRect(p2.worldX-18,p2.worldY-14,36,28,4);
-          bPrev.lineStyle(2,col,0.8).strokeRoundedRect(p2.worldX-18,p2.worldY-14,36,28,4);
+          const pts=[BW(-hw,-hh),BW(hw,-hh),BW(hw,hh),BW(-hw,hh)];
+          bPrev.fillStyle(col,0.25).fillPoints(pts,true);
+          bPrev.lineStyle(2,col,0.85).beginPath().moveTo(pts[0].x,pts[0].y);
+          pts.slice(1).forEach(q=>bPrev.lineTo(q.x,q.y));
+          bPrev.closePath().strokePath();
         }
       } else if(bPrev)bPrev.setVisible(false);
     }
