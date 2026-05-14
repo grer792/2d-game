@@ -1311,7 +1311,7 @@ class Game extends Phaser.Scene {
     this.cameras.main.setZoom(2.5);
     bPrev=this.add.graphics().setDepth(98000).setVisible(false);
     this.hammerGfx=this.add.graphics().setDepth(98001);
-    this.hammerHintTxt=this.add.text(0,0,'🔨 Click to upgrade  Green=can afford  Orange=need more mats  Grey=max tier',{fontSize:'8px',color:'#ffe',stroke:'#111',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.65)',padding:{x:5,y:3}}).setOrigin(0.5).setDepth(99002).setVisible(false);
+    this.hammerHintTxt=this.add.text(0,0,'Click: upgrade   Right-click: demolish (10 min)',{fontSize:'8px',color:'#ffe',stroke:'#111',strokeThickness:2,fontFamily:'Segoe UI',backgroundColor:'rgba(0,0,0,0.65)',padding:{x:5,y:3}}).setOrigin(0.5).setDepth(99002).setVisible(false);
     this.wolfGfx=this.add.graphics().setDepth(50000);
 
     this.keys=this.input.keyboard.addKeys({
@@ -1330,7 +1330,11 @@ class Game extends Phaser.Scene {
       k9:Phaser.Input.Keyboard.KeyCodes.NINE,
       k0:Phaser.Input.Keyboard.KeyCodes.ZERO
     });
-    this.input.on('pointerdown',ptr=>this.handleClick(ptr));
+    this.input.mouse.disableContextMenu();
+    this.input.on('pointerdown',ptr=>{
+      if(ptr.rightButtonDown()) this.handleRightClick(ptr);
+      else this.handleClick(ptr);
+    });
     this.setupFirebase();
     window.addEventListener('beforeunload',()=>{
       if(!isDead){
@@ -2202,39 +2206,68 @@ class Game extends Phaser.Scene {
     return false;
   }
 
-  tryHammerBldg(ptr){
-    if(getActiveTool()!=='hammer')return false;
+  _hammerTarget(ptr){
     const px=this.pbody.x, py=this.pbody.y;
     for(const [id,g] of Object.entries(bldgSpr)){
       const d=g._d;
       if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
-      if(dist2(d.x,d.y,px,py)>ATK_RNG+20)continue;
-      if(Math.abs(ptr.worldX-d.x)>36||Math.abs(ptr.worldY-d.y)>36)continue;
-      const tier=d.tier||0;
-      const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:d.type==='ewwall'?EWWALL_TIERS:null;
-      if(tiers&&tier<2){
-        const next=tiers[tier+1], upgCost=next.upg;
-        if(invCanAfford(upgCost)){
-          for(const[k,v]of Object.entries(upgCost))invRemove(k,v);
-          const newHp=next.hp;
-          update(sref('buildings/'+id),{tier:tier+1,hp:newHp});
-          const matName=Object.keys(upgCost)[0];
-          this.pop(d.x,d.y-32,'Upgraded to '+matName+'! ('+newHp+' HP)','#2ecc71');
-        } else {
-          const needed=Object.entries(upgCost).map(([k,v])=>v+'x'+ITEM_ICON[k]).join(' ');
-          this.pop(d.x,d.y-32,'Need '+needed+' to upgrade','#e74c3c');
-        }
+      if(dist2(d.x,d.y,px,py)>ATK_RNG+30)continue;
+      const isEww=d.type==='ewwall'||d.type==='ewgate';
+      if(isEww){
+        const aR=(d.angle||0)*Math.PI/180,aC=Math.cos(aR),aS=Math.sin(aR);
+        const dx=ptr.worldX-d.x, dy=ptr.worldY-d.y;
+        const lx=dx*aC+dy*aS, ly=-dx*aS+dy*aC;
+        if(Math.abs(lx)>44||Math.abs(ly)>12)continue;
       } else {
-        const cost=BLDG_COST[d.type]||{};
-        const bag={x:d.x,y:d.y+10}; let hasDrop=false;
-        for(const[res,amt]of Object.entries(cost)){const ref2=Math.max(1,Math.floor(amt*0.5));bag[res]=(bag[res]||0)+ref2;hasDrop=true;}
-        if(hasDrop)set(sref('loot/demo_'+id),bag);
-        remove(sref('buildings/'+id));
-        this.pop(d.x,d.y-28,'Demolished','#aaa');
+        if(dist2(ptr.worldX,ptr.worldY,d.x,d.y)>32)continue;
       }
-      return true;
+      return {id,d};
     }
-    return false;
+    return null;
+  }
+
+  tryHammerBldg(ptr){
+    if(getActiveTool()!=='hammer')return false;
+    const hit=this._hammerTarget(ptr); if(!hit)return false;
+    const {id,d}=hit;
+    const tier=d.tier||0;
+    const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:d.type==='ewwall'?EWWALL_TIERS:null;
+    if(tiers&&tier<2){
+      const next=tiers[tier+1], upgCost=next.upg;
+      if(invCanAfford(upgCost)){
+        for(const[k,v]of Object.entries(upgCost))invRemove(k,v);
+        update(sref('buildings/'+id),{tier:tier+1,hp:next.hp});
+        const mat=tier===0?'Stone':'Iron';
+        this.pop(d.x,d.y-32,'→ '+mat,'#2ecc71');
+      } else {
+        const needed=Object.entries(upgCost).map(([k,v])=>v+ITEM_ICON[k]).join(' ');
+        this.pop(d.x,d.y-32,'Need '+needed,'#e74c3c');
+      }
+    } else if(tiers){
+      this.pop(d.x,d.y-28,'Max tier','#888');
+    } else {
+      this.pop(d.x,d.y-28,'R-click to demolish','#888');
+    }
+    return true;
+  }
+
+  handleRightClick(ptr){
+    if(getActiveTool()==='hammer') this.tryHammerDemolish(ptr);
+  }
+
+  tryHammerDemolish(ptr){
+    const hit=this._hammerTarget(ptr); if(!hit)return;
+    const {id,d}=hit;
+    const AGE_LIMIT=10*60*1000;
+    if(!d.placedAt||Date.now()-d.placedAt>AGE_LIMIT){
+      this.pop(d.x,d.y-28,'Too old to demolish','#888'); return;
+    }
+    const cost=BLDG_COST[d.type]||{};
+    const bag={x:d.x,y:d.y+10}; let hasDrop=false;
+    for(const[res,amt]of Object.entries(cost)){const r2=Math.max(1,Math.floor(amt*0.5));bag[res]=(bag[res]||0)+r2;hasDrop=true;}
+    if(hasDrop)set(sref('loot/demo_'+id),bag);
+    remove(sref('buildings/'+id));
+    this.pop(d.x,d.y-28,'Demolished','#aaa');
   }
 
   tryLootBag(ptr){
@@ -2429,8 +2462,8 @@ class Game extends Phaser.Scene {
     invRemove(t,1); refreshHotbar();
     state.score+=3; this.updateHUD();
     const id=t[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
-    set(sref('buildings/'+id),{x:placeX,y:placeY,type:t,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[t],...extra});
-    if(t==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
+    set(sref('buildings/'+id),{x:placeX,y:placeY,type:t,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[t],placedAt:Date.now(),...extra});
+    if(t==='tc')this.pop(placeX,placeY-40,'Cabinet placed!','#27ae60');
     if(t==='sleeping_bag')this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');
     return true;
   }
@@ -2505,8 +2538,8 @@ class Game extends Phaser.Scene {
     for(const[res,amt]of Object.entries(cost))invRemove(res,amt);
     state.score+=3; this.updateHUD();
     const id=buildType[0]+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,3);
-    set(sref('buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],...extra});
-    if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed! Enemies can\'t build inside your zone.','#27ae60');
+    set(sref('buildings/'+id),{x:placeX,y:placeY,type:buildType,ownerId:PID,teamId:state.teamId||null,hp:BLDG_HP[buildType],placedAt:Date.now(),...extra});
+    if(buildType==='tc')this.pop(placeX,placeY-40,'Cabinet placed!','#27ae60');
     if(buildType==='monument')this.pop(placeX,placeY-40,'Monument! Stand on it 90s to win!','#f0c040');
     if(buildType==='sleeping_bag'){this.pop(placeX,placeY-28,'🛏 Bed placed — respawn here!','#7ec8e3');}
     // Clear resources that were spawned on this foundation
@@ -3172,22 +3205,34 @@ class Game extends Phaser.Scene {
     const hammerActive=!buildMode&&getActiveTool()==='hammer';
     this.hammerHintTxt.setVisible(hammerActive);
     if(hammerActive){
-      this.hammerHintTxt.setPosition(state.x,state.y-56);
+      this.hammerHintTxt.setPosition(state.x,state.y-52);
+      const SZ={tc:{hw:18,hh:18},chest:{hw:14,hh:14},workbench:{hw:24,hh:10},sleeping_bag:{hw:17,hh:11},furnace:{hw:20,hh:18}};
       for(const[,g] of Object.entries(bldgSpr)){
         const d=g._d;
         if(d.ownerId!==PID&&!(state.teamId&&d.teamId===state.teamId))continue;
         if(dist2(d.x,d.y,state.x,state.y)>ATK_RNG+30)continue;
         const tiers=d.type==='wall'?WALL_TIERS:d.type==='door'?DOOR_TIERS:d.type==='ewwall'?EWWALL_TIERS:null;
         const tier=d.tier||0;
-        const isEww=d.type==='ewwall'||d.type==='ewgate';
-        const r=isEww?38:28;
-        if(tiers&&tier<2){
-          const col=invCanAfford(tiers[tier+1].upg)?0x2ecc71:0xf39c12;
-          this.hammerGfx.lineStyle(2.5,col,0.85).strokeRect(d.x-r,d.y-10,r*2,20);
-        } else if(tiers){
-          this.hammerGfx.lineStyle(2.5,0x888888,0.6).strokeRect(d.x-r,d.y-10,r*2,20);
+        const canDemo=d.placedAt&&Date.now()-d.placedAt<10*60*1000;
+        let col;
+        if(tiers&&tier<2) col=invCanAfford(tiers[tier+1].upg)?0x2ecc71:0xf39c12;
+        else if(tiers) col=0x555555;
+        else col=canDemo?0x7090c0:0x555555;
+        this.hammerGfx.lineStyle(2.5,col,0.85);
+        // draw outline matching actual building shape
+        const aR=(d.angle||0)*Math.PI/180, aC=Math.cos(aR), aS=Math.sin(aR);
+        const W=(lx,ly)=>({x:d.x+lx*aC-ly*aS,y:d.y+lx*aS+ly*aC});
+        if(d.type==='ewwall'||d.type==='ewgate'){
+          const pts=[W(-43,-9),W(43,-9),W(43,9),W(-43,9)];
+          this.hammerGfx.beginPath().moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>this.hammerGfx.lineTo(p.x,p.y));this.hammerGfx.closePath().strokePath();
+        } else if(d.type==='furnace'){
+          this.hammerGfx.strokeRect(d.x-20,d.y-18,40,36);
+        } else if(SZ[d.type]){
+          const {hw,hh}=SZ[d.type];
+          const pts=[W(-hw,-hh),W(hw,-hh),W(hw,hh),W(-hw,hh)];
+          this.hammerGfx.beginPath().moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>this.hammerGfx.lineTo(p.x,p.y));this.hammerGfx.closePath().strokePath();
         } else {
-          this.hammerGfx.lineStyle(2.5,0x2ecc71,0.7).strokeCircle(d.x,d.y,28);
+          this.hammerGfx.strokeCircle(d.x,d.y,20);
         }
       }
     }
