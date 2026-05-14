@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- dark bg -->
+  <rect width="32" height="32" rx="7" fill="#13131f"/>
+  <!-- bomb body -->
+  <circle cx="16" cy="20" r="10" fill="#7c5cfc"/>
+  <!-- shine -->
+  <ellipse cx="12.5" cy="15.5" rx="3" ry="2" fill="rgba(255,255,255,0.22)" transform="rotate(-20 12.5 15.5)"/>
+  <!-- fuse tube -->
+  <rect x="14.5" y="9" width="3" height="4" rx="1.5" fill="#5a3fd4"/>
+  <!-- fuse rope -->
+  <path d="M16 9 Q19 6 21 3" stroke="#c8a060" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- spark -->
+  <circle cx="21.5" cy="2.5" r="2.8" fill="#ffd166"/>
+  <circle cx="21.5" cy="2.5" r="1.4" fill="#fff"/>
+</svg>
