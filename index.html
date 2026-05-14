@@ -670,7 +670,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="sb-links">
         <a href="#">About</a><a href="/terms-and-conditions">Privacy</a><a href="/terms-and-conditions">Terms</a><a href="#">Contact</a>
       </div>
-      <div class="sb-copy"><span>Â© 2025 BonkerGames</span></div>
+      <div class="sb-copy"><span>© 2025 BonkerGames</span></div>
     </div>
   </aside>
 
@@ -923,7 +923,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
     <p style="font-family:'Inter',sans-serif;font-size:0.82rem;color:#444;line-height:1.6;margin-bottom:10px;">Some of our <a href="/terms-and-conditions" style="color:#7c5cfc;text-decoration:none;">partners</a> process personal data on the basis of legitimate interest. You can object to such processing at any time. Please click "Options" below to view our list of partners and the purposes for which consent is required.</p>
     <p style="font-family:'Inter',sans-serif;font-size:0.82rem;color:#444;line-height:1.6;margin-bottom:22px;">You don't have to consent in order to view the information on this site, but if you don't consent, some personalisation of content and advertising won't be available.</p>
     <div style="display:flex;gap:12px;margin-bottom:16px;">
-      <button onclick="cookieAccept()" style="flex:1;background:#f0ecff;border:none;color:#7c5cfc;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:700;padding:13px 16px;border-radius:10px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#e0d8ff'" onmouseout="this.style.background='#f0ecff'">More Options</button>
+      <button onclick="cookieDecline()" style="flex:1;background:#f0ecff;border:none;color:#7c5cfc;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:700;padding:13px 16px;border-radius:10px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#e0d8ff'" onmouseout="this.style.background='#f0ecff'">Decline</button>
       <button onclick="cookieAccept()" style="flex:1;background:#7c5cfc;border:none;color:#fff;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:700;padding:13px 16px;border-radius:10px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#6a4de0'" onmouseout="this.style.background='#7c5cfc'">Agree &amp; Continue</button>
     </div>
     <p style="font-family:'Inter',sans-serif;font-size:0.73rem;color:#888;line-height:1.5;text-align:center;">By continuing to this website, you agree to our <a href="/terms-and-conditions" style="color:#7c5cfc;text-decoration:none;">Terms and Conditions</a>. If you have any questions about these Terms and Conditions, please <a href="#" style="color:#7c5cfc;text-decoration:none;">contact us</a>.</p>
@@ -967,6 +967,9 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 <script>
   function cookieAccept() {
     localStorage.setItem('cookieConsent', '1');
+    document.getElementById('cookieOverlay').style.display = 'none';
+  }
+  function cookieDecline() {
     document.getElementById('cookieOverlay').style.display = 'none';
   }
   window.addEventListener('load', function() {
