@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wordle</title>
+<style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+#endOv{background:rgba(13,13,25,.92);backdrop-filter:blur(6px);}
+.menu-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 48px rgba(124,92,252,.07);}
+.game-title{font-size:clamp(1.9rem,7vw,2.8rem);font-weight:950;letter-spacing:-.03em;}.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.5rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.5;}
+.sopt.on .sopt-lbl{color:var(--text);}
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
+
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:8px 0;}
+#gameArea.show{display:flex;}
+.topbar{display:flex;align-items:center;gap:10px;}
+.stat-pill{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:.8rem;font-weight:700;}
+.back-btn{background:rgba(37,37,56,.9);border:1.5px solid var(--border);border-radius:10px;padding:6px 12px;font-size:.8rem;font-weight:700;color:var(--text2);transition:all .13s;}
+.back-btn:hover{background:var(--bg4);color:var(--text);}
+#board{display:flex;flex-direction:column;gap:5px;}
+.g-row{display:flex;gap:5px;}
+.tile{display:flex;align-items:center;justify-content:center;font-weight:900;border-radius:6px;border:2px solid rgba(255,255,255,.1);text-transform:uppercase;transition:border-color .1s,transform .06s;}
+.tile.filled{border-color:rgba(255,255,255,.32);}
+.tile.correct{background:#4ade80;border-color:#4ade80;color:#000;}
+.tile.present{background:#fbbf24;border-color:#fbbf24;color:#000;}
+.tile.absent{background:#3a3a55;border-color:#3a3a55;}
+@keyframes rowShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.g-row.shake{animation:rowShake .4s ease;}
+#toast{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);color:#0e0e1a;padding:8px 18px;border-radius:8px;font-size:.82rem;font-weight:800;opacity:0;pointer-events:none;white-space:nowrap;z-index:50;transition:opacity .2s;}
+#toast.show{opacity:1;}
+#keyboard{display:flex;flex-direction:column;gap:5px;align-items:center;}
+.kb-row{display:flex;gap:4px;}
+.key{height:46px;border-radius:6px;background:var(--bg3);color:#fff;font-size:.78rem;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-transform:uppercase;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+.key.wide{font-size:.68rem;}
+.key.correct{background:#4ade80;color:#000;}
+.key.present{background:#fbbf24;color:#000;}
+.key.absent{background:#3a3a55;}
+.end-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(320px,90vw);}
+.end-title{font-size:1.8rem;font-weight:950;}
+.end-title.win{color:#4ade80;}.end-title.lose{color:#ff4d6d;}
+.answer-lbl{font-size:.88rem;color:var(--text2);}
+.answer-lbl b{color:#fff;text-transform:uppercase;letter-spacing:.08em;}
+.stat-row{display:flex;gap:14px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-box b{font-size:1.3rem;font-weight:800;color:var(--accent);}
+.stat-box small{font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap:hover{opacity:1;}
+#volWrap label{font-size:.68rem;color:var(--text2);}
+#volSlider{width:68px;accent-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">Wor<span>dle</span></div>
+    <div class="game-sub">Guess the 5-letter word</div>
+    <div class="scat">
+      <div class="scat-label">Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt on" id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🟩</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">6 guesses</em></div></div>
+        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">🧠</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">5 · use hints</em></div></div>
+        <div class="sopt" id="dExpert" onclick="setDiff('expert')"><div class="sopt-ico">💀</div><div class="sopt-lbl">Expert<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">4 · use hints</em></div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">&#129001; Right spot &nbsp;&#128993; Wrong spot &nbsp;&#128997; Not in word</p>
+  </div>
+</div>
+
+<div class="ov" id="endOv">
+  <div class="end-card">
+    <div class="end-title" id="endTitle"></div>
+    <div class="answer-lbl">The word was <b id="endWord"></b></div>
+    <div class="stat-row">
+      <div class="stat-box"><b id="endGuesses">—</b><small>Guesses</small></div>
+      <div class="stat-box"><b id="endWins">0</b><small>Wins</small></div>
+      <div class="stat-box"><b id="endStreak">0</b><small>Streak</small></div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play Again</button>
+    <button class="gbtn ghost" onclick="showMenu()">&#8592;&ensp;Change Mode</button>
+  </div>
+</div>
+
+<div id="gameArea">
+  <div class="topbar">
+    <div class="stat-pill" id="guessLeft">6 left</div>
+    <button class="back-btn" onclick="showMenu()">&#8592; Menu</button>
+  </div>
+  <div id="board"></div>
+  <div id="keyboard">
+    <div class="kb-row" id="kb0"></div>
+    <div class="kb-row" id="kb1"></div>
+    <div class="kb-row" id="kb2"></div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="volWrap"><label>Vol</label><input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)"></div>
+
+<script>
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
+function setVol(v){mg.gain.value=v/100;}
+function tone(f,d=.08,t='sine',v=.4){if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+d+.02);}
+const SFX={type:()=>tone(300,.04,'square',.15),ok:()=>tone(420,.07,'sine',.3),win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.35),i*90));},lose:()=>tone(180,.3,'sawtooth',.4),bad:()=>tone(200,.1,'sawtooth',.3)};
+
+const WORDS=['about','above','actor','admit','adult','after','again','agent','agree','ahead','alarm','alert','alien','align','alike','alive','allow','alone','along','angel','anger','angle','angry','ankle','apart','apple','apply','arena','atlas','audio','avoid','awake','award','aware','awful','baker','basic','beach','began','begin','being','below','bench','berry','birth','black','blade','blame','blank','blast','blaze','bleed','blend','bless','blind','block','blood','blown','blues','blunt','board','boost','bound','brain','brand','brave','bread','break','brick','bride','brief','bring','broad','broke','brown','brush','build','built','burst','cabin','cable','candy','carry','catch','cause','chain','chair','chaos','charm','chase','cheap','check','chest','child','civic','claim','clash','class','clean','clear','climb','clock','close','cloud','coach','coast','color','comic','coral','could','count','court','cover','crack','craft','crane','crash','crazy','cream','crime','crisp','cross','crowd','crown','cruel','crush','curve','cycle','dance','debut','dense','depth','devil','disco','ditch','doubt','dough','draft','drain','drama','dread','dream','dress','drift','drink','drive','drown','drunk','dying','eagle','early','earth','eight','elite','empty','enemy','enjoy','enter','entry','equal','erase','error','essay','event','every','exact','exist','extra','fable','faith','false','fancy','fault','feast','fence','fiber','field','fifth','fifty','fight','final','flame','flash','fleet','flesh','floor','flour','focus','force','forge','forth','forum','found','frame','frank','fraud','fresh','front','frost','fruit','fully','funny','ghost','giant','given','globe','glory','glove','grace','grade','grain','grape','grasp','grass','grave','great','greed','green','greet','grief','grill','grind','groan','gross','group','grove','grown','guard','guide','guild','happy','harsh','heart','heavy','hedge','heist','hence','hinge','honey','honor','hotel','house','human','humor','hurry','ideal','image','inner','input','irony','issue','ivory','jewel','joint','joker','judge','juice','juicy','jumbo','knife','knock','known','label','labor','lance','large','laser','latch','later','laugh','layer','learn','least','leave','legal','lemon','level','light','limit','liner','liver','local','logic','loose','lover','lower','lucky','lunch','magic','major','maple','march','marry','match','mayor','media','mercy','merit','metal','might','minor','minus','moist','money','month','moral','mouth','movie','music','naive','nasty','naval','nerve','never','night','noble','noise','north','notch','noted','novel','nurse','occur','ocean','offer','olive','orbit','order','other','outer','owner','paint','panic','paper','patch','pause','peace','peach','pearl','penny','perch','phase','phone','photo','piano','pixel','pizza','place','plain','plane','plant','plate','pluck','point','poppy','porch','power','press','price','pride','prime','print','probe','proof','prose','pulse','punch','purse','query','quest','quick','quiet','quota','quote','radio','raise','rally','range','rapid','raven','reach','ready','realm','rebel','refer','reign','relax','relay','reply','rider','rifle','right','rigid','risky','river','robot','rough','round','route','royal','ruler','sadly','saint','sauce','scale','scare','scene','score','seize','sense','serve','seven','shade','shake','shame','shape','share','shark','sharp','sheep','shelf','shell','shift','shine','shirt','shock','shoot','shout','shove','sight','silly','since','skill','skull','slate','slave','sleep','slide','slope','snack','snake','sneak','solar','solve','south','space','spare','spark','speak','speed','spend','spill','spine','split','spook','sport','spray','squad','staff','stage','stain','stake','stale','stamp','stand','start','state','steel','steep','steer','stern','stiff','still','sting','stock','stone','storm','story','stove','strap','straw','strip','stuck','study','stuff','style','sugar','super','surge','swamp','swear','sweet','sweep','swift','swing','sword','table','taste','teach','teeth','tempo','tempt','tense','theft','their','theme','there','thick','think','those','three','throw','thumb','tiger','timer','tired','toast','today','token','trace','track','trade','trail','train','trait','trash','treat','trend','trial','tribe','trick','tried','trust','truth','ultra','under','union','unite','until','upper','upset','urban','usage','usher','vague','valid','valor','value','virus','visit','vital','voice','voter','water','weary','weave','weird','where','which','while','white','whole','whose','witch','woman','world','worry','worse','worst','worth','would','wound','wrist','yacht','yield','young','youth','zebra'];
+const DIFFS={normal:{max:6,strict:false},hard:{max:5,strict:true},expert:{max:4,strict:true}};
+const KEYROWS=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['Enter','z','x','c','v','b','n','m','⌫']];
+
+let diff='normal',answer='',typed='',curRow=0,gameOver=false,wins=0,streak=0;
+let keyEls={},tileEls=[],rowEls=[],letterStates={},guessHist=[],resultHist=[];
+
+function setDiff(d){
+  diff=d;
+  ['normal','hard','expert'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',x===d));
+}
+
+function beginGame(){
+  document.getElementById('menuOv').classList.remove('open');
+  document.getElementById('endOv').classList.remove('open');
+  document.getElementById('gameArea').classList.add('show');
+  answer=WORDS[Math.floor(Math.random()*WORDS.length)];
+  typed='';curRow=0;gameOver=false;letterStates={};guessHist=[];resultHist=[];
+  buildBoard();buildKeyboard();sizeBoard();
+  document.getElementById('guessLeft').textContent=`${DIFFS[diff].max} left`;
+}
+
+function showMenu(){
+  document.getElementById('menuOv').classList.add('open');
+  document.getElementById('gameArea').classList.remove('show');
+  document.getElementById('endOv').classList.remove('open');
+}
+
+function sizeBoard(){
+  const max=DIFFS[diff].max;
+  const avH=window.innerHeight-220,avW=Math.min(window.innerWidth-24,320);
+  const byH=Math.floor((avH-max*5)/max),byW=Math.floor((avW-4*5)/5);
+  const sz=Math.max(36,Math.min(byH,byW,58));
+  const fs=Math.max(14,Math.floor(sz*.58));
+  tileEls.flat().forEach(t=>{t.style.width=t.style.height=sz+'px';t.style.fontSize=fs+'px';});
+  const kAvail=Math.min(window.innerWidth-16,480);
+  const kw=Math.max(26,Math.floor((kAvail-9*4)/10));
+  document.querySelectorAll('.key').forEach(k=>{
+    k.style.minWidth=(k.classList.contains('wide')?Math.floor(kw*1.55):kw)+'px';
+  });
+}
+
+function buildBoard(){
+  const b=document.getElementById('board');b.innerHTML='';tileEls=[];rowEls=[];
+  for(let r=0;r<DIFFS[diff].max;r++){
+    const rEl=document.createElement('div');rEl.className='g-row';
+    const rt=[];
+    for(let c=0;c<5;c++){const t=document.createElement('div');t.className='tile';rEl.appendChild(t);rt.push(t);}
+    b.appendChild(rEl);tileEls.push(rt);rowEls.push(rEl);
+  }
+}
+
+function buildKeyboard(){
+  keyEls={};
+  KEYROWS.forEach((keys,i)=>{
+    const rEl=document.getElementById('kb'+i);rEl.innerHTML='';
+    keys.forEach(k=>{
+      const btn=document.createElement('button');
+      btn.className='key'+(k.length>1?' wide':'');
+      btn.textContent=k;btn.dataset.k=k;
+      btn.addEventListener('click',()=>handleKey(k));
+      if(k.length===1)keyEls[k]=btn;
+      rEl.appendChild(btn);
+    });
+  });
+}
+
+function evalGuess(g,a){
+  const res=Array(5).fill('absent'),aArr=a.split(''),gArr=g.split('');
+  for(let i=0;i<5;i++){if(gArr[i]===aArr[i]){res[i]='correct';aArr[i]=null;gArr[i]=null;}}
+  for(let i=0;i<5;i++){if(!gArr[i])continue;const j=aArr.indexOf(gArr[i]);if(j!==-1){res[i]='present';aArr[j]=null;}}
+  return res;
+}
+
+function checkStrict(guess){
+  if(!DIFFS[diff].strict)return null;
+  for(let r=0;r<guessHist.length;r++){
+    const prev=guessHist[r],res=resultHist[r];
+    for(let i=0;i<5;i++){
+      if(res[i]==='correct'&&guess[i]!==prev[i])return `Pos ${i+1} must be '${prev[i].toUpperCase()}'`;
+    }
+    for(let i=0;i<5;i++){
+      if(res[i]==='present'&&!guess.includes(prev[i]))return `Must use '${prev[i].toUpperCase()}'`;
+    }
+  }
+  return null;
+}
+
+function updateKey(letter,state){
+  const p={correct:3,present:2,absent:1};
+  if(!letterStates[letter]||(p[state]||0)>(p[letterStates[letter]]||0)){
+    letterStates[letter]=state;
+    const el=keyEls[letter];if(el){el.classList.remove('correct','present','absent');el.classList.add(state);}
+  }
+}
+
+function toast(msg,dur=1500){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function handleKey(k){
+  if(gameOver)return;
+  if(k==='⌫'||k==='Backspace'){
+    if(typed.length>0){tileEls[curRow][typed.length-1].textContent='';tileEls[curRow][typed.length-1].classList.remove('filled');typed=typed.slice(0,-1);}
+    return;
+  }
+  if(k==='Enter'){
+    if(typed.length<5){toast('Not enough letters');rowEls[curRow].classList.add('shake');setTimeout(()=>rowEls[curRow].classList.remove('shake'),500);SFX.bad();return;}
+    if(!WORDS.includes(typed)){toast('Not in word list');rowEls[curRow].classList.add('shake');setTimeout(()=>rowEls[curRow].classList.remove('shake'),500);SFX.bad();return;}
+    const err=checkStrict(typed);
+    if(err){toast(err);rowEls[curRow].classList.add('shake');setTimeout(()=>rowEls[curRow].classList.remove('shake'),500);SFX.bad();return;}
+    const result=evalGuess(typed,answer);
+    const guess=typed,thisRow=curRow;
+    guessHist.push(guess);resultHist.push(result);
+    typed='';curRow++;
+    SFX.ok();
+    result.forEach((state,i)=>{
+      const tile=tileEls[thisRow][i];
+      setTimeout(()=>{
+        tile.style.transform='scaleY(0)';tile.style.transition='transform .18s ease';
+        setTimeout(()=>{
+          tile.classList.add(state);tile.style.transform='scaleY(1)';
+          updateKey(guess[i],state);
+          if(i===4){
+            const won=result.every(s=>s==='correct'),isLast=thisRow>=DIFFS[diff].max-1;
+            if(won){setTimeout(()=>{wins++;streak++;SFX.win();endGame(true);},300);}
+            else if(isLast){setTimeout(()=>{streak=0;SFX.lose();endGame(false);},300);}
+          }
+        },180);
+      },i*80);
+    });
+    const left=DIFFS[diff].max-curRow;
+    document.getElementById('guessLeft').textContent=`${left>0?left:'0'} left`;
+    return;
+  }
+  if(/^[a-zA-Z]$/.test(k)&&typed.length<5){
+    const l=k.toLowerCase();typed+=l;
+    const t=tileEls[curRow][typed.length-1];t.textContent=l;t.classList.add('filled');
+    t.style.transition='transform .06s';t.style.transform='scale(1.12)';
+    setTimeout(()=>{t.style.transform='scale(1)';},60);
+    SFX.type();
+  }
+}
+
+function endGame(won){
+  gameOver=true;
+  document.getElementById('endTitle').textContent=won?'You Won! 🎉':'Game Over';
+  document.getElementById('endTitle').className='end-title '+(won?'win':'lose');
+  document.getElementById('endWord').textContent=answer;
+  document.getElementById('endGuesses').textContent=won?curRow:'—';
+  document.getElementById('endWins').textContent=wins;
+  document.getElementById('endStreak').textContent=streak;
+  setTimeout(()=>document.getElementById('endOv').classList.add('open'),won?1400:800);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.altKey||e.metaKey)return;
+  if(e.key==='Enter')handleKey('Enter');
+  else if(e.key==='Backspace')handleKey('⌫');
+  else if(/^[a-zA-Z]$/.test(e.key))handleKey(e.key);
+  else return;
+  e.preventDefault();
+});
+window.addEventListener('resize',()=>{if(document.getElementById('gameArea').classList.contains('show'))sizeBoard();});
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-a-Mole</title>
+<style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+#endOv{background:rgba(13,13,25,.92);backdrop-filter:blur(6px);}
+.menu-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 48px rgba(124,92,252,.07);}
+.game-title{font-size:clamp(1.6rem,6vw,2.4rem);font-weight:950;letter-spacing:-.03em;}.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.5rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.5;}
+.sopt.on .sopt-lbl{color:var(--text);}
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
+
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#gameArea.show{display:flex;}
+.hud{display:flex;gap:16px;align-items:center;}
+.hud-box{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:8px 20px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hud-val{font-size:1.4rem;font-weight:900;}
+.hud-val.accent{color:var(--accent);}
+.hud-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
+
+#timer-bar{width:240px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+#timer-fill{height:100%;background:var(--accent);transition:width .5s linear;width:100%;}
+
+#hole-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.hole{border-radius:50%;background:#130e05;position:relative;overflow:hidden;cursor:pointer;border:4px solid #0a0702;box-shadow:inset 0 4px 12px rgba(0,0,0,.7);}
+.mole{position:absolute;bottom:-110%;left:50%;transform:translateX(-50%);width:80%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#6b3a1a;transition:bottom .15s ease;pointer-events:none;box-shadow:0 -3px 8px rgba(0,0,0,.4);}
+.mole-face{font-size:1.8rem;line-height:1;}
+.hole.active .mole{bottom:-8%;}
+.hole.whacked .mole{bottom:-110%;transition:bottom .1s ease;}
+@keyframes scoreFloat{0%{opacity:1;transform:translate(-50%,-10px)}100%{opacity:0;transform:translate(-50%,-50px)}}
+.score-pop{position:absolute;left:50%;top:20%;color:#4ade80;font-size:1.1rem;font-weight:900;pointer-events:none;animation:scoreFloat .6s ease forwards;}
+
+.end-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(320px,90vw);}
+.end-card h2{font-size:2rem;font-weight:950;}
+.stat-row{display:flex;gap:16px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-box b{font-size:1.4rem;font-weight:800;color:var(--accent);}
+.stat-box small{font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.new-best{font-size:.8rem;color:#4ade80;font-weight:700;}
+
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap:hover{opacity:1;}
+#volWrap label{font-size:.68rem;color:var(--text2);}
+#volSlider{width:68px;accent-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">Whack-a-<span>Mole</span></div>
+    <div class="game-sub">Tap moles as fast as you can!</div>
+    <div class="scat">
+      <div class="scat-label">Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt on" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">🐢</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">60 sec · Slow</em></div></div>
+        <div class="sopt" id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🏃</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">45 sec · Fast</em></div></div>
+        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">⚡</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">30 sec · Rapid</em></div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">Click or tap the moles before they disappear!</p>
+  </div>
+</div>
+
+<div class="ov" id="endOv">
+  <div class="end-card">
+    <h2>Time's Up! ⏱️</h2>
+    <div class="stat-row">
+      <div class="stat-box"><b id="endScore">0</b><small>Score</small></div>
+      <div class="stat-box"><b id="endBest">0</b><small>Best</small></div>
+      <div class="stat-box"><b id="endMisses">0</b><small>Misses</small></div>
+    </div>
+    <div class="new-best" id="newBest" style="display:none">⭐ New best!</div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play Again</button>
+    <button class="gbtn ghost" onclick="showMenu()">&#8592;&ensp;Change Difficulty</button>
+  </div>
+</div>
+
+<div id="gameArea">
+  <div class="hud">
+    <div class="hud-box"><div class="hud-val accent" id="scoreDisp">0</div><div class="hud-label">Score</div></div>
+    <div class="hud-box"><div class="hud-val" id="timeDisp">60</div><div class="hud-label">Seconds</div></div>
+    <div class="hud-box"><div class="hud-val" id="bestDisp">0</div><div class="hud-label">Best</div></div>
+  </div>
+  <div id="timer-bar"><div id="timer-fill"></div></div>
+  <div id="hole-grid"></div>
+</div>
+
+<div id="volWrap"><label>Vol</label><input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)"></div>
+
+<script>
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
+function setVol(v){mg.gain.value=v/100;}
+function tone(f,d=.08,t='sine',v=.4){if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+d+.02);}
+const SFX={whack:()=>{tone(300,.05,'square',.4);tone(200,.08,'square',.3);},miss:()=>tone(160,.07,'sawtooth',.2),end:()=>{[523,440,330].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.3),i*100));}};
+
+const DIFFS={easy:{gameTime:60,moleTime:1800,spawnMs:1200},normal:{gameTime:45,moleTime:1100,spawnMs:800},hard:{gameTime:30,moleTime:650,spawnMs:500}};
+const MOLE_FACES=['🐹','🐭','🐀','🦫'];
+
+let diff='easy',score=0,misses=0,timeLeft=0,gameOver=false,bestScores={easy:0,normal:0,hard:0};
+let moleActive=Array(9).fill(false),moleTimers=Array(9).fill(null),spawnTimer=null,countTimer=null;
+
+function setDiff(d){
+  diff=d;
+  document.getElementById('dEasy').classList.toggle('on',d==='easy');
+  document.getElementById('dNormal').classList.toggle('on',d==='normal');
+  document.getElementById('dHard').classList.toggle('on',d==='hard');
+}
+
+function beginGame(){
+  document.getElementById('menuOv').classList.remove('open');
+  document.getElementById('endOv').classList.remove('open');
+  document.getElementById('gameArea').classList.add('show');
+  score=0;misses=0;gameOver=false;
+  moleActive=Array(9).fill(false);
+  moleTimers.forEach(t=>clearTimeout(t));moleTimers=Array(9).fill(null);
+  clearTimeout(spawnTimer);clearInterval(countTimer);
+  const cfg=DIFFS[diff];timeLeft=cfg.gameTime;
+  document.getElementById('scoreDisp').textContent='0';
+  document.getElementById('timeDisp').textContent=timeLeft;
+  document.getElementById('bestDisp').textContent=bestScores[diff];
+  buildGrid();sizeHoles();
+  // reset timer bar
+  const fill=document.getElementById('timer-fill');
+  fill.style.transition='none';fill.style.width='100%';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    fill.style.transition=`width ${cfg.gameTime}s linear`;fill.style.width='0%';
+  }));
+  // hide all moles
+  document.querySelectorAll('.hole').forEach(h=>h.classList.remove('active','whacked'));
+  // start spawning
+  spawnMole();
+  countTimer=setInterval(()=>{
+    timeLeft--;document.getElementById('timeDisp').textContent=timeLeft;
+    if(timeLeft<=0){clearInterval(countTimer);endGame();}
+  },1000);
+}
+
+function showMenu(){
+  clearTimeout(spawnTimer);clearInterval(countTimer);
+  moleTimers.forEach(t=>clearTimeout(t));
+  document.getElementById('menuOv').classList.add('open');
+  document.getElementById('gameArea').classList.remove('show');
+  document.getElementById('endOv').classList.remove('open');
+}
+
+function buildGrid(){
+  const grid=document.getElementById('hole-grid');grid.innerHTML='';
+  for(let i=0;i<9;i++){
+    const hole=document.createElement('div');hole.className='hole';hole.id='hole'+i;
+    const face=MOLE_FACES[Math.floor(Math.random()*MOLE_FACES.length)];
+    hole.innerHTML=`<div class="mole"><div class="mole-face">${face}</div></div>`;
+    hole.addEventListener('click',()=>whack(i));
+    hole.addEventListener('touchstart',e=>{e.preventDefault();whack(i);},{passive:false});
+    grid.appendChild(hole);
+  }
+}
+
+function sizeHoles(){
+  const avW=Math.min(window.innerWidth-40,400),avH=window.innerHeight-220;
+  const byW=Math.floor((avW-2*14)/3),byH=Math.floor((avH-2*14)/3);
+  const sz=Math.max(70,Math.min(byW,byH,120));
+  document.querySelectorAll('.hole').forEach(h=>{h.style.width=h.style.height=sz+'px';});
+  document.querySelector('.mole-face').style.fontSize=Math.floor(sz*.4)+'px';
+  document.querySelectorAll('.mole-face').forEach(f=>f.style.fontSize=Math.floor(sz*.4)+'px');
+  document.getElementById('timer-bar').style.width=Math.min(sz*3+2*14,360)+'px';
+}
+
+function spawnMole(){
+  if(gameOver)return;
+  const empty=moleActive.map((v,i)=>!v?i:-1).filter(i=>i>=0);
+  if(empty.length>0){
+    const idx=empty[Math.floor(Math.random()*empty.length)];
+    moleActive[idx]=true;
+    const hole=document.getElementById('hole'+idx);
+    hole.classList.add('active');
+    moleTimers[idx]=setTimeout(()=>{
+      if(moleActive[idx]){
+        moleActive[idx]=false;misses++;
+        hole.classList.remove('active');
+        SFX.miss();
+      }
+      if(!gameOver)spawnTimer=setTimeout(spawnMole,DIFFS[diff].spawnMs);
+    },DIFFS[diff].moleTime);
+  } else {
+    spawnTimer=setTimeout(spawnMole,200);
+  }
+}
+
+function whack(idx){
+  if(!moleActive[idx]||gameOver)return;
+  moleActive[idx]=false;
+  clearTimeout(moleTimers[idx]);
+  score++;document.getElementById('scoreDisp').textContent=score;
+  const hole=document.getElementById('hole'+idx);
+  hole.classList.remove('active');hole.classList.add('whacked');
+  setTimeout(()=>hole.classList.remove('whacked'),200);
+  // floating score pop
+  const pop=document.createElement('div');pop.className='score-pop';pop.textContent='+1';
+  hole.appendChild(pop);setTimeout(()=>pop.remove(),600);
+  SFX.whack();
+  if(!gameOver)spawnTimer=setTimeout(spawnMole,DIFFS[diff].spawnMs*0.6);
+}
+
+function endGame(){
+  gameOver=true;
+  clearTimeout(spawnTimer);
+  moleTimers.forEach(t=>clearTimeout(t));
+  document.querySelectorAll('.hole').forEach(h=>h.classList.remove('active'));
+  const isNew=score>bestScores[diff];if(isNew)bestScores[diff]=score;
+  document.getElementById('endScore').textContent=score;
+  document.getElementById('endBest').textContent=bestScores[diff];
+  document.getElementById('endMisses').textContent=misses;
+  document.getElementById('newBest').style.display=isNew?'block':'none';
+  SFX.end();
+  setTimeout(()=>document.getElementById('endOv').classList.add('open'),400);
+}
+
+window.addEventListener('resize',()=>{if(document.getElementById('gameArea').classList.contains('show'))sizeHoles();});
+</script>
+</body>
+</html>

@@ -29,6 +29,9 @@
     { "source": "/game/memory-match",    "destination": "/games/memory-match/play.html" },
     { "source": "/game/simon-says",      "destination": "/games/simon-says/play.html" },
     { "source": "/game/connect-four",    "destination": "/games/connect-four/play.html" },
-    { "source": "/game/pong",            "destination": "/games/pong/play.html" }
+    { "source": "/game/pong",            "destination": "/games/pong/play.html" },
+    { "source": "/game/wordle",          "destination": "/games/wordle/play.html" },
+    { "source": "/game/hangman",         "destination": "/games/hangman/play.html" },
+    { "source": "/game/whack-a-mole",   "destination": "/games/whack-a-mole/play.html" }
   ]
 }

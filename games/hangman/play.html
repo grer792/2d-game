@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<base href="/games/hangman/">
+<title>Hangman - Free Online Game | BonkerGames</title>
+<meta name="description" content="Play Hangman free in your browser — guess letters to reveal the hidden word before it's too late! Easy, Medium, and Hard modes.">
+<meta property="og:title" content="Hangman - Free Online Game | BonkerGames">
+<meta property="og:description" content="Play Hangman free in your browser — guess letters to reveal the hidden word!">
+<meta property="og:image" content="/games/hangman/thumb.png">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://www.bonkergames.com/game/hangman">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--sw-icon:62px;--header-h:64px;--bar-h:52px;--pn-w:250px;--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#ffffff;--text2:#9898b8;--border:rgba(255,255,255,0.07);--red:#ff4d6d;--ease:0.22s ease;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+a{text-decoration:none;color:inherit;}
+.header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;z-index:300;}
+.header-left{display:flex;align-items:center;gap:6px;flex:1;}
+.hamburger{width:40px;height:40px;flex-shrink:0;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:background .15s,color .15s;}
+.hamburger:hover{background:var(--bg3);color:var(--text);}
+.hamburger svg{width:24px;height:24px;fill:currentColor;}
+.header-logo{display:flex;align-items:center;padding:4px 8px;border-radius:10px;transition:background .15s;text-decoration:none;color:inherit;}
+.header-logo:hover{background:var(--bg3);}
+.logo-img{height:56px;width:auto;mix-blend-mode:screen;display:block;}
+.header-search{flex:0 0 420px;position:relative;margin:0 16px;}
+.header-search input{width:100%;background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:10px 18px 10px 44px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;}
+.header-search input:focus{border-color:var(--accent);}
+.header-search input::placeholder{color:var(--text2);}
+.search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);display:flex;align-items:center;pointer-events:none;}
+.search-ico svg{width:19px;height:19px;fill:currentColor;}
+.header-right{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;}
+.icon-btn{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);background:transparent;border:none;transition:background .15s,color .15s;position:relative;}
+.icon-btn:hover{background:var(--bg3);color:var(--text);}
+.icon-btn svg{width:24px;height:24px;fill:currentColor;}
+.notif-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg2);}
+.header-divider{width:1px;height:24px;background:var(--border);margin:0 4px;}
+.btn-login{background:var(--accent);border:none;color:white;padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;margin-left:4px;}
+.btn-login:hover{background:var(--accent-h);}
+.layout{display:flex;height:calc(100vh - var(--header-h));margin-top:var(--header-h);}
+body.sidebar-off .sidebar{width:0;border-right:none;}
+body.sidebar-on .sidebar{width:var(--sw-icon);}
+.sidebar{flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);height:100%;overflow:hidden;display:flex;flex-direction:column;transition:width var(--ease),box-shadow var(--ease);}
+body.sidebar-on .sidebar:hover{width:230px;box-shadow:4px 0 32px rgba(0,0,0,.5);}
+.sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 7px 4px;display:flex;flex-direction:column;}
+.sidebar-scroll::-webkit-scrollbar{width:0;}
+.sidebar-group{display:flex;flex-direction:column;gap:2px;}
+.sidebar-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);padding:10px 8px 4px;white-space:nowrap;opacity:0;transition:opacity var(--ease);}
+body.sidebar-on .sidebar:hover .sidebar-label{opacity:1;}
+.sidebar-item{display:flex;align-items:center;gap:13px;padding:11px 9px;border-radius:9px;cursor:pointer;color:var(--text2);font-size:.875rem;font-weight:500;white-space:nowrap;overflow:hidden;transition:background .15s,color .15s;}
+.sidebar-item:hover,.sidebar-item.active{background:var(--bg3);color:var(--text);}
+.sidebar-item .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sidebar-item .ico svg{width:22px;height:22px;fill:currentColor;}
+.sidebar-item .label{opacity:0;transition:opacity var(--ease);pointer-events:none;}
+body.sidebar-on .sidebar:hover .sidebar-item .label{opacity:1;}
+.sidebar-bottom{border-top:1px solid var(--border);padding:8px 7px 10px;display:flex;flex-direction:column;gap:2px;}
+.sb-contact{display:flex;align-items:center;gap:13px;padding:10px 9px;border-radius:9px;cursor:pointer;background:var(--accent);color:white;font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;transition:background .15s;}
+.sb-contact:hover{background:var(--accent-h);}
+.sb-contact .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sb-contact .ico svg{width:22px;height:22px;fill:white;}
+.sb-contact .label{opacity:0;transition:opacity var(--ease);}
+body.sidebar-on .sidebar:hover .sb-contact .label{opacity:1;}
+.play-main{flex:1;min-width:0;display:flex;gap:12px;padding:12px;overflow:hidden;}
+.game-section{flex:1;min-width:0;display:flex;flex-direction:column;}
+.game-frame-wrap{flex:1;position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;min-height:0;}
+.game-iframe{width:100%;height:100%;border:none;display:block;}
+.game-bar{height:var(--bar-h);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;}
+.game-bar-left{display:flex;align-items:center;gap:10px;}
+.bar-logo-wrap{width:48px;height:48px;overflow:hidden;flex-shrink:0;}
+.bar-logo{height:48px;width:auto;mix-blend-mode:screen;display:block;}
+.bar-game-title{font-size:.95rem;font-weight:700;}
+.game-bar-actions{display:flex;align-items:center;gap:4px;}
+.bar-btn{display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:.78rem;font-weight:600;cursor:pointer;transition:background .15s,color .15s;font-family:'Inter',sans-serif;white-space:nowrap;}
+.bar-btn:hover{background:var(--bg4);color:var(--text);}
+.bar-btn svg{width:17px;height:17px;fill:currentColor;flex-shrink:0;}
+.bar-sep{width:1px;height:22px;background:var(--border);margin:0 2px;}
+.play-next{width:var(--pn-w);flex-shrink:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;padding-right:2px;}
+.play-next::-webkit-scrollbar{width:0;}
+.pn-title{font-size:.88rem;font-weight:700;padding:2px 0 4px;}
+.pn-card{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;text-decoration:none;color:inherit;}
+.pn-card:hover{border-color:rgba(124,92,252,.4);transform:translateX(3px);}
+.pn-thumb{width:80px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;position:relative;}
+.pn-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.pn-info{flex:1;padding:0 10px;}
+.pn-name{font-size:.82rem;font-weight:700;margin-bottom:3px;}
+.pn-meta{font-size:.7rem;color:var(--text2);}
+#notif-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:298;backdrop-filter:blur(3px);}
+#notif-overlay.open{display:block;}
+#notif-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+#notif-panel.open{transform:translateX(0);}
+.notif-panel-head{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;padding:18px 16px 14px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.notif-panel-title{font-size:1rem;font-weight:800;text-align:center;}
+.notif-panel-close{background:transparent;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;justify-self:end;}
+.notif-panel-close:hover{background:var(--bg3);color:var(--text);}
+.notif-scroll{flex:1;overflow-y:auto;padding:12px;}
+.notif-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.notif-card-body{padding:12px 14px 14px;}
+</style>
+</head>
+<body class="sidebar-on">
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" id="sidebarToggle"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+    <a class="header-logo" href="/"><img src="../../assets/logo.png" alt="BonkerGames" class="logo-img"></a>
+  </div>
+  <div class="header-search">
+    <span class="search-ico"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
+    <input type="text" placeholder="Search games and categories">
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" id="btn-notif" title="Notifications" onclick="openNotifPanel()"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span class="notif-dot"></span></button>
+    <button class="icon-btn" title="Favorites" onclick="window._openFavPanel&&window._openFavPanel()"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+    <div class="header-divider"></div>
+    <button class="btn-login" id="btn-header-login" onclick="window._openAuthPanel&&window._openAuthPanel()">Log in</button>
+    <div class="user-badge" id="user-badge" style="display:none" onclick="window._openProfilePanel&&window._openProfilePanel()"><div class="u-avatar" id="u-avatar"></div><span class="u-name" id="u-name"></span></div>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-scroll">
+      <div class="sidebar-group">
+        <a class="sidebar-item" href="/"><span class="ico"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span><span class="label">Home</span></a>
+        <div class="sidebar-item"><span class="ico"><svg viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg></span><span class="label">Hot games</span></div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-label">Categories</div>
+        <div class="sidebar-item active"><span class="ico"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span><span class="label">Word Games</span></div>
+        <div class="sidebar-item"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></span><span class="label">Puzzle</span></div>
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <a class="sb-contact" href="#"><span class="ico"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span><span class="label">Contact us</span></a>
+    </div>
+  </aside>
+  <main class="play-main">
+    <div class="game-section">
+      <div class="game-frame-wrap"><iframe class="game-iframe" id="gameFrame" src="index.html" allowfullscreen allow="fullscreen *"></iframe></div>
+      <div class="game-bar">
+        <div class="game-bar-left">
+          <div class="bar-logo-wrap"><img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo"></div>
+          <span class="bar-game-title">Hangman</span>
+        </div>
+        <div class="game-bar-actions">
+          <button class="bar-btn" id="likeBtn" onclick="toggleLike()"><svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg> Like</button>
+          <button class="bar-btn" id="dislikeBtn" onclick="toggleDislike()"><svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg></button>
+          <div class="bar-sep"></div>
+          <button class="bar-btn" id="favBtn" onclick="toggleFav()"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Favorite</button>
+          <div class="bar-sep"></div>
+          <button class="bar-btn" onclick="goFullscreen()"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg> Fullscreen</button>
+        </div>
+      </div>
+    </div>
+    <div class="play-next">
+      <div class="pn-title">Play next</div>
+      <a class="pn-card" href="/game/wordle"><div class="pn-thumb" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);font-size:2rem;">🔤</div><div class="pn-info"><div class="pn-name">Wordle</div><div class="pn-meta">Word · Solo</div></div></a>
+      <a class="pn-card" href="/game/minesweeper"><div class="pn-thumb"><img src="/games/minesweeper/thumb.png" alt="Minesweeper"></div><div class="pn-info"><div class="pn-name">Minesweeper</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+      <a class="pn-card" href="/game/connect-four"><div class="pn-thumb"><img src="/games/connect-four/thumb.png" alt="Connect Four"></div><div class="pn-info"><div class="pn-name">Connect Four</div><div class="pn-meta">Strategy · 2 Player</div></div></a>
+      <a class="pn-card" href="/game/simon-says"><div class="pn-thumb"><img src="/games/simon-says/thumb.png" alt="Sequence"></div><div class="pn-info"><div class="pn-name">Sequence</div><div class="pn-meta">Memory · Solo</div></div></a>
+    </div>
+  </main>
+</div>
+<div id="notif-overlay" onclick="closeNotifPanel()"></div>
+<div id="notif-panel">
+  <div class="notif-panel-head"><div></div><div class="notif-panel-title">Notifications</div><button class="notif-panel-close" onclick="closeNotifPanel()">✕</button></div>
+  <div class="notif-scroll"><div class="notif-card"><div class="notif-card-body" style="display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text2);font-size:.85rem;">No new notifications</div></div></div>
+</div>
+<script>
+window.CURRENT_GAME_ID='hangman';
+function openNotifPanel(){window._closeAllPanels&&window._closeAllPanels();document.getElementById('notif-overlay').classList.add('open');document.getElementById('notif-panel').classList.add('open');const d=document.querySelector('.notif-dot');if(d)d.style.display='none';}
+function closeNotifPanel(){document.getElementById('notif-overlay').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');}
+window._closeAllPanels=(function(prev){return function(){if(prev)prev();closeNotifPanel();};})(window._closeAllPanels||null);
+</script>
+<script type="module" src="/assets/header-auth.js"></script>
+<script>
+let liked=false,disliked=false,faved=false;
+function toggleLike(){liked=!liked;if(liked)disliked=false;document.getElementById('likeBtn').style.color=liked?'#4ade80':'';document.getElementById('dislikeBtn').style.color='';}
+function toggleDislike(){disliked=!disliked;if(disliked)liked=false;document.getElementById('dislikeBtn').style.color=disliked?'#f87171':'';document.getElementById('likeBtn').style.color='';}
+function toggleFav(){faved=!faved;document.getElementById('favBtn').style.color=faved?'#ff4d6d':'';document.getElementById('favBtn').style.background=faved?'rgba(255,77,109,.1)':'';}
+function goFullscreen(){const f=document.getElementById('gameFrame');if(f.requestFullscreen)f.requestFullscreen();else if(f.webkitRequestFullscreen)f.webkitRequestFullscreen();}
+document.getElementById('sidebarToggle').addEventListener('click',()=>{document.body.classList.toggle('sidebar-on');document.body.classList.toggle('sidebar-off');});
+</script>
+</body>
+</html>
