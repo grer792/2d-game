@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Speed</title>
+<style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+#endOv{background:rgba(13,13,25,.92);backdrop-filter:blur(6px);}
+.menu-card,.end-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(360px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5);}
+.game-title{font-size:clamp(1.6rem,6vw,2.4rem);font-weight:950;letter-spacing:-.03em;}.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.4rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.5;}
+.sopt.on .sopt-lbl{color:var(--text);}
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
+
+/* Game area */
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;}
+#gameArea.show{display:flex;}
+
+.hud{display:flex;gap:16px;align-items:center;}
+.hud-box{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:8px 22px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hud-val{font-size:1.5rem;font-weight:900;}
+.hud-val.accent{color:var(--accent);}
+.hud-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
+
+/* Text display */
+#text-wrap{width:min(700px,95vw);background:rgba(18,18,30,.8);border:1px solid var(--border);border-radius:16px;padding:24px 26px;position:relative;cursor:text;}
+#text-wrap.active{border-color:rgba(124,92,252,.4);}
+#text-display{font-size:clamp(1rem,2.5vw,1.25rem);line-height:2;height:calc(2em * 3);overflow:hidden;position:relative;font-family:'Courier New',Courier,monospace;letter-spacing:.02em;}
+.ch{color:rgba(255,255,255,.25);transition:color .05s;}
+.ch.correct{color:#4ade80;}
+.ch.wrong{color:#ff4d6d;background:rgba(255,77,109,.18);border-radius:2px;}
+.ch.cursor{border-left:2.5px solid var(--accent);margin-left:-1px;animation:blink .7s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.ch.space-wrong{background:rgba(255,77,109,.3);border-radius:2px;}
+.ch.current-word-ch{color:rgba(255,255,255,.65);}
+
+.click-to-start{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--text2);pointer-events:none;}
+#text-wrap.active .click-to-start{display:none;}
+
+/* Timer bar */
+#timer-bar{width:min(700px,95vw);height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+#timer-fill{height:100%;background:var(--accent);transition:width 1s linear;width:100%;}
+
+/* Hidden input */
+#typer{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;}
+
+/* End card stats */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-box b{font-size:1.5rem;font-weight:800;color:var(--accent);}
+.stat-box small{font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.new-best{font-size:.82rem;color:#4ade80;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">Typing <span>Speed</span></div>
+    <div class="game-sub">How fast can you type?</div>
+    <div class="scat">
+      <div class="scat-label">Mode</div>
+      <div class="scat-row">
+        <div class="sopt on" id="dEasy"   onclick="setDiff('easy')">  <div class="sopt-ico">⏱️</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">30 sec</em></div></div>
+        <div class="sopt"    id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🏃</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">60 sec</em></div></div>
+        <div class="sopt"    id="dHard"   onclick="setDiff('hard')">  <div class="sopt-ico">🔥</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">60 sec · hard words</em></div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Start Typing</button>
+    <p class="hint">Click the text area and start typing · Space to next word</p>
+  </div>
+</div>
+
+<div class="ov" id="endOv">
+  <div class="end-card">
+    <div class="game-title" style="font-size:1.6rem">Results</div>
+    <div class="stat-grid">
+      <div class="stat-box"><b id="endWpm">0</b><small>WPM</small></div>
+      <div class="stat-box"><b id="endAcc">0%</b><small>Accuracy</small></div>
+      <div class="stat-box"><b id="endCorrect">0</b><small>Correct</small></div>
+      <div class="stat-box"><b id="endErrors">0</b><small>Errors</small></div>
+    </div>
+    <div class="new-best" id="newBest" style="display:none">⭐ New best WPM!</div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Try Again</button>
+    <button class="gbtn ghost" onclick="showMenu()">&#8592;&ensp;Change Mode</button>
+  </div>
+</div>
+
+<div id="gameArea">
+  <div class="hud">
+    <div class="hud-box"><div class="hud-val accent" id="wpmDisp">0</div><div class="hud-label">WPM</div></div>
+    <div class="hud-box"><div class="hud-val" id="timeDisp">30</div><div class="hud-label">Seconds</div></div>
+    <div class="hud-box"><div class="hud-val" id="accDisp">100%</div><div class="hud-label">Accuracy</div></div>
+  </div>
+  <div id="timer-bar"><div id="timer-fill"></div></div>
+  <div id="text-wrap" onclick="focusTyper()">
+    <div id="text-display"></div>
+    <div class="click-to-start">Click here to start typing…</div>
+  </div>
+  <input id="typer" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <button class="gbtn ghost" style="width:auto;padding:8px 20px;font-size:.82rem;" onclick="showMenu()">&#8592; Menu</button>
+</div>
+
+<script>
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+const mg=ac.createGain();mg.gain.value=0.15;mg.connect(ac.destination);
+function tone(f,d=.06,t='sine',v=.3){if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+d+.02);}
+const SFX={
+  correct:()=>tone(800,.04,'sine',.2),
+  wrong:  ()=>tone(200,.05,'sawtooth',.25),
+  word:   ()=>{tone(600,.04,'sine',.2);setTimeout(()=>tone(800,.04,'sine',.15),40);},
+  end:    ()=>{[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.3),i*100));}
+};
+
+const WORDS={
+  easy:['the','be','to','of','and','in','that','have','it','for','not','on','with','he','as','you','do','at','this','but','his','by','from','they','we','say','she','or','an','will','my','one','all','would','there','their','what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just','him','know','take','good','some','could','them','see','other','than','then','now','look','only','come','over','think','also','back','after','use','two','how','our','work','well','way','even','new','want','any','give','day','most','us','great','own','hand','high','place','hold','large','down','side','open','seem','together','next','white','children','begin','got','walk','example','ease','paper','often','always','music','those','both','mark','book','letter','until','mile','river','car','feet','care','second','enough','plain','girl','usual','young','ready','above','ever','red','list','though','feel','talk','bird','soon','body','dog','family','direct','pose','leave','song','measure','door','product','black','short','numeral','class','wind','question','happen','complete','ship','area','half','rock','order','fire','south','problem','piece','told','knew','pass','since','top','whole','king','space','heard','best','hour','better','true','during','hundred','five','remember','step','early','hold','west','ground','interest','reach','fast','verb','sing','listen','six','table','travel','less','morning','ten','simple','several','vowel','toward','war','lay','against','pattern','slow','center','love','person','money','serve','appear','road','map','rain','rule','govern','pull','cold','notice','voice','power','town','fine','drive','led','cry','dark','machine','note','wait','plan','figure','star','box','noun','field','rest','correct','able','pound','done','beauty','drive','stood','contain','front','teach','week','final','gave','green','oh','quick','develop','ocean','warm','free','minute','strong','special','mind','behind','clear','tail','produce','fact','street','inch','multiply','nothing','course','stay','wheel','full','force','blue','object','decide','surface','deep','moon','island','foot','system','busy','test','record','boat','common','gold','possible','plane','stead','dry','wonder','laugh','thousands','ago','ran','check','game','shape','equate','hot','miss','brought','heat','snow','tire','bring','yes','distant','fill','east','paint','language','among'],
+  normal:['computer','window','keyboard','program','science','morning','evening','winter','summer','forest','garden','mountain','history','culture','travel','family','friend','music','health','power','world','ocean','planet','player','system','design','create','building','problem','question','answer','thought','believe','achieve','success','journey','memory','future','present','example','nothing','together','different','important','beautiful','wonderful','possible','difficult','perfect','natural','already','country','without','another','because','something','everyone','anything','through','between','although','however','enough','perhaps','usually','probably','actually','already','finally','clearly','quickly','simply','nearly','almost','always','never','often','really','quite','rather','maybe','either','whether','during','within','across','around','behind','before','after','above','below','under','inside','outside','beside','beyond','against','toward','through','following','including','according','regarding','considering','despite','except','within','among','along','around','upon','throughout','since','until','unless','while','although','whereas','therefore','however','moreover','furthermore','nevertheless','otherwise','meanwhile','afterward','somewhere','everywhere','anywhere','nowhere','somehow','anyway','otherwise','instead','indeed','perhaps','probably','certainly','definitely','exactly','entirely','completely','basically','obviously','generally','usually','recently','currently','immediately','suddenly','suddenly','slowly','quickly','carefully','easily','clearly','loudly','softly','strongly','widely','highly','deeply','fully','finally'],
+  hard:['accommodate','acknowledgment','approximately','arithmetic','bureaucracy','camouflage','conscientious','controversial','convenience','correspondence','curiosity','deliberately','democracy','description','development','disappointment','discipline','embarrassment','environment','extraordinary','fundamental','guarantee','independence','intelligence','knowledge','maintenance','management','mathematics','measurement','necessary','occasionally','opportunity','particularly','perseverance','perspective','professional','pronunciation','qualification','questionnaire','recommendation','relationship','representative','responsibility','rhythm','significant','sophisticated','spontaneous','substantially','technology','throughout','understanding','unfortunately','vulnerability','abbreviation','accomplishment','acknowledgement','administrative','advertisement','advantageous','amplification','announcement','approximately','assassination','bibliography','catastrophically','characteristics','collaborative','communication','complicated','comprehension','confidential','congratulations','consciousness','considerably','constitutional','contemporary','continuously','controversial','corporation','correspondence','demonstration','determination','developmental','differentiate','disappointment','discouragement','disproportionate','documentation','electromagnetic','encouragement','establishment','exaggeration','examination','explanation','fundamentally','generalization','government','humanitarian','hypothetically','identification','implementation','inappropriate','independently','indirectly','infrastructure','initialization','instantaneous','insufficiently','interconnected','international','interpretation','introspection','investigation','justification','kindergarten','knowledgeable','laboratories','liberalization','manifestation','manufacturing','mathematician','miscellaneous','misunderstanding','multiplication','Nevertheless','optimization','organizational','overwhelming','parliamentary','philosophical','photography','pronunciation','qualification','ramifications','recommendation','reconsideration','regeneration','reimbursement','reinforcement','representation','responsibilities']
+};
+
+const DIFFS={easy:{time:30,pool:'easy'},normal:{time:60,pool:'normal'},hard:{time:60,pool:'hard'}};
+
+let diff='easy',words=[],wordIdx=0,typedWords=[],started=false,done=false;
+let timeLeft=0,totalChars=0,correctCharsCount=0,errorCount=0,bestWpm={easy:0,normal:0,hard:0};
+let timerInterval=null,wpmInterval=null;
+
+function setDiff(d){
+  diff=d;
+  ['Easy','Normal','Hard'].forEach(n=>document.getElementById('d'+n).classList.toggle('on',d===n.toLowerCase()));
+}
+
+function generateWords(count){
+  const pool=WORDS[DIFFS[diff].pool];
+  const out=[];
+  for(let i=0;i<count;i++)out.push(pool[Math.floor(Math.random()*pool.length)]);
+  return out;
+}
+
+function beginGame(){
+  document.getElementById('menuOv').classList.remove('open');
+  document.getElementById('endOv').classList.remove('open');
+  document.getElementById('gameArea').classList.add('show');
+  words=generateWords(200);
+  wordIdx=0;typedWords=Array(200).fill('');
+  started=false;done=false;timeLeft=DIFFS[diff].time;
+  totalChars=0;correctCharsCount=0;errorCount=0;
+  clearInterval(timerInterval);clearInterval(wpmInterval);
+  document.getElementById('wpmDisp').textContent='0';
+  document.getElementById('timeDisp').textContent=timeLeft;
+  document.getElementById('accDisp').textContent='100%';
+  const fill=document.getElementById('timer-fill');
+  fill.style.transition='none';fill.style.width='100%';
+  renderText();
+  setTimeout(()=>focusTyper(),100);
+}
+
+function showMenu(){
+  clearInterval(timerInterval);clearInterval(wpmInterval);
+  document.getElementById('menuOv').classList.add('open');
+  document.getElementById('gameArea').classList.remove('show');
+  document.getElementById('endOv').classList.remove('open');
+  document.getElementById('typer').blur();
+}
+
+function focusTyper(){
+  if(done)return;
+  document.getElementById('typer').focus();
+  document.getElementById('text-wrap').classList.add('active');
+}
+
+function startTimer(){
+  started=true;
+  const cfg=DIFFS[diff];
+  const fill=document.getElementById('timer-fill');
+  fill.style.transition=`width ${cfg.time}s linear`;
+  fill.style.width='0%';
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('timeDisp').textContent=timeLeft;
+    if(timeLeft<=0){clearInterval(timerInterval);clearInterval(wpmInterval);endGame();}
+  },1000);
+  wpmInterval=setInterval(updateWpm,500);
+}
+
+function updateWpm(){
+  const elapsed=(DIFFS[diff].time-timeLeft)||1;
+  const wpm=Math.round((correctCharsCount/5)/(elapsed/60));
+  document.getElementById('wpmDisp').textContent=wpm;
+  const acc=totalChars>0?Math.round((correctCharsCount/totalChars)*100):100;
+  document.getElementById('accDisp').textContent=acc+'%';
+}
+
+/* Render visible text window */
+function renderText(){
+  const display=document.getElementById('text-display');
+  display.innerHTML='';
+  const lineWords=30; // words per render batch
+  const start=Math.max(0,wordIdx-2);
+  const end=Math.min(words.length,start+lineWords);
+
+  for(let wi=start;wi<end;wi++){
+    const word=words[wi];
+    const typed=typedWords[wi]||'';
+    const wordSpan=document.createElement('span');
+    wordSpan.id='w'+wi;
+    wordSpan.style.cssText='display:inline-block;white-space:nowrap;margin-right:.5em;';
+
+    for(let ci=0;ci<word.length;ci++){
+      const s=document.createElement('span');s.className='ch';s.textContent=word[ci];
+      if(wi<wordIdx){
+        // past word
+        s.classList.add(ci<typed.length&&typed[ci]===word[ci]?'correct':'wrong');
+      } else if(wi===wordIdx){
+        if(ci<typed.length){s.classList.add(typed[ci]===word[ci]?'correct':'wrong');}
+        else if(ci===typed.length){s.classList.add('cursor');}
+        else{s.classList.add('current-word-ch');}
+      }
+      wordSpan.appendChild(s);
+    }
+    // extra typed chars beyond word length
+    if(wi===wordIdx&&typed.length>word.length){
+      for(let ci=word.length;ci<typed.length;ci++){
+        const s=document.createElement('span');s.className='ch wrong';s.textContent=typed[ci];
+        wordSpan.appendChild(s);
+      }
+    }
+    display.appendChild(wordSpan);
+    if(wi<end-1){const sp=document.createElement('span');sp.textContent=' ';display.appendChild(sp);}
+  }
+
+  // scroll current word into view
+  requestAnimationFrame(()=>{
+    const el=document.getElementById('w'+wordIdx);
+    if(el){
+      const dRect=display.getBoundingClientRect();
+      const eRect=el.getBoundingClientRect();
+      const lineH=display.offsetHeight/3;
+      if(eRect.top-dRect.top>lineH){
+        display.scrollTop+=eRect.top-dRect.top-10;
+      }
+    }
+  });
+}
+
+const typer=document.getElementById('typer');
+typer.addEventListener('input',()=>{
+  if(done)return;
+  if(!started)startTimer();
+  const val=typer.value;
+  if(val.endsWith(' ')){
+    // advance word
+    const typed=val.trim();
+    const word=words[wordIdx];
+    typedWords[wordIdx]=typed;
+    // count chars
+    for(let i=0;i<Math.max(typed.length,word.length);i++){
+      totalChars++;
+      if(i<typed.length&&i<word.length&&typed[i]===word[i])correctCharsCount++;
+      else if(i<typed.length)errorCount++;
+    }
+    if(typed===word)SFX.word(); else SFX.wrong();
+    wordIdx++;
+    typer.value='';
+    renderText();
+    if(wordIdx>=words.length-10)words.push(...generateWords(30));
+    return;
+  }
+  typedWords[wordIdx]=val;
+  renderText();
+});
+
+typer.addEventListener('keydown',e=>{
+  if(e.key==='Escape')showMenu();
+});
+
+function endGame(){
+  done=true;
+  document.getElementById('text-wrap').classList.remove('active');
+  const elapsed=DIFFS[diff].time;
+  const wpm=Math.round((correctCharsCount/5)/(elapsed/60));
+  const acc=totalChars>0?Math.round((correctCharsCount/totalChars)*100):100;
+  const isNew=wpm>bestWpm[diff];if(isNew)bestWpm[diff]=wpm;
+  document.getElementById('endWpm').textContent=wpm;
+  document.getElementById('endAcc').textContent=acc+'%';
+  document.getElementById('endCorrect').textContent=correctCharsCount;
+  document.getElementById('endErrors').textContent=errorCount;
+  document.getElementById('newBest').style.display=isNew?'block':'none';
+  SFX.end();
+  setTimeout(()=>document.getElementById('endOv').classList.add('open'),600);
+}
+</script>
+</body>
+</html>

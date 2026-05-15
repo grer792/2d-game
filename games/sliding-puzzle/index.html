@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sliding Puzzle</title>
+<style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+#endOv{background:rgba(13,13,25,.92);backdrop-filter:blur(6px);}
+.menu-card,.end-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5);}
+.game-title{font-size:clamp(1.6rem,6vw,2.4rem);font-weight:950;letter-spacing:-.03em;}.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.4rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.5;}
+.sopt.on .sopt-lbl{color:var(--text);}
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
+
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#gameArea.show{display:flex;}
+.topbar{display:flex;gap:12px;align-items:center;}
+.pill{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:10px;padding:6px 16px;font-size:.82rem;font-weight:700;}
+.pill span{color:var(--accent);}
+.back-btn{background:rgba(37,37,56,.9);border:1.5px solid var(--border);border-radius:10px;padding:6px 12px;font-size:.8rem;font-weight:700;color:var(--text2);cursor:pointer;transition:all .13s;}
+.back-btn:hover{background:var(--bg4);color:var(--text);}
+
+/* Puzzle board */
+#board-wrap{background:rgba(12,10,20,.7);border:2px solid rgba(124,92,252,.2);border-radius:18px;padding:12px;box-shadow:0 0 40px rgba(124,92,252,.08);}
+#board{position:relative;}
+
+/* Tiles */
+.tile{
+  position:absolute;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,rgba(44,38,80,.95),rgba(30,26,55,.95));
+  border:2px solid rgba(124,92,252,.35);
+  box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:top .13s ease,left .13s ease,background .1s,transform .1s;
+  color:#fff;
+  user-select:none;
+}
+.tile:hover{background:linear-gradient(135deg,rgba(60,50,110,.95),rgba(44,38,80,.95));border-color:rgba(124,92,252,.6);}
+.tile:active{transform:scale(.96);}
+.tile.correct{border-color:rgba(74,222,128,.4);background:linear-gradient(135deg,rgba(20,50,35,.95),rgba(15,35,25,.95));}
+
+/* Win animation */
+@keyframes tileWin{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.tile.win{animation:tileWin .35s ease;}
+
+/* End stats */
+.stat-row{display:flex;gap:12px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 18px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-box b{font-size:1.4rem;font-weight:800;color:var(--accent);}
+.stat-box small{font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.new-best{font-size:.82rem;color:#4ade80;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">Sliding <span>Puzzle</span></div>
+    <div class="game-sub">Slide tiles into order</div>
+    <div class="scat">
+      <div class="scat-label">Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt on" id="dEasy"   onclick="setDiff('easy')">  <div class="sopt-ico">🧩</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">3×3</em></div></div>
+        <div class="sopt"    id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🔷</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">4×4</em></div></div>
+        <div class="sopt"    id="dHard"   onclick="setDiff('hard')">  <div class="sopt-ico">💀</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">5×5</em></div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">Click tiles adjacent to the empty space to slide them</p>
+  </div>
+</div>
+
+<div class="ov" id="endOv">
+  <div class="end-card">
+    <div class="game-title" style="color:#4ade80;font-size:2rem">Solved! 🎉</div>
+    <div class="stat-row">
+      <div class="stat-box"><b id="endMoves">0</b><small>Moves</small></div>
+      <div class="stat-box"><b id="endTime">0s</b><small>Time</small></div>
+    </div>
+    <div class="new-best" id="newBest" style="display:none">⭐ New best moves!</div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play Again</button>
+    <button class="gbtn ghost" onclick="showMenu()">&#8592;&ensp;Change Difficulty</button>
+  </div>
+</div>
+
+<div id="gameArea">
+  <div class="topbar">
+    <div class="pill">Moves: <span id="moveDisp">0</span></div>
+    <div class="pill">Time: <span id="timeDisp">0s</span></div>
+    <button class="back-btn" onclick="showMenu()">&#8592; Menu</button>
+  </div>
+  <div id="board-wrap"><div id="board"></div></div>
+  <button class="gbtn ghost" style="width:auto;padding:8px 20px;font-size:.82rem;" onclick="beginGame()">↺ Shuffle</button>
+</div>
+
+<script>
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+const mg=ac.createGain();mg.gain.value=0.18;mg.connect(ac.destination);
+function tone(f,d=.07,t='sine',v=.3){if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+d+.02);}
+const SFX={
+  slide:()=>tone(300,.05,'sine',.25),
+  win:  ()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.3),i*80));}
+};
+
+const DIFFS={easy:{size:3,shuffles:80},normal:{size:4,shuffles:200},hard:{size:5,shuffles:400}};
+let diff='easy',SIZE=3,state=[],moves=0,elapsed=0,done=false,timerInt=null;
+let bestMoves={easy:Infinity,normal:Infinity,hard:Infinity};
+let tileEls={},CELL=90;
+
+function setDiff(d){
+  diff=d;
+  ['Easy','Normal','Hard'].forEach(n=>document.getElementById('d'+n).classList.toggle('on',d===n.toLowerCase()));
+}
+
+function beginGame(){
+  document.getElementById('menuOv').classList.remove('open');
+  document.getElementById('endOv').classList.remove('open');
+  document.getElementById('gameArea').classList.add('show');
+  clearInterval(timerInt);
+  SIZE=DIFFS[diff].size;moves=0;elapsed=0;done=false;
+  document.getElementById('moveDisp').textContent='0';
+  document.getElementById('timeDisp').textContent='0s';
+  // build solved state
+  state=[];
+  for(let r=0;r<SIZE;r++){state.push([]);for(let c=0;c<SIZE;c++)state[r].push(r*SIZE+c+1);}
+  state[SIZE-1][SIZE-1]=0; // blank
+  // shuffle
+  shuffle(DIFFS[diff].shuffles);
+  calcCellSize();
+  buildBoard();
+  renderTiles();
+  timerInt=setInterval(()=>{elapsed++;document.getElementById('timeDisp').textContent=elapsed+'s';},1000);
+}
+
+function showMenu(){
+  clearInterval(timerInt);
+  document.getElementById('menuOv').classList.add('open');
+  document.getElementById('gameArea').classList.remove('show');
+  document.getElementById('endOv').classList.remove('open');
+}
+
+function calcCellSize(){
+  const avW=Math.min(window.innerWidth-60,420),avH=window.innerHeight-180;
+  const byW=Math.floor((avW-24)/SIZE),byH=Math.floor((avH-24)/SIZE);
+  CELL=Math.max(50,Math.min(byW,byH,110));
+}
+
+function shuffle(n){
+  let br=SIZE-1,bc=SIZE-1;
+  const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  let last=null;
+  for(let i=0;i<n;i++){
+    const valid=dirs.filter(([dr,dc])=>{
+      const nr=br+dr,nc=bc+dc;
+      return nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&!(last&&dr===-last[0]&&dc===-last[1]);
+    });
+    const [dr,dc]=valid[Math.floor(Math.random()*valid.length)];
+    const nr=br+dr,nc=bc+dc;
+    state[br][bc]=state[nr][nc];state[nr][nc]=0;
+    last=[dr,dc];br=nr;bc=nc;
+  }
+}
+
+function buildBoard(){
+  const board=document.getElementById('board');
+  board.innerHTML='';tileEls={};
+  const boardSz=SIZE*CELL+(SIZE-1)*4;
+  board.style.width=board.style.height=boardSz+'px';
+  for(let v=1;v<SIZE*SIZE;v++){
+    const tile=document.createElement('div');
+    tile.className='tile';tile.dataset.v=v;
+    tile.style.width=tile.style.height=CELL+'px';
+    tile.style.fontSize=Math.max(14,Math.round(CELL*0.35))+'px';
+    tile.textContent=v;
+    tile.addEventListener('click',()=>tryMove(v));
+    tile.addEventListener('touchstart',e=>{e.preventDefault();tryMove(v);},{passive:false});
+    board.appendChild(tile);
+    tileEls[v]=tile;
+  }
+}
+
+function posOf(v){
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(state[r][c]===v)return[r,c];
+  return null;
+}
+
+function renderTiles(){
+  for(let v=1;v<SIZE*SIZE;v++){
+    const [r,c]=posOf(v);
+    const el=tileEls[v];
+    el.style.top=(r*(CELL+4))+'px';
+    el.style.left=(c*(CELL+4))+'px';
+    // mark correct position
+    const solvedR=Math.floor((v-1)/SIZE),solvedC=(v-1)%SIZE;
+    el.classList.toggle('correct',r===solvedR&&c===solvedC);
+  }
+}
+
+function tryMove(v){
+  if(done)return;
+  const [vr,vc]=posOf(v);
+  const [br,bc]=posOf(0);
+  if((Math.abs(vr-br)+Math.abs(vc-bc))!==1)return;
+  state[br][bc]=v;state[vr][vc]=0;
+  moves++;document.getElementById('moveDisp').textContent=moves;
+  SFX.slide();
+  renderTiles();
+  if(isSolved())winGame();
+}
+
+function isSolved(){
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const expected=r===SIZE-1&&c===SIZE-1?0:r*SIZE+c+1;
+    if(state[r][c]!==expected)return false;
+  }
+  return true;
+}
+
+function winGame(){
+  done=true;clearInterval(timerInt);
+  // flash all tiles
+  Object.values(tileEls).forEach((el,i)=>setTimeout(()=>el.classList.add('win'),i*30));
+  const isNew=moves<bestMoves[diff];if(isNew)bestMoves[diff]=moves;
+  document.getElementById('endMoves').textContent=moves;
+  document.getElementById('endTime').textContent=elapsed+'s';
+  document.getElementById('newBest').style.display=isNew?'block':'none';
+  SFX.win();
+  setTimeout(()=>document.getElementById('endOv').classList.add('open'),600);
+}
+
+// Keyboard arrow support
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('gameArea').classList.contains('show'))return;
+  const[br,bc]=posOf(0);
+  const map={ArrowUp:[1,0],ArrowDown:[-1,0],ArrowLeft:[0,1],ArrowRight:[0,-1]};
+  const d=map[e.key];if(!d)return;
+  const [dr,dc]=d;const nr=br+dr,nc=bc+dc;
+  if(nr<0||nr>=SIZE||nc<0||nc>=SIZE)return;
+  e.preventDefault();tryMove(state[nr][nc]);
+});
+
+window.addEventListener('resize',()=>{
+  if(!document.getElementById('gameArea').classList.contains('show'))return;
+  calcCellSize();buildBoard();renderTiles();
+});
+</script>
+</body>
+</html>

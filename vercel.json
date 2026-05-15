@@ -32,6 +32,11 @@
     { "source": "/game/pong",            "destination": "/games/pong/play.html" },
     { "source": "/game/wordle",          "destination": "/games/wordle/play.html" },
     { "source": "/game/hangman",         "destination": "/games/hangman/play.html" },
-    { "source": "/game/whack-a-mole",   "destination": "/games/whack-a-mole/play.html" }
+    { "source": "/game/whack-a-mole",    "destination": "/games/whack-a-mole/play.html" },
+    { "source": "/game/typing-speed",   "destination": "/games/typing-speed/play.html" },
+    { "source": "/game/sliding-puzzle", "destination": "/games/sliding-puzzle/play.html" },
+    { "source": "/game/blackjack",      "destination": "/games/blackjack/play.html" },
+    { "source": "/game/sudoku",         "destination": "/games/sudoku/play.html" },
+    { "source": "/game/space-invaders", "destination": "/games/space-invaders/play.html" }
   ]
 }
