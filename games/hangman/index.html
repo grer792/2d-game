@@ -210,8 +210,8 @@ function showMenu(){
 }
 
 function sizeGallows(){
-  const avH=Math.min(window.innerHeight*0.36,230),avW=Math.min(window.innerWidth*0.55,210);
-  const h=Math.max(110,Math.min(avH,avW*230/210));
+  const avH=Math.min(window.innerHeight*0.48,320),avW=Math.min(window.innerWidth*0.7,300);
+  const h=Math.max(150,Math.min(avH,avW*230/210));
   const g=document.getElementById('gallows');
   g.style.height=h+'px';
   g.style.width=(h*210/230)+'px';
