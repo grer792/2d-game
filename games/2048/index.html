@@ -45,17 +45,19 @@ h1 { font-size: 2.4rem; font-weight: 950; letter-spacing: -0.03em; color: var(--
 .board {
   width: 100%; aspect-ratio: 1;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
-  display: grid; grid-template-columns: repeat(4,1fr);
+  display: grid; grid-template-columns: repeat(4,1fr); grid-auto-rows: 1fr;
   gap: 8px; padding: 8px;
 }
 .cell {
+  aspect-ratio: 1;
   background: var(--bg3); border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-weight: 900; line-height: 1;
-  transition: transform 0.08s;
 }
-.cell.pop { animation: pop 0.12s ease; }
-@keyframes pop { 0%{transform:scale(0.5)} 60%{transform:scale(1.1)} 100%{transform:scale(1)} }
+.cell.pop  { animation: pop    0.18s ease; }
+.cell.appear { animation: appear 0.16s ease; }
+@keyframes pop    { 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
+@keyframes appear { 0%{transform:scale(0.25);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
 
 .overlay {
   position: fixed; inset: 0;
@@ -112,7 +114,23 @@ h1 { font-size: 2.4rem; font-weight: 950; letter-spacing: -0.03em; color: var(--
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
+import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
+
+const fbApp = initializeApp({
+  apiKey: 'AIzaSyBQjDeFUKpleEsc2Fl3yZdnNje0cyAGaKU',
+  authDomain: 'd-game-b50ef.firebaseapp.com',
+  databaseURL: 'https://d-game-b50ef-default-rtdb.firebaseio.com',
+  projectId: 'd-game-b50ef',
+  storageBucket: 'd-game-b50ef.firebasestorage.app',
+  messagingSenderId: '80712714092',
+  appId: '1:80712714092:web:4b15f70196f05942905549'
+});
+const db = getDatabase(fbApp);
+const auth = getAuth(fbApp);
+
 // --- Sound ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let _ctx;
@@ -136,9 +154,34 @@ function sfxMerge(val) {
 function sfxWin()  { [523,659,784,1047].forEach((f,i) => setTimeout(() => beep(f, 0.3, 0.2), i*80)); }
 function sfxLose() { [330,262,220].forEach((f,i) => setTimeout(() => beep(f, 0.3, 0.18), i*120)); }
 
+// --- Best score persistence ---
+let uid = null;
+let best = parseInt(localStorage.getItem('bg2048best') || '0', 10);
+document.getElementById('bestVal').textContent = best;
+
+onAuthStateChanged(auth, async user => {
+  uid = user ? user.uid : null;
+  if (uid) {
+    try {
+      const snap = await get(ref(db, `users/${uid}/scores/2048`));
+      if (snap.exists() && snap.val() > best) {
+        best = snap.val();
+        localStorage.setItem('bg2048best', best);
+        document.getElementById('bestVal').textContent = best;
+      }
+    } catch(e) {}
+  }
+});
+
+function saveBest() {
+  localStorage.setItem('bg2048best', best);
+  if (uid) set(ref(db, `users/${uid}/scores/2048`), best).catch(() => {});
+}
+
 // --- Game ---
 const SIZE = 4;
-let grid, score, best = 0, won = false, over = false;
+let grid, score, won = false, over = false;
+let prevGrid = null, newTilePos = -1;
 
 function newGrid() { return Array.from({ length: SIZE }, () => Array(SIZE).fill(0)); }
 
@@ -148,11 +191,16 @@ function addRandom(g) {
   if (!empty.length) return;
   const [r, c] = empty[Math.floor(Math.random() * empty.length)];
   g[r][c] = Math.random() < 0.9 ? 2 : 4;
+  newTilePos = r * SIZE + c;
 }
 
 function startGame() {
   grid = newGrid(); score = 0; won = false; over = false;
+  prevGrid = null; newTilePos = -1;
   addRandom(grid); addRandom(grid);
+  newTilePos = -1; // no appear animation for initial tiles
+  document.getElementById('scoreVal').textContent = 0;
+  document.getElementById('bestVal').textContent = best;
   document.getElementById('overlay').style.display = 'none';
   render();
 }
@@ -176,8 +224,8 @@ function move(dir) {
   if (over) return;
   let moved = false, pts = 0;
   let g = grid.map(r => [...r]);
+  const preMove = grid.map(r => [...r]);
 
-  // Rotate so we always slide left
   const rotations = { left: 0, right: 2, up: 3, down: 1 };
   const rots = rotations[dir];
   for (let i = 0; i < rots; i++) g = rotateCW(g);
@@ -194,10 +242,13 @@ function move(dir) {
   if (!moved) return;
   sfxSlide();
   score += pts;
-  if (score > best) best = score;
+  if (score > best) { best = score; saveBest(); }
   document.getElementById('scoreVal').textContent = score;
   document.getElementById('bestVal').textContent = best;
+
+  newTilePos = -1;
   addRandom(g);
+  prevGrid = preMove;
   grid = g;
   render();
 
@@ -245,9 +296,18 @@ function render() {
   board.innerHTML = '';
   for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
     const v = grid[r][c];
+    const pos = r * SIZE + c;
     const cell = document.createElement('div');
     cell.className = 'cell ' + tileClass(v);
-    if (v) { cell.textContent = v; cell.style.fontSize = fontSize(v); cell.classList.add('pop'); }
+    if (v) {
+      cell.textContent = v;
+      cell.style.fontSize = fontSize(v);
+      if (pos === newTilePos) {
+        cell.classList.add('appear');
+      } else if (prevGrid && prevGrid[r][c] > 0 && prevGrid[r][c] < v) {
+        cell.classList.add('pop');
+      }
+    }
     board.appendChild(cell);
   }
 }
