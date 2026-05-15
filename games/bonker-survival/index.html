@@ -2151,23 +2151,42 @@ class Game extends Phaser.Scene {
     });
     const checkResources=()=>{
       get(sref('resources')).then(snap=>{
-        const val=snap.val(), keys=val?Object.keys(val):[];
-        console.log('[checkResources] keys found:',keys.length);
+        const val=snap.val()??{};
+        const keys=Object.keys(val);
         const hasTree=keys.some(k=>k.startsWith('tree_'));
         const hasRock=keys.some(k=>k.startsWith('rock_'));
         const hasIron=keys.some(k=>k.startsWith('iron_'));
-        if(!hasIron||!hasTree||!hasRock||keys.length<(RES_N*3*0.5)||(keys.length&&val[keys[0]].hp===undefined)){
-          console.log('[checkResources] reseeding...');
+        const hasBadHp=Object.values(val).some(v=>v&&v.hp===undefined);
+        if(!hasIron||!hasTree||!hasRock||keys.length<20||hasBadHp){
+          // Full reseed needed — clear stale queue first to prevent ghost sprites
+          sc._resQueue=[];
           remove(sref('resources')).then(()=>sc.seedMap()).catch(e=>console.error('[checkResources] remove failed:',e));
+          return;
         }
+        // Partial respawn: add back any seeded resource IDs that are missing
+        // (handles overnight case where client-side timers never fired)
+        const counts={tree:RES_N,rock:RES_N,bush:RES_N,ore:22,iron:28,coal:24,sulfur:18};
+        const batch={};
+        Object.entries(counts).forEach(([type,n])=>{
+          const maxHp=RES_DEF[type].maxHp;
+          for(let i=0;i<n;i++){
+            const id=type+'_'+i;
+            if(!val[id]){
+              let rx,ry,t=0;
+              do{rx=ISLAND_GRASS+40+Math.random()*(MAP_W-(ISLAND_GRASS+40)*2);ry=ISLAND_GRASS+40+Math.random()*(MAP_H-(ISLAND_GRASS+40)*2);}while(isInRiver(rx,ry)&&++t<20);
+              batch[id]={x:Math.round(rx),y:Math.round(ry),type,hp:maxHp,maxHp};
+            }
+          }
+        });
+        if(Object.keys(batch).length) update(sref('resources'),batch);
       }).catch(e=>console.error('[checkResources] read failed:',e));
     };
     checkResources();
-    // Second check after 4 s in case Firebase was slow to respond
-    setTimeout(()=>{ if(Object.keys(resSpr).length<10) checkResources(); }, 4000);
+    // Second check after 5 s in case Firebase was slow to respond
+    setTimeout(()=>{ if(Object.keys(resSpr).length<10) checkResources(); }, 5000);
     onChildAdded(sref('resources'),  s=>{if(s.val()&&!resSpr[s.key]){sc._resQueue.push({key:s.key,val:s.val()});if(!sc._resDraining)sc._drainRes();}});
     onChildChanged(sref('resources'),s=>{if(s.val()&&resSpr[s.key])  sc.rxRes(s.key,s.val());});
-    onChildRemoved(sref('resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}});
+    onChildRemoved(sref('resources'),s=>{if(resSpr[s.key]){resSpr[s.key].destroy();delete resSpr[s.key];}delete resHitTime[s.key];});
     onChildAdded(sref('players'),  s=>{if(s.key!==PID&&s.val())sc.mkOther(s.key,s.val());});
     onChildChanged(sref('players'),s=>{if(s.key!==PID&&s.val())sc.mvOther(s.key,s.val());});
     onChildRemoved(sref('players'),s=>{

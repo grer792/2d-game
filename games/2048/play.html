@@ -12,6 +12,14 @@
 <meta property="og:image" content="/games/2048/thumb.png">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://www.bonkergames.com/game/2048">
+<style>
+.game-info-section{margin-top:8px;border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.gi-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-top:4px}
+.gi-text{font-size:.78rem;color:var(--text2);line-height:1.5}
+.gi-list{font-size:.78rem;color:var(--text2);line-height:1.5;padding-left:14px}
+.gi-q{font-size:.78rem;font-weight:600;color:var(--text);margin-top:2px}
+.gi-a{font-size:.78rem;color:var(--text2);line-height:1.5}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -258,7 +266,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           <div class="bar-logo-wrap">
             <img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo">
           </div>
-          <span class="bar-game-title">2048</span>
+          <h1 class="bar-game-title" style="margin:0">2048</h1>
         </div>
         <div class="game-bar-actions">
           <button class="bar-btn" id="likeBtn" onclick="toggleLike()">
@@ -300,6 +308,27 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="pn-card">
         <div class="pn-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">🏎️<div class="pn-overlay"><span class="pn-pill">Coming soon</span></div></div>
         <div class="pn-info"><div class="pn-name">Bonker Racer</div><div class="pn-meta">Racing · Multiplayer</div></div>
+      </div>
+      <div class="game-info-section">
+        <div class="gi-label">About</div>
+        <p class="gi-text">The addictive number-sliding puzzle. Slide tiles to merge matching numbers and try to reach the 2048 tile. Simple to learn, hard to master.</p>
+        <div class="gi-label">How to Play</div>
+        <ul class="gi-list">
+          <li>Slide all tiles in one direction per move</li>
+          <li>Matching tiles merge and double their value</li>
+          <li>A new tile appears after each move</li>
+          <li>Reach the 2048 tile to win!</li>
+        </ul>
+        <div class="gi-label">Controls</div>
+        <ul class="gi-list">
+          <li>Arrow keys / WASD — slide tiles</li>
+          <li>Swipe — on mobile</li>
+        </ul>
+        <div class="gi-label">FAQ</div>
+        <div class="gi-q">Can I keep playing past 2048?</div>
+        <div class="gi-a">Yes! The game continues after you reach 2048.</div>
+        <div class="gi-q">Is there a time limit?</div>
+        <div class="gi-a">No — take as long as you need on each move.</div>
       </div>
     </div>
 

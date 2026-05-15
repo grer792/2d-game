@@ -12,6 +12,14 @@
 <meta property="og:image" content="/games/breakout/thumb.png">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://www.bonkergames.com/game/breakout">
+<style>
+.game-info-section{margin-top:8px;border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.gi-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-top:4px}
+.gi-text{font-size:.78rem;color:var(--text2);line-height:1.5}
+.gi-list{font-size:.78rem;color:var(--text2);line-height:1.5;padding-left:14px}
+.gi-q{font-size:.78rem;font-weight:600;color:var(--text);margin-top:2px}
+.gi-a{font-size:.78rem;color:var(--text2);line-height:1.5}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -257,7 +265,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           <div class="bar-logo-wrap">
             <img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo">
           </div>
-          <span class="bar-game-title">Bonker Breakout</span>
+          <h1 class="bar-game-title" style="margin:0">Bonker Breakout</h1>
         </div>
         <div class="game-bar-actions">
           <button class="bar-btn" id="likeBtn" onclick="toggleLike()">
@@ -307,6 +315,27 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="pn-card">
         <div class="pn-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">🏎️<div class="pn-overlay"><span class="pn-pill">Coming soon</span></div></div>
         <div class="pn-info"><div class="pn-name">Bonker Racer</div><div class="pn-meta">Racing · Multiplayer</div></div>
+      </div>
+      <div class="game-info-section">
+        <div class="gi-label">About</div>
+        <p class="gi-text">A modern brick-breaking arcade game with 10 handcrafted levels, an endless mode, 4 game modes, and 6 power-ups to collect.</p>
+        <div class="gi-label">How to Play</div>
+        <ul class="gi-list">
+          <li>Launch the ball with Space</li>
+          <li>Move your paddle to keep the ball in play</li>
+          <li>Break all bricks to advance to the next level</li>
+          <li>Collect power-ups for special abilities</li>
+        </ul>
+        <div class="gi-label">Controls</div>
+        <ul class="gi-list">
+          <li>Arrow keys / WASD or Mouse — move paddle</li>
+          <li>Space — launch ball, P — pause</li>
+        </ul>
+        <div class="gi-label">FAQ</div>
+        <div class="gi-q">How many levels?</div>
+        <div class="gi-a">10 handcrafted levels plus an endless mode.</div>
+        <div class="gi-q">What power-ups are there?</div>
+        <div class="gi-a">Extra ball, wide paddle, slow ball, shield, fire ball, sticky paddle.</div>
       </div>
     </div>
 

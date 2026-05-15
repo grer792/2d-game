@@ -545,18 +545,13 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
   "@type": "ItemList",
   "name": "BonkerGames - Free Online Games",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Bonker Survival",
-      "url": "https://www.bonkergames.com/game/bonker-survival"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Bonker Chess",
-      "url": "https://www.bonkergames.com/game/bonker-chess"
-    }
+    {"@type":"ListItem","position":1,"name":"Bonker Survival","url":"https://www.bonkergames.com/game/bonker-survival"},
+    {"@type":"ListItem","position":2,"name":"Bonker Chess","url":"https://www.bonkergames.com/game/bonker-chess"},
+    {"@type":"ListItem","position":3,"name":"Bonker Snake","url":"https://www.bonkergames.com/game/snake"},
+    {"@type":"ListItem","position":4,"name":"2048","url":"https://www.bonkergames.com/game/2048"},
+    {"@type":"ListItem","position":5,"name":"Bonker Breakout","url":"https://www.bonkergames.com/game/breakout"},
+    {"@type":"ListItem","position":6,"name":"Bonker Bird","url":"https://www.bonkergames.com/game/flappy-bird"},
+    {"@type":"ListItem","position":7,"name":"Tic Tac Toe","url":"https://www.bonkergames.com/game/tic-tac-toe"}
   ]
 }
 </script>
@@ -658,7 +653,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
 
     <!-- SIDEBAR BOTTOM (nav actions) -->
     <div class="sidebar-bottom">
-      <a class="sb-contact" href="#">
+      <a class="sb-contact" href="/faq">
         <span class="ico"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span>
         <span class="label">Contact us</span>
       </a>
@@ -698,16 +693,16 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="cat-chip">Strategy</div>
     </div>
 
-    <div class="hero-card" onclick="window._trackRecent&&window._trackRecent('bonker-survival');window.location.href='/game/bonker-survival'">
+    <a class="hero-card" href="/game/bonker-survival" onclick="window._trackRecent&&window._trackRecent('bonker-survival')">
       <div class="hero-thumb">
         <img src="games/bonker-survival/thumb.png" alt="Bonker Survival">
         <div class="hero-fade"></div>
       </div>
       <div class="hero-info">
-        <div class="hero-tag">ðŸ”¥ Featured</div>
+        <div class="hero-tag">&#x1F525; Featured</div>
         <div class="hero-title">Bonker Survival</div>
-        <div class="hero-stars">â˜…â˜…â˜…â˜…â˜…</div>
-        <div class="hero-desc">Build your base, gather resources, and raid enemies. Survive long enough to reach the top. Free multiplayer â€” play with friends right now.</div>
+        <div class="hero-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="hero-desc">Build your base, gather resources, and raid enemies. Survive long enough to reach the top. Free multiplayer, play with friends right now.</div>
         <div class="hero-tags">
           <span class="game-tag">Survival</span>
           <span class="game-tag">Multiplayer</span>
@@ -725,17 +720,17 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           </button>
         </div>
       </div>
-    </div>
+    </a>
 
     <div class="section">
       <div class="section-head">
-        <div class="section-title">🕹️ All games</div>
+        <h1 class="section-title">🕹️ All games</h1>
       </div>
       <div class="games-grid">
 
         <!-- Row 1: Featured wide cards (2+2 = 4 cols, no mixing) -->
         <!-- CHESS — wide -->
-        <div class="game-card card-wide" onclick="window._trackRecent&&window._trackRecent('bonker-chess');window.location.href='/game/bonker-chess'">
+        <a class="game-card card-wide" href="/game/bonker-chess" onclick="window._trackRecent&&window._trackRecent('bonker-chess')">
           <div class="card-thumb">
             <img src="games/bonker-chess/thumb.png" alt="Bonker Chess">
             <span class="card-badge badge-hot">Hot</span>
@@ -744,10 +739,10 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">Bonker Chess</div>
           </div>
-        </div>
+        </a>
 
         <!-- BIRD — wide -->
-        <div class="game-card card-wide" onclick="window._trackRecent&&window._trackRecent('flappy-bird');window.location.href='/game/flappy-bird'">
+        <a class="game-card card-wide" href="/game/flappy-bird" onclick="window._trackRecent&&window._trackRecent('flappy-bird')">
           <div class="card-thumb">
             <img src="games/flappy-bird/thumb.png" alt="Bonker Bird">
             <span class="card-badge badge-new">New</span>
@@ -756,11 +751,11 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">Bonker Bird</div>
           </div>
-        </div>
+        </a>
 
         <!-- Row 2: Normal cards (4 equal cols) -->
         <!-- SNAKE -->
-        <div class="game-card" onclick="window._trackRecent&&window._trackRecent('snake');window.location.href='/game/snake'">
+        <a class="game-card" href="/game/snake" onclick="window._trackRecent&&window._trackRecent('snake')">
           <div class="card-thumb">
             <img src="games/snake/thumb.png" alt="Bonker Snake">
             <button class="card-fav-btn" data-fav-game="snake" onclick="event.stopPropagation();window._toggleFav&&window._toggleFav('snake')" title="Favorite">
@@ -768,10 +763,10 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">Bonker Snake</div>
           </div>
-        </div>
+        </a>
 
         <!-- TTT -->
-        <div class="game-card" onclick="window._trackRecent&&window._trackRecent('tic-tac-toe');window.location.href='/game/tic-tac-toe'">
+        <a class="game-card" href="/game/tic-tac-toe" onclick="window._trackRecent&&window._trackRecent('tic-tac-toe')">
           <div class="card-thumb">
             <img src="games/tic-tac-toe-online/thumb.png" alt="Tic Tac Toe">
             <button class="card-fav-btn" data-fav-game="tic-tac-toe" onclick="event.stopPropagation();window._toggleFav&&window._toggleFav('tic-tac-toe')" title="Favorite">
@@ -779,10 +774,10 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">Tic Tac Toe</div>
           </div>
-        </div>
+        </a>
 
         <!-- 2048 -->
-        <div class="game-card" onclick="window._trackRecent&&window._trackRecent('2048');window.location.href='/game/2048'">
+        <a class="game-card" href="/game/2048" onclick="window._trackRecent&&window._trackRecent('2048')">
           <div class="card-thumb">
             <img src="games/2048/thumb.png" alt="2048">
             <button class="card-fav-btn" data-fav-game="2048" onclick="event.stopPropagation();window._toggleFav&&window._toggleFav('2048')" title="Favorite">
@@ -790,10 +785,10 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">2048</div>
           </div>
-        </div>
+        </a>
 
         <!-- BREAKOUT -->
-        <div class="game-card" onclick="window._trackRecent&&window._trackRecent('breakout');window.location.href='/game/breakout'">
+        <a class="game-card" href="/game/breakout" onclick="window._trackRecent&&window._trackRecent('breakout')">
           <div class="card-thumb">
             <img src="games/breakout/thumb.png" alt="Bonker Breakout">
             <button class="card-fav-btn" data-fav-game="breakout" onclick="event.stopPropagation();window._toggleFav&&window._toggleFav('breakout')" title="Favorite">
@@ -801,10 +796,10 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">Bonker Breakout</div>
           </div>
-        </div>
+        </a>
 
         <!-- SURVIVAL — normal -->
-        <div class="game-card" onclick="window._trackRecent&&window._trackRecent('bonker-survival');window.location.href='/game/bonker-survival'">
+        <a class="game-card" href="/game/bonker-survival" onclick="window._trackRecent&&window._trackRecent('bonker-survival')">
           <div class="card-thumb">
             <img src="games/bonker-survival/thumb.png" alt="Bonker Survival">
             <button class="card-fav-btn" data-fav-game="bonker-survival" onclick="event.stopPropagation();window._toggleFav&&window._toggleFav('bonker-survival')" title="Favorite">
@@ -812,7 +807,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
             </button>
             <div class="card-hover-label">Bonker Survival</div>
           </div>
-        </div>
+        </a>
       </div>
     </div>
 
@@ -942,8 +937,8 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       English
     </div>
     <div class="auth-footer-links">
-      <a href="#">About</a><a href="/terms-and-conditions">Terms &amp; conditions</a>
-      <a href="/terms-and-conditions">Privacy</a><a href="#">Contact</a>
+      <a href="/about">About</a><a href="/terms-and-conditions">Terms &amp; conditions</a>
+      <a href="/terms-and-conditions">Privacy</a><a href="/faq">Contact</a>
     </div>
   </div>
 </div>
@@ -990,12 +985,12 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       English
     </div>
     <div class="auth-footer-links">
-      <a href="#">About</a>
+      <a href="/about">About</a>
       <a href="/terms-and-conditions">Terms &amp; conditions</a>
       <a href="/terms-and-conditions">Privacy</a>
-      <a href="#">Contact</a>
+      <a href="/faq">Contact</a>
       <a href="#">Developers</a>
-      <a href="#">All games</a>
+      <a href="/">All games</a>
     </div>
     <div class="auth-footer-socials">
       <a class="auth-footer-soc" href="https://www.tiktok.com/@bonkergames" target="_blank" rel="noopener" title="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.54V6.79a4.85 4.85 0 01-1.02-.1z"/></svg></a>

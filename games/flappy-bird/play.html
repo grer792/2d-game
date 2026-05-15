@@ -12,6 +12,14 @@
 <meta property="og:image" content="/games/flappy-bird/thumb.png">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://www.bonkergames.com/game/flappy-bird">
+<style>
+.game-info-section{margin-top:8px;border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.gi-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-top:4px}
+.gi-text{font-size:.78rem;color:var(--text2);line-height:1.5}
+.gi-list{font-size:.78rem;color:var(--text2);line-height:1.5;padding-left:14px}
+.gi-q{font-size:.78rem;font-weight:600;color:var(--text);margin-top:2px}
+.gi-a{font-size:.78rem;color:var(--text2);line-height:1.5}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -223,7 +231,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
           <div class="bar-logo-wrap">
             <img src="../../assets/logo.png" alt="BonkerGames" class="bar-logo">
           </div>
-          <span class="bar-game-title">Bonker Bird</span>
+          <h1 class="bar-game-title" style="margin:0">Bonker Bird</h1>
         </div>
         <div class="game-bar-actions">
           <button class="bar-btn" id="likeBtn" onclick="toggleLike()">
@@ -273,6 +281,26 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
         <div class="pn-thumb"><img src="/games/tic-tac-toe-online/thumb.png" alt="Tic Tac Toe"></div>
         <div class="pn-info"><div class="pn-name">Tic Tac Toe</div><div class="pn-meta">Strategy · Multiplayer</div></div>
       </a>
+      <div class="game-info-section">
+        <div class="gi-label">About</div>
+        <p class="gi-text">A smooth Flappy Bird-style arcade game. Tap to flap your wings and navigate through a relentless stream of pipes. How far can you go?</p>
+        <div class="gi-label">How to Play</div>
+        <ul class="gi-list">
+          <li>Tap or press Space to flap your wings</li>
+          <li>Fly through the gaps between pipes</li>
+          <li>Each pipe you pass scores one point</li>
+          <li>Don't touch the pipes or the ground!</li>
+        </ul>
+        <div class="gi-label">Controls</div>
+        <ul class="gi-list">
+          <li>Space / Click / Tap — flap</li>
+        </ul>
+        <div class="gi-label">FAQ</div>
+        <div class="gi-q">Is my best score saved?</div>
+        <div class="gi-a">Yes — saved locally and to your profile when logged in.</div>
+        <div class="gi-q">Does it get harder?</div>
+        <div class="gi-a">Yes, speed increases gradually as your score grows.</div>
+      </div>
     </div>
   </main>
 </div>

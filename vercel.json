@@ -2,6 +2,20 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{"type": "host", "value": "bonkergames.com"}],
+      "destination": "https://www.bonkergames.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{"type": "host", "value": "2d-game-beta.vercel.app"}],
+      "destination": "https://www.bonkergames.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/game/bonker-survival", "destination": "/games/bonker-survival/play.html" },
     { "source": "/game/bonker-chess",    "destination": "/games/bonker-chess/play.html" },
