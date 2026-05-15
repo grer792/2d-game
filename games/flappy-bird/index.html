@@ -84,14 +84,14 @@ function sfxDie()   { [300, 230, 170].forEach((f, i) => setTimeout(() => beep(f,
 // Responsive constants (scale relative to 600px reference height)
 function sc()       { return H / 600; }
 const K = {
-  get GRAVITY()    { return 0.27  * sc(); },
-  get FLAP_V()     { return -6.2  * sc(); },
+  get GRAVITY()    { return 0.16  * sc(); },
+  get FLAP_V()     { return -5.2  * sc(); },
   get BIRD_R()     { return Math.max(10, 14  * sc()); },
   get BIRD_X()     { return W * 0.22; },
   get PIPE_W()     { return Math.max(44, 54  * sc()); },
-  get PIPE_GAP()   { return Math.max(165, 210 * sc()); },
-  get PIPE_SPEED() { return Math.max(1.4, 2.0 * sc()); },
-  get PIPE_EVERY() { return Math.round(Math.max(90, 115 * sc())); },
+  get PIPE_GAP()   { return Math.max(180, 235 * sc()); },
+  get PIPE_SPEED() { return Math.max(1.2, 1.6 * sc()); },
+  get PIPE_EVERY() { return Math.round(Math.max(100, 130 * sc())); },
   get GROUND_H()   { return Math.max(48, 62  * sc()); },
 };
 
