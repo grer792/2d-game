@@ -6,77 +6,206 @@
 <title>Memory Match</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#13131f;color:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;gap:16px}
-h1{font-size:1.4rem;font-weight:800;color:#7c5cfc}
-.stats{display:flex;gap:24px;font-size:.85rem;color:#9898b8}
-.stats span{display:flex;flex-direction:column;align-items:center;gap:2px}
-.stats b{font-size:1.1rem;font-weight:700;color:#fff}
-.grid{display:grid;gap:10px}
-.card{width:72px;height:72px;border-radius:12px;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform .35s ease;user-select:none}
+html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden}
+
+/* ── Screens ── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .3s;background:#13131f;z-index:20}
+.screen.hidden{opacity:0;pointer-events:none}
+.logo{font-size:2.2rem;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#7c5cfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{font-size:.85rem;color:#9898b8;margin-top:-8px}
+.diff-row,.mode-row{display:flex;gap:10px}
+.diff-btn,.play-btn,.restart-btn{font-family:inherit;cursor:pointer;border:none;font-weight:700;border-radius:10px;transition:all .15s}
+.diff-btn{padding:9px 22px;background:#252538;color:#9898b8;border:1.5px solid rgba(255,255,255,.08);font-size:.85rem}
+.diff-btn:hover,.diff-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
+.play-btn{padding:13px 48px;background:#7c5cfc;color:#fff;font-size:1rem;margin-top:4px}
+.play-btn:hover{background:#6a4de0}
+.restart-btn{padding:12px 40px;background:#7c5cfc;color:#fff;font-size:.95rem}
+.restart-btn:hover{background:#6a4de0}
+
+/* ── Game area ── */
+#gameArea{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;transition:opacity .3s;pointer-events:none}
+#gameArea.show{opacity:1;pointer-events:auto}
+
+/* ── Stats bar ── */
+.stats{display:flex;gap:28px}
+.stat{display:flex;flex-direction:column;align-items:center;gap:1px}
+.stat-val{font-size:1.3rem;font-weight:800;color:#fff}
+.stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;color:#9898b8}
+.stat.best .stat-val{color:#7c5cfc}
+
+/* ── Grid ── */
+#grid{display:grid;gap:8px}
+
+/* ── Card ── */
+.card{border-radius:12px;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform .25s ease;will-change:transform}
 .card.flipped,.card.matched{transform:rotateY(180deg)}
-.card.matched .back{background:rgba(124,92,252,.18);border-color:rgba(124,92,252,.5)}
-.card-face{position:absolute;inset:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.card.matched .back{background:rgba(124,92,252,.15);border-color:rgba(124,92,252,.45)}
+.card.wrong .back{background:rgba(255,77,109,.15);border-color:rgba(255,77,109,.45)}
+.card-face{position:absolute;inset:0;border-radius:12px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .front{background:#252538;border:1.5px solid rgba(255,255,255,.07)}
-.front svg{width:28px;height:28px;fill:#9898b8;opacity:.4}
-.back{background:#1c1c2e;border:1.5px solid rgba(124,92,252,.3);transform:rotateY(180deg)}
-.btn{background:#7c5cfc;color:#fff;border:none;padding:10px 28px;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s}
-.btn:hover{background:#6a4de0}
-.msg{font-size:1.1rem;font-weight:700;color:#4ade80;min-height:1.5rem}
-.diff{display:flex;gap:8px}
-.diff button{background:#252538;color:#9898b8;border:1.5px solid rgba(255,255,255,.07);padding:6px 16px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s}
-.diff button.active,.diff button:hover{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
+.front::after{content:'?';font-size:1.4rem;font-weight:800;color:rgba(255,255,255,.15)}
+.back{background:#1c1c2e;border:1.5px solid rgba(124,92,252,.3);transform:rotateY(180deg);font-size:2rem}
+
+/* ── Win overlay ── */
+#winOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(19,19,31,.94);z-index:30;opacity:0;transition:opacity .35s;pointer-events:none}
+#winOverlay.show{opacity:1;pointer-events:auto}
+.win-title{font-size:2.5rem;font-weight:900;background:linear-gradient(135deg,#7c5cfc,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.win-stats{display:flex;gap:28px}
+.win-stat{display:flex;flex-direction:column;align-items:center;gap:2px;background:#1c1c2e;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 20px}
+.win-stat b{font-size:1.5rem;font-weight:800;color:#7c5cfc}
+.win-stat span{font-size:.72rem;color:#9898b8;text-transform:uppercase;letter-spacing:.5px}
+.new-best{font-size:.82rem;color:#4ade80;font-weight:600}
+
+/* volume */
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.5;transition:opacity .2s}
+#volWrap:hover{opacity:1}
+#volWrap label{font-size:.68rem;color:#9898b8}
+#volSlider{width:68px;accent-color:#7c5cfc}
 </style>
 </head>
 <body>
-<h1>Memory Match</h1>
-<div class="diff">
-  <button onclick="setDiff(4)" id="d4" class="active">4x4</button>
-  <button onclick="setDiff(5)" id="d5">5x4</button>
-  <button onclick="setDiff(6)" id="d6">6x6</button>
+
+<!-- Start screen -->
+<div class="screen" id="startScreen">
+  <div class="logo">Memory Match</div>
+  <div class="sub">Find all matching pairs</div>
+  <div class="diff-row">
+    <button class="diff-btn sel" id="d4" onclick="setDiff(4)">4&times;4</button>
+    <button class="diff-btn" id="d5" onclick="setDiff(5)">5&times;4</button>
+    <button class="diff-btn" id="d6" onclick="setDiff(6)">6&times;6</button>
+  </div>
+  <button class="play-btn" onclick="beginGame()">Play</button>
 </div>
-<div class="stats">
-  <span><b id="moves">0</b>Moves</span>
-  <span><b id="pairs">0</b>Pairs</span>
-  <span><b id="timer">0:00</b>Time</span>
+
+<!-- Game area -->
+<div id="gameArea">
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="sMoves">0</div><div class="stat-label">Moves</div></div>
+    <div class="stat"><div class="stat-val" id="sPairs">0/0</div><div class="stat-label">Pairs</div></div>
+    <div class="stat"><div class="stat-val" id="sTime">0:00</div><div class="stat-label">Time</div></div>
+    <div class="stat best"><div class="stat-val" id="sBest">--</div><div class="stat-label">Best</div></div>
+  </div>
+  <div id="grid"></div>
+  <button class="restart-btn" onclick="showStart()">&#8592; Menu</button>
 </div>
-<div class="grid" id="grid"></div>
-<div class="msg" id="msg"></div>
-<button class="btn" onclick="startGame()">New Game</button>
+
+<!-- Win overlay -->
+<div id="winOverlay">
+  <div class="win-title">You Won!</div>
+  <div class="win-stats">
+    <div class="win-stat"><b id="wMoves">0</b><span>Moves</span></div>
+    <div class="win-stat"><b id="wTime">0:00</b><span>Time</span></div>
+  </div>
+  <div class="new-best" id="newBest" style="display:none">&#11088; New best time!</div>
+  <button class="restart-btn" onclick="playAgain()">Play Again</button>
+  <button class="restart-btn" style="background:#252538;border:1.5px solid rgba(255,255,255,.1)" onclick="showStart()">Change Difficulty</button>
+</div>
+
+<div id="volWrap">
+  <label>Vol</label>
+  <input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)">
+</div>
 
 <script>
-const EMOJIS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🦁','🐯','🐸','🐵','🐔','🐧','🦆','🦄','🐝','🦋','🐢'];
-let cols=4,rows=4,cards=[],flipped=[],matched=0,moves=0,locked=false,timerEl,startTime,timerInterval;
+// ── Audio ───────────────────────────────────────────────
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
+function setVol(v){mg.gain.value=v/100;}
+function tone(freq,dur=0.1,type='sine',vol=0.5){
+  if(ac.state==='suspended')ac.resume();
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+  o.connect(g);g.connect(mg);
+  o.start();o.stop(ac.currentTime+dur+0.01);
+}
+const SFX={
+  flip:()=>tone(380,0.06,'sine',0.3),
+  match:()=>{tone(523,0.1,'sine');setTimeout(()=>tone(659,0.12,'sine'),100);},
+  wrong:()=>tone(160,0.15,'sawtooth',0.4),
+  win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.18,'sine'),i*110));},
+  click:()=>tone(300,0.04,'sine',0.2)
+};
+
+// ── EMOJIS ─────────────────────────────────────────────
+const EMOJIS=['&#128054;','&#128049;','&#128007;','&#128015;','&#128008;','&#129411;','&#128059;','&#128060;','&#128047;','&#129408;','&#128046;','&#128056;','&#128053;','&#128052;','&#128039;','&#128045;','&#129412;','&#128029;','&#129419;','&#128034;'];
+
+// ── State ──────────────────────────────────────────────
+let cols=4,rows=4,cards=[],flipped=[],matchCount=0,moves=0,locked=false;
+let timerInterval=null,startTime=null,elapsed=0;
+let bestTimes={4:null,5:null,6:null};
 
 function setDiff(c){
-  cols=c; rows=(c===5)?4:c;
-  document.querySelectorAll('.diff button').forEach(b=>b.classList.remove('active'));
-  document.getElementById('d'+c).classList.add('active');
-  startGame();
+  cols=c;rows=c===5?4:c;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('d'+c).classList.add('sel');
+  SFX.click();
+}
+
+function cardSize(){
+  const maxW=Math.min(window.innerWidth-40,520);
+  const maxH=window.innerHeight-160;
+  const byW=Math.floor((maxW-(cols-1)*8)/cols);
+  const byH=Math.floor((maxH-(rows-1)*8)/rows);
+  return Math.min(Math.max(Math.min(byW,byH),52),90);
+}
+
+function buildDeck(){
+  const pairs=(cols*rows)/2;
+  const chosen=EMOJIS.slice(0,pairs);
+  return [...chosen,...chosen].sort(()=>Math.random()-.5);
 }
 
 function startGame(){
   clearInterval(timerInterval);
-  const total=cols*rows, pairs=total/2;
-  const chosen=EMOJIS.slice(0,pairs);
-  const deck=[...chosen,...chosen].sort(()=>Math.random()-.5);
+  const deck=buildDeck();
   cards=deck.map((e,i)=>({id:i,emoji:e,flipped:false,matched:false}));
-  flipped=[];matched=0;moves=0;locked=false;
-  document.getElementById('moves').textContent='0';
-  document.getElementById('pairs').textContent='0';
-  document.getElementById('timer').textContent='0:00';
-  document.getElementById('msg').textContent='';
-  startTime=null;
+  flipped=[];matchCount=0;moves=0;locked=false;startTime=null;elapsed=0;
+  document.getElementById('sMoves').textContent='0';
+  document.getElementById('sPairs').textContent=`0/${cols*rows/2}`;
+  document.getElementById('sTime').textContent='0:00';
+  updateBestDisplay();
   renderGrid();
 }
 
+function updateBestDisplay(){
+  const b=bestTimes[cols];
+  document.getElementById('sBest').textContent=b?fmtTime(b):'--';
+}
+
+function beginGame(){
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameArea').classList.add('show');
+  document.getElementById('winOverlay').classList.remove('show');
+  startGame();
+}
+
+function showStart(){
+  document.getElementById('startScreen').classList.remove('hidden');
+  document.getElementById('gameArea').classList.remove('show');
+  document.getElementById('winOverlay').classList.remove('show');
+  clearInterval(timerInterval);
+  SFX.click();
+}
+
+function playAgain(){
+  document.getElementById('winOverlay').classList.remove('show');
+  startGame();
+  SFX.click();
+}
+
 function renderGrid(){
+  const sz=cardSize();
   const g=document.getElementById('grid');
-  g.style.gridTemplateColumns=`repeat(${cols},72px)`;
+  g.style.gridTemplateColumns=`repeat(${cols},${sz}px)`;
   g.innerHTML='';
   cards.forEach(c=>{
     const el=document.createElement('div');
-    el.className='card'+(c.flipped?' flipped':'')+(c.matched?' matched':'');
-    el.innerHTML=`<div class="card-face front"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="card-face back">${c.emoji}</div>`;
+    el.className='card'+(c.flipped||c.matched?' flipped':'')+( c.matched?' matched':'');
+    el.style.width=sz+'px';el.style.height=sz+'px';
+    el.style.fontSize=Math.max(sz*.42,20)+'px';
+    el.innerHTML=`<div class="card-face front"></div><div class="card-face back">${c.emoji}</div>`;
     el.addEventListener('click',()=>flip(c.id));
     g.appendChild(el);
   });
@@ -86,37 +215,62 @@ function flip(id){
   if(locked)return;
   const c=cards[id];
   if(c.flipped||c.matched)return;
-  if(!startTime){startTime=Date.now();timerInterval=setInterval(updateTimer,500);}
+  SFX.flip();
+  if(!startTime){startTime=Date.now();timerInterval=setInterval(tickTimer,500);}
   c.flipped=true;
   flipped.push(id);
   renderGrid();
   if(flipped.length===2){
     moves++;
-    document.getElementById('moves').textContent=moves;
+    document.getElementById('sMoves').textContent=moves;
     locked=true;
     const [a,b]=flipped.map(i=>cards[i]);
     if(a.emoji===b.emoji){
       a.matched=b.matched=true;
-      matched++;
-      document.getElementById('pairs').textContent=matched;
+      matchCount++;
+      document.getElementById('sPairs').textContent=`${matchCount}/${cols*rows/2}`;
+      SFX.match();
       flipped=[];locked=false;
       renderGrid();
-      if(matched===cols*rows/2){
+      if(matchCount===cols*rows/2){
         clearInterval(timerInterval);
-        document.getElementById('msg').textContent='You won! &#127881;';
+        setTimeout(showWin,700);
       }
     } else {
-      setTimeout(()=>{a.flipped=b.flipped=false;flipped=[];locked=false;renderGrid();},900);
+      SFX.wrong();
+      // mark wrong briefly
+      const elA=document.querySelector(`#grid .card:nth-child(${a.id+1})`);
+      const elB=document.querySelector(`#grid .card:nth-child(${b.id+1})`);
+      if(elA)elA.classList.add('wrong');if(elB)elB.classList.add('wrong');
+      setTimeout(()=>{
+        a.flipped=b.flipped=false;
+        flipped=[];locked=false;
+        renderGrid();
+      },800);
     }
   }
 }
 
-function updateTimer(){
-  const s=Math.floor((Date.now()-startTime)/1000);
-  document.getElementById('timer').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+function tickTimer(){
+  elapsed=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById('sTime').textContent=fmtTime(elapsed);
 }
 
-startGame();
+function fmtTime(s){return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+
+function showWin(){
+  SFX.win();
+  const t=elapsed;
+  const isNew=!bestTimes[cols]||t<bestTimes[cols];
+  if(isNew)bestTimes[cols]=t;
+  document.getElementById('wMoves').textContent=moves;
+  document.getElementById('wTime').textContent=fmtTime(t);
+  document.getElementById('newBest').style.display=isNew?'block':'none';
+  document.getElementById('winOverlay').classList.add('show');
+  updateBestDisplay();
+}
+
+window.addEventListener('resize',()=>{if(document.getElementById('gameArea').classList.contains('show'))renderGrid();});
 </script>
 </body>
 </html>

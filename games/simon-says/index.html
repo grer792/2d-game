@@ -6,126 +6,290 @@
 <title>Simon Says</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#13131f;color:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:20px;user-select:none}
-h1{font-size:1.4rem;font-weight:800;color:#7c5cfc}
-.info{display:flex;gap:32px;font-size:.85rem;color:#9898b8}
-.info span{display:flex;flex-direction:column;align-items:center;gap:2px}
-.info b{font-size:1.3rem;font-weight:800;color:#fff}
-.board{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px}
-.btn-pad{width:140px;height:140px;border-radius:24px;cursor:pointer;border:none;transition:filter .1s,transform .1s;position:relative;overflow:hidden}
-.btn-pad::after{content:'';position:absolute;inset:0;background:#fff;opacity:0;border-radius:inherit;transition:opacity .08s}
-.btn-pad.flash::after{opacity:.45}
-.btn-pad:active{transform:scale(.94)}
-#red{background:#e03535}
+html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#13131f;z-index:20;transition:opacity .3s}
+.screen.hidden{opacity:0;pointer-events:none}
+.logo{font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#7c5cfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{font-size:.85rem;color:#9898b8;margin-top:-10px}
+.diff-row{display:flex;gap:10px}
+.diff-btn{padding:9px 22px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:#252538;color:#9898b8;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.diff-btn:hover,.diff-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
+.play-btn{padding:13px 48px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
+.play-btn:hover{background:#6a4de0}
+.hint{font-size:.75rem;color:#9898b8}
+
+/* ── game area ── */
+#gameArea{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s}
+#gameArea.show{opacity:1;pointer-events:auto}
+
+.hud{display:flex;gap:32px}
+.hud-item{display:flex;flex-direction:column;align-items:center;gap:1px}
+.hud-val{font-size:1.5rem;font-weight:800;color:#fff}
+.hud-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;color:#9898b8}
+.hud-item.best .hud-val{color:#7c5cfc}
+
+/* timer bar */
+#timerBar{width:260px;height:5px;background:#252538;border-radius:3px;overflow:hidden;opacity:0;transition:opacity .2s}
+#timerBar.show{opacity:1}
+#timerFill{height:100%;background:#7c5cfc;transition:width .1s linear;width:100%}
+
+/* board */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pad{border-radius:22px;cursor:pointer;border:none;position:relative;overflow:hidden;transition:filter .08s,transform .08s;display:flex;align-items:center;justify-content:center;font-size:2.8rem}
+.pad::after{content:'';position:absolute;inset:0;background:#fff;opacity:0;border-radius:inherit;transition:opacity .08s}
+.pad.lit::after{opacity:.45}
+.pad:active:not(:disabled){transform:scale(.93)}
+.pad:disabled{cursor:default}
+#red{background:#dc2626}
 #blue{background:#2563eb}
 #green{background:#16a34a}
 #yellow{background:#ca8a04}
-.btn-pad span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;pointer-events:none}
-.msg{font-size:1.05rem;font-weight:600;color:#9898b8;min-height:1.5rem;text-align:center}
-.msg.bad{color:#ff4d6d}
-.msg.good{color:#4ade80}
-.start-btn{background:#7c5cfc;color:#fff;border:none;padding:12px 36px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s}
-.start-btn:hover{background:#6a4de0}
-.start-btn:disabled{background:#3a2a8a;cursor:default;color:#9898b8}
+
+.status{font-size:.95rem;font-weight:600;color:#9898b8;text-align:center;min-height:1.4rem}
+.status.ok{color:#4ade80}
+.status.fail{color:#ff4d6d}
+.status.watch{color:#a78bfa}
+
+.back-btn{background:#252538;color:#9898b8;border:1.5px solid rgba(255,255,255,.08);padding:9px 24px;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.back-btn:hover{background:#2e2e45;color:#fff}
+
+/* ── lose overlay ── */
+#loseOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(19,19,31,.94);z-index:30;opacity:0;pointer-events:none;transition:opacity .3s}
+#loseOverlay.show{opacity:1;pointer-events:auto}
+.lose-title{font-size:2.2rem;font-weight:900;color:#ff4d6d}
+.lose-sub{font-size:.9rem;color:#9898b8}
+.lose-score{font-size:1.1rem;font-weight:700;color:#fff}
+.new-best{font-size:.82rem;color:#4ade80;font-weight:600}
+.retry-btn{padding:13px 40px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:.95rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s}
+.retry-btn:hover{background:#6a4de0}
+.menu-btn{background:#252538;border:1.5px solid rgba(255,255,255,.1);color:#9898b8;padding:11px 32px;border-radius:12px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.menu-btn:hover{color:#fff;background:#2e2e45}
+
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.5;transition:opacity .2s}
+#volWrap:hover{opacity:1}
+#volWrap label{font-size:.68rem;color:#9898b8}
+#volSlider{width:68px;accent-color:#7c5cfc}
 </style>
 </head>
 <body>
-<h1>Simon Says</h1>
-<div class="info">
-  <span><b id="round">-</b>Round</span>
-  <span><b id="best">0</b>Best</span>
+
+<!-- Start screen -->
+<div class="screen" id="startScreen">
+  <div class="logo">Simon Says</div>
+  <div class="sub">Repeat the pattern</div>
+  <div class="diff-row">
+    <button class="diff-btn sel" id="dEasy" onclick="setDiff('easy')">Easy</button>
+    <button class="diff-btn" id="dNormal" onclick="setDiff('normal')">Normal</button>
+    <button class="diff-btn" id="dHard" onclick="setDiff('hard')">Hard</button>
+  </div>
+  <button class="play-btn" onclick="beginGame()">Play</button>
+  <div class="hint">Watch the pattern &mdash; repeat it back!</div>
 </div>
-<div class="board">
-  <button class="btn-pad" id="red"   onclick="playerPress('red')">  <span>&#128308;</span></button>
-  <button class="btn-pad" id="blue"  onclick="playerPress('blue')"> <span>&#128309;</span></button>
-  <button class="btn-pad" id="green" onclick="playerPress('green')"><span>&#128994;</span></button>
-  <button class="btn-pad" id="yellow" onclick="playerPress('yellow')"><span>&#128993;</span></button>
+
+<!-- Game area -->
+<div id="gameArea">
+  <div class="hud">
+    <div class="hud-item"><div class="hud-val" id="hRound">—</div><div class="hud-label">Round</div></div>
+    <div class="hud-item best"><div class="hud-val" id="hBest">0</div><div class="hud-label">Best</div></div>
+  </div>
+  <div id="timerBar"><div id="timerFill"></div></div>
+  <div class="board">
+    <button class="pad" id="red"    onclick="playerPress('red')"   >&#128308;</button>
+    <button class="pad" id="blue"   onclick="playerPress('blue')"  >&#128309;</button>
+    <button class="pad" id="green"  onclick="playerPress('green')" >&#128994;</button>
+    <button class="pad" id="yellow" onclick="playerPress('yellow')">&#128993;</button>
+  </div>
+  <div class="status" id="status">Get ready...</div>
+  <button class="back-btn" onclick="showStart()">&#8592; Menu</button>
 </div>
-<div class="msg" id="msg">Press Start to play</div>
-<button class="start-btn" id="startBtn" onclick="startGame()">Start</button>
+
+<!-- Lose overlay -->
+<div id="loseOverlay">
+  <div class="lose-title">Wrong!</div>
+  <div class="lose-score" id="loseScore">You reached round 5</div>
+  <div class="new-best" id="loseBest" style="display:none">&#11088; New best!</div>
+  <button class="retry-btn" onclick="retryGame()">Try Again</button>
+  <button class="menu-btn" onclick="showStart()">Change Difficulty</button>
+</div>
+
+<div id="volWrap">
+  <label>Vol</label>
+  <input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)">
+</div>
 
 <script>
-const COLORS=['red','blue','green','yellow'];
-let seq=[],step=0,best=0,playing=false,accepting=false;
-
-const ctx=new (window.AudioContext||window.webkitAudioContext)();
-function beep(freq,dur=0.15){
-  const o=ctx.createOscillator(),g=ctx.createGain();
-  o.connect(g);g.connect(ctx.destination);
-  o.frequency.value=freq;g.gain.value=0.3;
-  o.start();g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur);
-  o.stop(ctx.currentTime+dur);
+// ── Audio ──────────────────────────────────────────────
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
+function setVol(v){mg.gain.value=v/100;}
+function tone(freq,dur,type='sine',vol=0.55){
+  if(ac.state==='suspended')ac.resume();
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+  o.connect(g);g.connect(mg);
+  o.start();o.stop(ac.currentTime+dur+0.02);
 }
 const FREQ={red:261,blue:329,green:392,yellow:523};
-const FAIL_FREQ=150;
 
-function flash(id,dur=350){
-  return new Promise(res=>{
-    const el=document.getElementById(id);
-    el.classList.add('flash');
-    beep(FREQ[id],dur/1000);
-    setTimeout(()=>{el.classList.remove('flash');res();},dur);
+// ── Difficulty config ──────────────────────────────────
+const DIFFS={
+  easy:  {flashDur:700,pause:350,inputLimit:0},
+  normal:{flashDur:550,pause:250,inputLimit:0},
+  hard:  {flashDur:400,pause:180,inputLimit:5000}
+};
+let diff='easy',bestScores={easy:0,normal:0,hard:0};
+
+function setDiff(d){
+  diff=d;
+  ['easy','normal','hard'].forEach(x=>{
+    document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('sel',x===d);
   });
+  tone(300,0.04,'sine',0.2);
 }
 
-async function playSequence(){
-  setButtons(false);
-  document.getElementById('msg').textContent='Watch...';
-  document.getElementById('msg').className='msg';
-  await delay(500);
-  for(const c of seq){
-    await flash(c,400);
-    await delay(200);
-  }
-  setButtons(true);
-  accepting=true;
-  step=0;
-  document.getElementById('msg').textContent='Your turn!';
-}
+// ── State ──────────────────────────────────────────────
+const COLORS=['red','blue','green','yellow'];
+let seq=[],step=0,accepting=false,inputTimer=null,playing=false;
 
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function lit(id,dur){
+  return new Promise(res=>{
+    const el=document.getElementById(id);
+    el.classList.add('lit');
+    tone(FREQ[id],dur/1000);
+    setTimeout(()=>{el.classList.remove('lit');res();},dur);
+  });
+}
 
 function setButtons(on){
   COLORS.forEach(c=>{document.getElementById(c).disabled=!on;});
 }
 
-async function startGame(){
-  seq=[];step=0;playing=true;accepting=false;
-  document.getElementById('startBtn').disabled=true;
+function setStatus(txt,cls=''){
+  const el=document.getElementById('status');
+  el.textContent=txt;el.className='status'+(cls?' '+cls:'');
+}
+
+// ── Game flow ──────────────────────────────────────────
+function beginGame(){
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameArea').classList.add('show');
+  document.getElementById('loseOverlay').classList.remove('show');
+  seq=[];step=0;playing=true;
+  updateBestDisplay();
   nextRound();
 }
 
+function showStart(){
+  clearTimeout(inputTimer);
+  accepting=false;playing=false;
+  setButtons(false);
+  document.getElementById('startScreen').classList.remove('hidden');
+  document.getElementById('gameArea').classList.remove('show');
+  document.getElementById('loseOverlay').classList.remove('show');
+  document.getElementById('timerBar').classList.remove('show');
+  tone(300,0.04,'sine',0.2);
+}
+
+function retryGame(){
+  document.getElementById('loseOverlay').classList.remove('show');
+  seq=[];step=0;playing=true;
+  updateBestDisplay();
+  nextRound();
+  tone(300,0.04,'sine',0.2);
+}
+
 async function nextRound(){
+  if(!playing)return;
   seq.push(COLORS[Math.floor(Math.random()*4)]);
-  document.getElementById('round').textContent=seq.length;
-  await playSequence();
+  document.getElementById('hRound').textContent=seq.length;
+  setButtons(false);
+  accepting=false;
+  document.getElementById('timerBar').classList.remove('show');
+  setStatus('Watch...','watch');
+  await delay(500);
+  const cfg=DIFFS[diff];
+  for(const c of seq){
+    if(!playing)return;
+    await lit(c,cfg.flashDur);
+    await delay(cfg.pause);
+  }
+  setButtons(true);
+  accepting=true;
+  step=0;
+  setStatus('Your turn!');
+  if(cfg.inputLimit>0) startInputTimer(cfg.inputLimit);
+}
+
+function startInputTimer(ms){
+  clearTimeout(inputTimer);
+  const bar=document.getElementById('timerBar');
+  const fill=document.getElementById('timerFill');
+  bar.classList.add('show');
+  fill.style.transition='none';
+  fill.style.width='100%';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      fill.style.transition=`width ${ms}ms linear`;
+      fill.style.width='0%';
+    });
+  });
+  inputTimer=setTimeout(()=>{
+    if(accepting) fail();
+  },ms);
 }
 
 async function playerPress(color){
-  if(!accepting)return;
-  await flash(color,200);
-  if(color===seq[step]){
-    step++;
-    if(step===seq.length){
-      accepting=false;
-      if(seq.length>best){best=seq.length;document.getElementById('best').textContent=best;}
-      document.getElementById('msg').textContent='Correct! &#10004;';
-      document.getElementById('msg').className='msg good';
-      await delay(700);
-      nextRound();
-    }
-  } else {
+  if(!accepting||!playing)return;
+  clearTimeout(inputTimer);
+  document.getElementById('timerBar').classList.remove('show');
+  await lit(color,180);
+  if(color!==seq[step]){fail();return;}
+  step++;
+  if(step===seq.length){
     accepting=false;
-    setButtons(false);
-    beep(FAIL_FREQ,0.6);
-    document.getElementById('msg').textContent=`Wrong! You reached round ${seq.length}`;
-    document.getElementById('msg').className='msg bad';
-    document.getElementById('round').textContent='-';
-    playing=false;
-    document.getElementById('startBtn').disabled=false;
+    const score=seq.length;
+    if(score>bestScores[diff]){bestScores[diff]=score;updateBestDisplay();}
+    setStatus('Correct! +1','ok');
+    await delay(700);
+    nextRound();
   }
 }
 
+function fail(){
+  if(!playing)return;
+  accepting=false;playing=false;
+  setButtons(false);
+  tone(110,0.5,'sawtooth',0.5);
+  const score=seq.length;
+  const isNew=score>bestScores[diff];
+  if(isNew)bestScores[diff]=score;
+  document.getElementById('loseScore').textContent=`You reached round ${score}`;
+  document.getElementById('loseBest').style.display=isNew?'block':'none';
+  updateBestDisplay();
+  setTimeout(()=>document.getElementById('loseOverlay').classList.add('show'),600);
+}
+
+function updateBestDisplay(){
+  document.getElementById('hBest').textContent=bestScores[diff]||0;
+}
+
+// ── Pad sizing ─────────────────────────────────────────
+function sizePads(){
+  const size=Math.min(Math.floor(Math.min(window.innerWidth,500)/2)-14,160);
+  document.querySelectorAll('.pad').forEach(p=>{
+    p.style.width=size+'px';p.style.height=size+'px';
+    p.style.fontSize=Math.floor(size*.32)+'px';
+  });
+  document.querySelector('.board').style.gap=Math.min(14,size*.08)+'px';
+  document.getElementById('timerBar').style.width=size*2+14+'px';
+}
+window.addEventListener('resize',sizePads);
+sizePads();
 setButtons(false);
 </script>
 </body>
