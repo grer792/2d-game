@@ -8,6 +8,7 @@
     { "source": "/game/tic-tac-toe",     "destination": "/games/tic-tac-toe-online/play.html" },
     { "source": "/game/snake",           "destination": "/games/snake/play.html" },
     { "source": "/game/2048",            "destination": "/games/2048/play.html" },
-    { "source": "/game/breakout",        "destination": "/games/breakout/play.html" }
+    { "source": "/game/breakout",        "destination": "/games/breakout/play.html" },
+    { "source": "/game/flappy-bird",     "destination": "/games/flappy-bird/play.html" }
   ]
 }
