@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simon Says</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#13131f;color:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:20px;user-select:none}
+h1{font-size:1.4rem;font-weight:800;color:#7c5cfc}
+.info{display:flex;gap:32px;font-size:.85rem;color:#9898b8}
+.info span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.info b{font-size:1.3rem;font-weight:800;color:#fff}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px}
+.btn-pad{width:140px;height:140px;border-radius:24px;cursor:pointer;border:none;transition:filter .1s,transform .1s;position:relative;overflow:hidden}
+.btn-pad::after{content:'';position:absolute;inset:0;background:#fff;opacity:0;border-radius:inherit;transition:opacity .08s}
+.btn-pad.flash::after{opacity:.45}
+.btn-pad:active{transform:scale(.94)}
+#red{background:#e03535}
+#blue{background:#2563eb}
+#green{background:#16a34a}
+#yellow{background:#ca8a04}
+.btn-pad span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;pointer-events:none}
+.msg{font-size:1.05rem;font-weight:600;color:#9898b8;min-height:1.5rem;text-align:center}
+.msg.bad{color:#ff4d6d}
+.msg.good{color:#4ade80}
+.start-btn{background:#7c5cfc;color:#fff;border:none;padding:12px 36px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:background .15s}
+.start-btn:hover{background:#6a4de0}
+.start-btn:disabled{background:#3a2a8a;cursor:default;color:#9898b8}
+</style>
+</head>
+<body>
+<h1>Simon Says</h1>
+<div class="info">
+  <span><b id="round">-</b>Round</span>
+  <span><b id="best">0</b>Best</span>
+</div>
+<div class="board">
+  <button class="btn-pad" id="red"   onclick="playerPress('red')">  <span>&#128308;</span></button>
+  <button class="btn-pad" id="blue"  onclick="playerPress('blue')"> <span>&#128309;</span></button>
+  <button class="btn-pad" id="green" onclick="playerPress('green')"><span>&#128994;</span></button>
+  <button class="btn-pad" id="yellow" onclick="playerPress('yellow')"><span>&#128993;</span></button>
+</div>
+<div class="msg" id="msg">Press Start to play</div>
+<button class="start-btn" id="startBtn" onclick="startGame()">Start</button>
+
+<script>
+const COLORS=['red','blue','green','yellow'];
+let seq=[],step=0,best=0,playing=false,accepting=false;
+
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+function beep(freq,dur=0.15){
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.connect(g);g.connect(ctx.destination);
+  o.frequency.value=freq;g.gain.value=0.3;
+  o.start();g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur);
+  o.stop(ctx.currentTime+dur);
+}
+const FREQ={red:261,blue:329,green:392,yellow:523};
+const FAIL_FREQ=150;
+
+function flash(id,dur=350){
+  return new Promise(res=>{
+    const el=document.getElementById(id);
+    el.classList.add('flash');
+    beep(FREQ[id],dur/1000);
+    setTimeout(()=>{el.classList.remove('flash');res();},dur);
+  });
+}
+
+async function playSequence(){
+  setButtons(false);
+  document.getElementById('msg').textContent='Watch...';
+  document.getElementById('msg').className='msg';
+  await delay(500);
+  for(const c of seq){
+    await flash(c,400);
+    await delay(200);
+  }
+  setButtons(true);
+  accepting=true;
+  step=0;
+  document.getElementById('msg').textContent='Your turn!';
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function setButtons(on){
+  COLORS.forEach(c=>{document.getElementById(c).disabled=!on;});
+}
+
+async function startGame(){
+  seq=[];step=0;playing=true;accepting=false;
+  document.getElementById('startBtn').disabled=true;
+  nextRound();
+}
+
+async function nextRound(){
+  seq.push(COLORS[Math.floor(Math.random()*4)]);
+  document.getElementById('round').textContent=seq.length;
+  await playSequence();
+}
+
+async function playerPress(color){
+  if(!accepting)return;
+  await flash(color,200);
+  if(color===seq[step]){
+    step++;
+    if(step===seq.length){
+      accepting=false;
+      if(seq.length>best){best=seq.length;document.getElementById('best').textContent=best;}
+      document.getElementById('msg').textContent='Correct! &#10004;';
+      document.getElementById('msg').className='msg good';
+      await delay(700);
+      nextRound();
+    }
+  } else {
+    accepting=false;
+    setButtons(false);
+    beep(FAIL_FREQ,0.6);
+    document.getElementById('msg').textContent=`Wrong! You reached round ${seq.length}`;
+    document.getElementById('msg').className='msg bad';
+    document.getElementById('round').textContent='-';
+    playing=false;
+    document.getElementById('startBtn').disabled=false;
+  }
+}
+
+setButtons(false);
+</script>
+</body>
+</html>

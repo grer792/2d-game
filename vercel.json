@@ -23,6 +23,12 @@
     { "source": "/game/snake",           "destination": "/games/snake/play.html" },
     { "source": "/game/2048",            "destination": "/games/2048/play.html" },
     { "source": "/game/breakout",        "destination": "/games/breakout/play.html" },
-    { "source": "/game/flappy-bird",     "destination": "/games/flappy-bird/play.html" }
+    { "source": "/game/flappy-bird",     "destination": "/games/flappy-bird/play.html" },
+    { "source": "/game/tetris",          "destination": "/games/tetris/play.html" },
+    { "source": "/game/minesweeper",     "destination": "/games/minesweeper/play.html" },
+    { "source": "/game/memory-match",    "destination": "/games/memory-match/play.html" },
+    { "source": "/game/simon-says",      "destination": "/games/simon-says/play.html" },
+    { "source": "/game/connect-four",    "destination": "/games/connect-four/play.html" },
+    { "source": "/game/pong",            "destination": "/games/pong/play.html" }
   ]
 }

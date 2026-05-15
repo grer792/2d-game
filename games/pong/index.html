@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pong</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#13131f;color:#fff;font-family:Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:10px;overflow:hidden}
+h1{font-size:1.2rem;font-weight:800;color:#7c5cfc}
+canvas{border-radius:12px;border:1.5px solid rgba(255,255,255,.07);display:block}
+.hint{font-size:.78rem;color:#9898b8;text-align:center}
+.btns{display:flex;gap:8px}
+.btn{background:#252538;color:#9898b8;border:1.5px solid rgba(255,255,255,.07);padding:8px 18px;border-radius:9px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s}
+.btn:hover,.btn.active{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
+</style>
+</head>
+<body>
+<h1>Pong</h1>
+<canvas id="c"></canvas>
+<div class="hint" id="hint">Press Space or click to start</div>
+<div class="btns">
+  <button class="btn active" id="modeAI" onclick="setMode('ai')">vs AI</button>
+  <button class="btn" id="mode2P" onclick="setMode('2p')">2 Players</button>
+</div>
+
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H,pw,ph,bsize,mode='ai';
+let p1,p2,ball,score1,score2,running,animId,vsAI;
+const SPEED=5,AI_SPEED=4,WIN=7;
+
+function resize(){
+  const vw=window.innerWidth,vh=window.innerHeight;
+  W=Math.min(600,vw-32);
+  H=Math.min(400,vh-160);
+  canvas.width=W;canvas.height=H;
+  pw=12;ph=70;bsize=10;
+}
+
+function setMode(m){
+  mode=m;vsAI=(m==='ai');
+  document.getElementById('modeAI').classList.toggle('active',m==='ai');
+  document.getElementById('mode2P').classList.toggle('active',m==='2p');
+  document.getElementById('hint').textContent=vsAI?'W/S or ↑/↓ to move. Space to start':'W/S for left, ↑/↓ for right. Space to start';
+  resetGame();
+}
+
+function resetGame(){
+  p1={x:20,y:H/2-ph/2,dy:0};
+  p2={x:W-20-pw,y:H/2-ph/2,dy:0};
+  ball={x:W/2,y:H/2,dx:(Math.random()>.5?1:-1)*SPEED,dy:(Math.random()-.5)*4};
+  running=false;
+  if(animId)cancelAnimationFrame(animId);
+  draw();
+}
+
+function startGame(){
+  if(running)return;
+  running=true;
+  score1=score1||0;score2=score2||0;
+  document.getElementById('hint').textContent='';
+  loop();
+}
+
+function newRound(){
+  p1.y=H/2-ph/2;p2.y=H/2-ph/2;
+  ball={x:W/2,y:H/2,dx:(Math.random()>.5?1:-1)*SPEED,dy:(Math.random()-.5)*4};
+  running=false;
+  setTimeout(startGame,800);
+}
+
+const keys={};
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space'){e.preventDefault();startGame();}});
+document.addEventListener('keyup',e=>{keys[e.code]=false;});
+canvas.addEventListener('click',startGame);
+
+function loop(){
+  if(!running)return;
+  update();draw();
+  animId=requestAnimationFrame(loop);
+}
+
+function update(){
+  // Move paddles
+  const spd=SPEED*1.1;
+  if(keys['KeyW']&&p1.y>0)p1.y-=spd;
+  if(keys['KeyS']&&p1.y<H-ph)p1.y+=spd;
+  if(!vsAI){
+    if(keys['ArrowUp']&&p2.y>0)p2.y-=spd;
+    if(keys['ArrowDown']&&p2.y<H-ph)p2.y+=spd;
+  } else {
+    const mid=p2.y+ph/2;
+    if(mid<ball.y-5&&p2.y<H-ph)p2.y+=AI_SPEED;
+    else if(mid>ball.y+5&&p2.y>0)p2.y-=AI_SPEED;
+  }
+
+  ball.x+=ball.dx;ball.y+=ball.dy;
+
+  // Top/bottom
+  if(ball.y<=bsize){ball.y=bsize;ball.dy*=-1;}
+  if(ball.y>=H-bsize){ball.y=H-bsize;ball.dy*=-1;}
+
+  // Paddle collisions
+  if(ball.dx<0&&ball.x-bsize<=p1.x+pw&&ball.x+bsize>=p1.x&&ball.y+bsize>=p1.y&&ball.y-bsize<=p1.y+ph){
+    ball.dx=Math.abs(ball.dx)*1.05;
+    ball.dy+=((ball.y-(p1.y+ph/2))/(ph/2))*3;
+    ball.x=p1.x+pw+bsize;
+  }
+  if(ball.dx>0&&ball.x+bsize>=p2.x&&ball.x-bsize<=p2.x+pw&&ball.y+bsize>=p2.y&&ball.y-bsize<=p2.y+ph){
+    ball.dx=-Math.abs(ball.dx)*1.05;
+    ball.dy+=((ball.y-(p2.y+ph/2))/(ph/2))*3;
+    ball.x=p2.x-bsize;
+  }
+
+  // Clamp ball speed
+  const spd2=Math.sqrt(ball.dx**2+ball.dy**2);
+  if(spd2>14){ball.dx=ball.dx/spd2*14;ball.dy=ball.dy/spd2*14;}
+
+  // Score
+  if(ball.x<0){score2=(score2||0)+1;if(score2>=WIN)endGame(2);else newRound();}
+  if(ball.x>W){score1=(score1||0)+1;if(score1>=WIN)endGame(1);else newRound();}
+}
+
+function draw(){
+  ctx.fillStyle='#13131f';ctx.fillRect(0,0,W,H);
+  // Center line
+  ctx.setLineDash([6,8]);ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
+  // Scores
+  ctx.fillStyle='rgba(255,255,255,.15)';ctx.font=`bold ${H*.22}px Inter,sans-serif`;ctx.textAlign='center';
+  ctx.fillText(score1||0,W*.25,H*.32);ctx.fillText(score2||0,W*.75,H*.32);
+  // Paddles
+  ctx.fillStyle='#7c5cfc';
+  roundRect(ctx,p1.x,p1.y,pw,ph,6);
+  roundRect(ctx,p2.x,p2.y,pw,ph,6);
+  // Ball
+  ctx.beginPath();ctx.arc(ball.x,ball.y,bsize,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  // Glow
+  const g=ctx.createRadialGradient(ball.x,ball.y,0,ball.x,ball.y,bsize*3);
+  g.addColorStop(0,'rgba(255,255,255,.3)');g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath();ctx.arc(ball.x,ball.y,bsize*3,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();
+}
+
+function endGame(winner){
+  running=false;cancelAnimationFrame(animId);
+  ctx.fillStyle='rgba(0,0,0,.65)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#7c5cfc';ctx.font=`bold ${H*.08}px Inter,sans-serif`;ctx.textAlign='center';
+  ctx.fillText(winner===1?'Left Wins!':'Right Wins!',W/2,H*.42);
+  ctx.fillStyle='#fff';ctx.font=`${H*.055}px Inter,sans-serif`;
+  ctx.fillText(`${score1} - ${score2}`,W/2,H*.58);
+  ctx.fillStyle='#9898b8';ctx.font=`${H*.04}px Inter,sans-serif`;
+  ctx.fillText('Press Space to play again',W/2,H*.74);
+  score1=0;score2=0;
+  document.addEventListener('keydown',function restart(e){if(e.code==='Space'){document.removeEventListener('keydown',restart);resetGame();}});
+}
+
+window.addEventListener('resize',()=>{resize();resetGame();});
+resize();
+score1=0;score2=0;
+resetGame();
+document.getElementById('hint').textContent='W/S or ↑/↓ to move. Space or click to start';
+</script>
+</body>
+</html>
