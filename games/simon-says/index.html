@@ -5,86 +5,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sequence</title>
 <style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
 
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#13131f;z-index:20;transition:opacity .3s}
-.screen.hidden{opacity:0;pointer-events:none}
-.logo{font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#7c5cfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.sub{font-size:.85rem;color:#9898b8;margin-top:-10px}
-.diff-row{display:flex;gap:10px}
-.diff-btn{padding:9px 22px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:#252538;color:#9898b8;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.diff-btn:hover,.diff-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
-.play-btn{padding:13px 48px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
-.play-btn:hover{background:#6a4de0}
-.hint{font-size:.75rem;color:#9898b8}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+#loseOv{background:rgba(13,13,25,.92);backdrop-filter:blur(6px);}
 
-/* ── game area ── */
-#gameArea{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:0;pointer-events:none;transition:opacity .3s}
-#gameArea.show{opacity:1;pointer-events:auto}
+.menu-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 48px rgba(124,92,252,.07);}
+.game-title{font-size:clamp(2.2rem,9vw,3.2rem);font-weight:950;letter-spacing:-.03em;}
+.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
 
-.hud{display:flex;gap:32px}
-.hud-item{display:flex;flex-direction:column;align-items:center;gap:1px}
-.hud-val{font-size:1.5rem;font-weight:800;color:#fff}
-.hud-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;color:#9898b8}
-.hud-item.best .hud-val{color:#7c5cfc}
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.5rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.4;}
+.sopt.on .sopt-lbl{color:var(--text);}
 
-/* timer bar */
-#timerBar{width:260px;height:5px;background:#252538;border-radius:3px;overflow:hidden;opacity:0;transition:opacity .2s}
-#timerBar.show{opacity:1}
-#timerFill{height:100%;background:#7c5cfc;transition:width .1s linear;width:100%}
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
 
-/* board */
-.board{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.pad{border-radius:22px;cursor:pointer;border:none;position:relative;overflow:hidden;transition:filter .08s,transform .08s;display:flex;align-items:center;justify-content:center;font-size:2.8rem}
-.pad::after{content:'';position:absolute;inset:0;background:#fff;opacity:0;border-radius:inherit;transition:opacity .08s}
-.pad.lit::after{opacity:.45}
-.pad:active:not(:disabled){transform:scale(.93)}
-.pad:disabled{cursor:default}
-#red{background:#dc2626}
-#blue{background:#2563eb}
-#green{background:#16a34a}
-#yellow{background:#ca8a04}
+/* ── Game area ── */
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#gameArea.show{display:flex;}
 
-.status{font-size:.95rem;font-weight:600;color:#9898b8;text-align:center;min-height:1.4rem}
-.status.ok{color:#4ade80}
-.status.fail{color:#ff4d6d}
-.status.watch{color:#a78bfa}
+.hud{display:flex;gap:20px;}
+.hud-item{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:8px 18px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hud-val{font-size:1.3rem;font-weight:800;}
+.hud-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
+.hud-item.best .hud-val{color:var(--accent);}
 
-.back-btn{background:#252538;color:#9898b8;border:1.5px solid rgba(255,255,255,.08);padding:9px 24px;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.back-btn:hover{background:#2e2e45;color:#fff}
+#timerBar{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;opacity:0;transition:opacity .2s;}
+#timerBar.show{opacity:1;}
+#timerFill{height:100%;background:var(--accent);transition:width .1s linear;width:100%;}
 
-/* ── lose overlay ── */
-#loseOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(19,19,31,.94);z-index:30;opacity:0;pointer-events:none;transition:opacity .3s}
-#loseOverlay.show{opacity:1;pointer-events:auto}
-.lose-title{font-size:2.2rem;font-weight:900;color:#ff4d6d}
-.lose-sub{font-size:.9rem;color:#9898b8}
-.lose-score{font-size:1.1rem;font-weight:700;color:#fff}
-.new-best{font-size:.82rem;color:#4ade80;font-weight:600}
-.retry-btn{padding:13px 40px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:.95rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s}
-.retry-btn:hover{background:#6a4de0}
-.menu-btn{background:#252538;border:1.5px solid rgba(255,255,255,.1);color:#9898b8;padding:11px 32px;border-radius:12px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.menu-btn:hover{color:#fff;background:#2e2e45}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pad{border-radius:20px;cursor:pointer;border:none;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:2.6rem;transition:filter .08s,transform .08s;}
+.pad::after{content:'';position:absolute;inset:0;background:#fff;opacity:0;border-radius:inherit;transition:opacity .08s;}
+.pad.lit::after{opacity:.45;}
+.pad:active:not(:disabled){transform:scale(.93);}
+.pad:disabled{cursor:default;opacity:.75;}
+#red{background:#dc2626;}#blue{background:#2563eb;}#green{background:#16a34a;}#yellow{background:#ca8a04;}
 
-#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.5;transition:opacity .2s}
-#volWrap:hover{opacity:1}
-#volWrap label{font-size:.68rem;color:#9898b8}
-#volSlider{width:68px;accent-color:#7c5cfc}
+.status{font-size:.9rem;font-weight:600;color:var(--text2);text-align:center;min-height:1.3rem;}
+.status.ok{color:#4ade80;}.status.fail{color:#ff4d6d;}.status.watch{color:#a78bfa;}
+
+/* Lose card */
+.lose-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(320px,90vw);box-shadow:0 20px 56px rgba(0,0,0,.5);}
+.lose-card h2{font-size:2rem;font-weight:950;color:#ff4d6d;}
+.lose-sub{font-size:.88rem;color:var(--text2);}
+.stat-row{display:flex;gap:20px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 18px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-box b{font-size:1.4rem;font-weight:800;color:var(--accent);}
+.stat-box span{font-size:.65rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.new-best{font-size:.8rem;color:#4ade80;font-weight:700;}
+
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap:hover{opacity:1;}
+#volWrap label{font-size:.68rem;color:var(--text2);}
+#volSlider{width:68px;accent-color:var(--accent);}
 </style>
 </head>
 <body>
 
-<!-- Start screen -->
-<div class="screen" id="startScreen">
-  <div class="logo">Sequence</div>
-  <div class="sub">Watch the pattern &mdash; repeat it back</div>
-  <div class="diff-row">
-    <button class="diff-btn sel" id="dEasy" onclick="setDiff('easy')">Easy</button>
-    <button class="diff-btn" id="dNormal" onclick="setDiff('normal')">Normal</button>
-    <button class="diff-btn" id="dHard" onclick="setDiff('hard')">Hard</button>
+<!-- Menu -->
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title"><span>Seq</span>uence</div>
+    <div class="game-sub">Watch the pattern — repeat it back</div>
+    <div class="scat">
+      <div class="scat-label">Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt on" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">🐢</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">Slow</em></div></div>
+        <div class="sopt" id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🧠</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">Fast</em></div></div>
+        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">⚡</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">Timer</em></div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">Watch the colors flash · Repeat the order</p>
   </div>
-  <button class="play-btn" onclick="beginGame()">Play</button>
-  <div class="hint">Watch the pattern &mdash; repeat it back!</div>
+</div>
+
+<!-- Lose overlay -->
+<div class="ov" id="loseOv">
+  <div class="lose-card">
+    <h2>Wrong! ❌</h2>
+    <div class="stat-row">
+      <div class="stat-box"><b id="lRound">0</b><span>Round</span></div>
+      <div class="stat-box"><b id="lBest">0</b><span>Best</span></div>
+    </div>
+    <div class="new-best" id="lNewBest" style="display:none">⭐ New best!</div>
+    <button class="gbtn accent" onclick="retryGame()">&#9654;&ensp;Try Again</button>
+    <button class="gbtn ghost" onclick="showMenu()">&#8592;&ensp;Change Difficulty</button>
+  </div>
 </div>
 
 <!-- Game area -->
@@ -93,7 +119,7 @@ html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,
     <div class="hud-item"><div class="hud-val" id="hRound">—</div><div class="hud-label">Round</div></div>
     <div class="hud-item best"><div class="hud-val" id="hBest">0</div><div class="hud-label">Best</div></div>
   </div>
-  <div id="timerBar"><div id="timerFill"></div></div>
+  <div id="timerBar" style="width:260px"><div id="timerFill"></div></div>
   <div class="board">
     <button class="pad" id="red"    onclick="playerPress('red')"   >&#128308;</button>
     <button class="pad" id="blue"   onclick="playerPress('blue')"  >&#128309;</button>
@@ -101,196 +127,99 @@ html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,
     <button class="pad" id="yellow" onclick="playerPress('yellow')">&#128993;</button>
   </div>
   <div class="status" id="status">Get ready...</div>
-  <button class="back-btn" onclick="showStart()">&#8592; Menu</button>
+  <button class="gbtn ghost" style="max-width:200px" onclick="showMenu()">&#8592;&ensp;Menu</button>
 </div>
 
-<!-- Lose overlay -->
-<div id="loseOverlay">
-  <div class="lose-title">Wrong!</div>
-  <div class="lose-score" id="loseScore">You reached round 5</div>
-  <div class="new-best" id="loseBest" style="display:none">&#11088; New best!</div>
-  <button class="retry-btn" onclick="retryGame()">Try Again</button>
-  <button class="menu-btn" onclick="showStart()">Change Difficulty</button>
-</div>
-
-<div id="volWrap">
-  <label>Vol</label>
-  <input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)">
-</div>
+<div id="volWrap"><label>Vol</label><input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)"></div>
 
 <script>
-// ── Audio ──────────────────────────────────────────────
 const ac=new(window.AudioContext||window.webkitAudioContext)();
 const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
 function setVol(v){mg.gain.value=v/100;}
 function tone(freq,dur,type='sine',vol=0.55){
   if(ac.state==='suspended')ac.resume();
   const o=ac.createOscillator(),g=ac.createGain();
-  o.type=type;o.frequency.value=freq;
-  g.gain.setValueAtTime(vol,ac.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
-  o.connect(g);g.connect(mg);
-  o.start();o.stop(ac.currentTime+dur+0.02);
+  o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+dur+.02);
 }
 const FREQ={red:261,blue:329,green:392,yellow:523};
-
-// ── Difficulty config ──────────────────────────────────
-const DIFFS={
-  easy:  {flashDur:700,pause:350,inputLimit:0},
-  normal:{flashDur:550,pause:250,inputLimit:0},
-  hard:  {flashDur:400,pause:180,inputLimit:5000}
-};
+const DIFFS={easy:{flashDur:700,pause:350,inputLimit:0},normal:{flashDur:550,pause:250,inputLimit:0},hard:{flashDur:400,pause:180,inputLimit:5000}};
 let diff='easy',bestScores={easy:0,normal:0,hard:0};
-
-function setDiff(d){
-  diff=d;
-  ['easy','normal','hard'].forEach(x=>{
-    document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('sel',x===d);
-  });
-  tone(300,0.04,'sine',0.2);
-}
-
-// ── State ──────────────────────────────────────────────
 const COLORS=['red','blue','green','yellow'];
 let seq=[],step=0,accepting=false,inputTimer=null,playing=false;
 
+function setDiff(d){
+  diff=d;
+  ['easy','normal','hard'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',x===d));
+}
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
-
 function lit(id,dur){
   return new Promise(res=>{
-    const el=document.getElementById(id);
-    el.classList.add('lit');
-    tone(FREQ[id],dur/1000);
+    const el=document.getElementById(id);el.classList.add('lit');tone(FREQ[id],dur/1000);
     setTimeout(()=>{el.classList.remove('lit');res();},dur);
   });
 }
+function setButtons(on){COLORS.forEach(c=>{document.getElementById(c).disabled=!on;});}
+function setStatus(txt,cls=''){const el=document.getElementById('status');el.textContent=txt;el.className='status'+(cls?' '+cls:'');}
 
-function setButtons(on){
-  COLORS.forEach(c=>{document.getElementById(c).disabled=!on;});
-}
-
-function setStatus(txt,cls=''){
-  const el=document.getElementById('status');
-  el.textContent=txt;el.className='status'+(cls?' '+cls:'');
-}
-
-// ── Game flow ──────────────────────────────────────────
 function beginGame(){
-  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('menuOv').classList.remove('open');document.getElementById('loseOv').classList.remove('open');
   document.getElementById('gameArea').classList.add('show');
-  document.getElementById('loseOverlay').classList.remove('show');
-  seq=[];step=0;playing=true;
-  updateBestDisplay();
-  nextRound();
+  seq=[];step=0;playing=true;updateBestDisplay();nextRound();
 }
-
-function showStart(){
-  clearTimeout(inputTimer);
-  accepting=false;playing=false;
-  setButtons(false);
-  document.getElementById('startScreen').classList.remove('hidden');
-  document.getElementById('gameArea').classList.remove('show');
-  document.getElementById('loseOverlay').classList.remove('show');
+function showMenu(){
+  clearTimeout(inputTimer);accepting=false;playing=false;setButtons(false);
+  document.getElementById('menuOv').classList.add('open');document.getElementById('gameArea').classList.remove('show');document.getElementById('loseOv').classList.remove('open');
   document.getElementById('timerBar').classList.remove('show');
-  tone(300,0.04,'sine',0.2);
 }
-
-function retryGame(){
-  document.getElementById('loseOverlay').classList.remove('show');
-  seq=[];step=0;playing=true;
-  updateBestDisplay();
-  nextRound();
-  tone(300,0.04,'sine',0.2);
-}
+function retryGame(){document.getElementById('loseOv').classList.remove('open');seq=[];step=0;playing=true;updateBestDisplay();nextRound();}
 
 async function nextRound(){
   if(!playing)return;
   seq.push(COLORS[Math.floor(Math.random()*4)]);
   document.getElementById('hRound').textContent=seq.length;
-  setButtons(false);
-  accepting=false;
-  document.getElementById('timerBar').classList.remove('show');
-  setStatus('Watch...','watch');
-  await delay(500);
+  setButtons(false);accepting=false;document.getElementById('timerBar').classList.remove('show');
+  setStatus('Watch...','watch');await delay(500);
   const cfg=DIFFS[diff];
-  for(const c of seq){
-    if(!playing)return;
-    await lit(c,cfg.flashDur);
-    await delay(cfg.pause);
-  }
-  setButtons(true);
-  accepting=true;
-  step=0;
-  setStatus('Your turn!');
-  if(cfg.inputLimit>0) startInputTimer(cfg.inputLimit);
+  for(const c of seq){if(!playing)return;await lit(c,cfg.flashDur);await delay(cfg.pause);}
+  setButtons(true);accepting=true;step=0;setStatus('Your turn!');
+  if(cfg.inputLimit>0)startInputTimer(cfg.inputLimit);
 }
-
 function startInputTimer(ms){
   clearTimeout(inputTimer);
-  const bar=document.getElementById('timerBar');
-  const fill=document.getElementById('timerFill');
-  bar.classList.add('show');
-  fill.style.transition='none';
-  fill.style.width='100%';
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      fill.style.transition=`width ${ms}ms linear`;
-      fill.style.width='0%';
-    });
-  });
-  inputTimer=setTimeout(()=>{
-    if(accepting) fail();
-  },ms);
+  const bar=document.getElementById('timerBar'),fill=document.getElementById('timerFill');
+  bar.classList.add('show');fill.style.transition='none';fill.style.width='100%';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{fill.style.transition=`width ${ms}ms linear`;fill.style.width='0%';}));
+  inputTimer=setTimeout(()=>{if(accepting)fail();},ms);
 }
-
 async function playerPress(color){
   if(!accepting||!playing)return;
-  clearTimeout(inputTimer);
-  document.getElementById('timerBar').classList.remove('show');
+  clearTimeout(inputTimer);document.getElementById('timerBar').classList.remove('show');
   await lit(color,180);
   if(color!==seq[step]){fail();return;}
   step++;
   if(step===seq.length){
-    accepting=false;
-    const score=seq.length;
-    if(score>bestScores[diff]){bestScores[diff]=score;updateBestDisplay();}
-    setStatus('Correct! +1','ok');
-    await delay(700);
-    nextRound();
+    accepting=false;const score=seq.length;if(score>bestScores[diff]){bestScores[diff]=score;updateBestDisplay();}
+    setStatus('Correct! ✓','ok');await delay(700);nextRound();
   }
 }
-
 function fail(){
-  if(!playing)return;
-  accepting=false;playing=false;
-  setButtons(false);
-  tone(110,0.5,'sawtooth',0.5);
-  const score=seq.length;
-  const isNew=score>bestScores[diff];
-  if(isNew)bestScores[diff]=score;
-  document.getElementById('loseScore').textContent=`You reached round ${score}`;
-  document.getElementById('loseBest').style.display=isNew?'block':'none';
-  updateBestDisplay();
-  setTimeout(()=>document.getElementById('loseOverlay').classList.add('show'),600);
+  if(!playing)return;accepting=false;playing=false;setButtons(false);
+  tone(110,.5,'sawtooth',.5);
+  const score=seq.length,isNew=score>bestScores[diff];if(isNew)bestScores[diff]=score;
+  document.getElementById('lRound').textContent=score;document.getElementById('lBest').textContent=bestScores[diff];
+  document.getElementById('lNewBest').style.display=isNew?'block':'none';
+  updateBestDisplay();setTimeout(()=>document.getElementById('loseOv').classList.add('open'),600);
 }
+function updateBestDisplay(){document.getElementById('hBest').textContent=bestScores[diff]||0;}
 
-function updateBestDisplay(){
-  document.getElementById('hBest').textContent=bestScores[diff]||0;
-}
-
-// ── Pad sizing ─────────────────────────────────────────
 function sizePads(){
-  const size=Math.min(Math.floor(Math.min(window.innerWidth,500)/2)-14,160);
-  document.querySelectorAll('.pad').forEach(p=>{
-    p.style.width=size+'px';p.style.height=size+'px';
-    p.style.fontSize=Math.floor(size*.32)+'px';
-  });
-  document.querySelector('.board').style.gap=Math.min(14,size*.08)+'px';
-  document.getElementById('timerBar').style.width=size*2+14+'px';
+  const size=Math.min(Math.floor(Math.min(window.innerWidth,500)/2)-14,155);
+  document.querySelectorAll('.pad').forEach(p=>{p.style.width=size+'px';p.style.height=size+'px';p.style.fontSize=Math.floor(size*.3)+'px';});
+  document.querySelector('.board').style.gap=Math.min(12,size*.08)+'px';
+  document.getElementById('timerBar').style.width=size*2+12+'px';
 }
-window.addEventListener('resize',sizePads);
-sizePads();
-setButtons(false);
+window.addEventListener('resize',sizePads);sizePads();setButtons(false);
 </script>
 </body>
 </html>

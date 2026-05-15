@@ -5,103 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Connect Four</title>
 <style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
 
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#13131f;z-index:20;transition:opacity .3s}
-.screen.hidden{opacity:0;pointer-events:none}
-.logo{font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#ff4d6d,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.sub{font-size:.85rem;color:#9898b8;margin-top:-10px}
-.opt-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.opt-btn{padding:9px 22px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:#252538;color:#9898b8;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.opt-btn:hover,.opt-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
-.play-btn{padding:13px 48px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s}
-.play-btn:hover{background:#6a4de0}
-.hint{font-size:.75rem;color:#9898b8}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+
+.menu-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 48px rgba(124,92,252,.07);}
+.game-title{font-size:clamp(2rem,8vw,2.8rem);font-weight:950;letter-spacing:-.03em;}
+.game-title span{color:#fbbf24;}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.5rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.4;}
+.sopt.on .sopt-lbl{color:var(--text);}
+
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
 
 /* ── Game area ── */
-#gameArea{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .3s}
-#gameArea.show{opacity:1;pointer-events:auto}
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+#gameArea.show{display:flex;}
 
-.hud{display:flex;align-items:center;gap:20px;font-size:.85rem}
-.score-box{display:flex;align-items:center;gap:8px;background:#1c1c2e;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 14px}
-.disc-sm{width:16px;height:16px;border-radius:50%;flex-shrink:0}
-.disc-r{background:#ff4d6d}
-.disc-y{background:#fbbf24}
-.score-val{font-size:1.1rem;font-weight:800;color:#fff}
-.turn-box{background:#1c1c2e;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600}
-.thinking{color:#9898b8;font-style:italic;font-weight:400}
+.hud{display:flex;align-items:center;gap:12px;}
+.score-box{display:flex;align-items:center;gap:8px;background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:8px 14px;}
+.disc-sm{width:16px;height:16px;border-radius:50%;flex-shrink:0;}
+.disc-r{background:#ff4d6d;}.disc-y{background:#fbbf24;}
+.score-val{font-size:1.2rem;font-weight:800;}
+.turn-box{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:8px 14px;display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:600;}
+.thinking{color:var(--text2);font-style:italic;font-weight:400;}
 
-/* ── Board ── */
-.board-wrap{position:relative}
-.hover-row{display:flex;height:24px;gap:6px;padding:0 6px;margin-bottom:2px;transition:opacity .2s}
-.hover-row.hidden{opacity:0;pointer-events:none}
-.h-cell{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
-.h-disc{width:14px;height:14px;border-radius:50%;opacity:0;transition:opacity .15s,transform .15s}
-.h-cell.active .h-disc{opacity:.85;transform:scale(1.1)}
-.board{background:#1c1c2e;border-radius:14px;padding:6px;display:grid;border:2px solid rgba(124,92,252,.25)}
-.cell{border-radius:50%;background:#13131f;position:relative;overflow:hidden;cursor:pointer}
-.cell::after{content:'';position:absolute;inset:0;border-radius:50%;opacity:0}
-.cell.p1{background:#ff4d6d;box-shadow:0 0 10px rgba(255,77,109,.35)}
-.cell.p2{background:#fbbf24;box-shadow:0 0 10px rgba(251,191,36,.35)}
-.cell.win-cell{animation:pulse .55s infinite alternate}
-@keyframes pulse{to{filter:brightness(1.6) saturate(1.3)}}
+/* Board */
+.board-wrap{position:relative;}
+.hover-row{display:flex;height:22px;transition:opacity .2s;}
+.hover-row.hidden{opacity:0;pointer-events:none;}
+.h-cell{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.h-disc{width:14px;height:14px;border-radius:50%;opacity:0;transition:opacity .15s,transform .15s;}
+.h-cell.active .h-disc{opacity:.85;transform:scale(1.1);}
+.board{background:var(--bg2);border-radius:14px;padding:6px;display:grid;border:2px solid rgba(124,92,252,.25);}
+.cell{border-radius:50%;background:#0e0e1a;cursor:pointer;}
+.cell.p1{background:#ff4d6d;box-shadow:0 0 10px rgba(255,77,109,.35);}
+.cell.p2{background:#fbbf24;box-shadow:0 0 10px rgba(251,191,36,.35);}
+.cell.win-cell{animation:pulse .55s infinite alternate;}
+@keyframes pulse{to{filter:brightness(1.6) saturate(1.3);}}
 
-/* ── Drop animation ── */
-@keyframes dropIn{from{transform:translateY(-200%);opacity:.6}to{transform:translateY(0);opacity:1}}
-.cell.dropping{animation:dropIn .32s cubic-bezier(.22,.61,.36,1)}
+.status{font-size:.88rem;font-weight:700;min-height:1.2rem;text-align:center;color:#4ade80;}
+.status.draw{color:var(--text2);}.status.lose{color:#ff4d6d;}
 
-.status{font-size:.9rem;font-weight:700;min-height:1.2rem;text-align:center;color:#4ade80}
-.status.draw{color:#9898b8}
-.status.lose{color:#ff4d6d}
+.bot-row{display:flex;gap:6px;}
 
-.bot-row{display:flex;gap:10px}
-.bot-btn{padding:8px 18px;border-radius:9px;border:1.5px solid rgba(255,255,255,.08);background:#252538;color:#9898b8;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.bot-btn:hover,.bot-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
-.new-btn{padding:9px 24px;border-radius:10px;border:none;background:#252538;border:1.5px solid rgba(255,255,255,.08);color:#9898b8;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.new-btn:hover{background:#2e2e45;color:#fff}
-.back-btn{padding:8px 18px;border-radius:9px;border:1.5px solid rgba(255,255,255,.08);background:transparent;color:#9898b8;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
-.back-btn:hover{color:#fff;background:#252538}
-
-#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.5;transition:opacity .2s}
-#volWrap:hover{opacity:1}
-#volWrap label{font-size:.68rem;color:#9898b8}
-#volSlider{width:68px;accent-color:#7c5cfc}
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap:hover{opacity:1;}
+#volWrap label{font-size:.68rem;color:var(--text2);}
+#volSlider{width:68px;accent-color:var(--accent);}
 </style>
 </head>
 <body>
 
-<!-- Start screen -->
-<div class="screen" id="startScreen">
-  <div class="logo">Connect Four</div>
-  <div class="sub">Drop 4 in a row to win</div>
-  <div class="opt-row">
-    <button class="opt-btn sel" id="oAI" onclick="setMode('ai')">vs AI</button>
-    <button class="opt-btn" id="o2P" onclick="setMode('2p')">2 Players</button>
+<!-- Menu -->
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">Connect <span>Four</span></div>
+    <div class="game-sub">Drop 4 in a row to win</div>
+    <div class="scat">
+      <div class="scat-label">Mode</div>
+      <div class="scat-row">
+        <div class="sopt on" id="oAI" onclick="setMode('ai')"><div class="sopt-ico">🤖</div><div class="sopt-lbl">vs AI</div></div>
+        <div class="sopt" id="o2P" onclick="setMode('2p')"><div class="sopt-ico">👥</div><div class="sopt-lbl">2 Players</div></div>
+      </div>
+    </div>
+    <div class="scat" id="aiDiffRow">
+      <div class="scat-label">AI Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt on" id="aEasy"   onclick="setAIDiff('easy')"><div class="sopt-ico">🐣</div><div class="sopt-lbl">Easy</div></div>
+        <div class="sopt" id="aNormal" onclick="setAIDiff('normal')"><div class="sopt-ico">🧠</div><div class="sopt-lbl">Normal</div></div>
+        <div class="sopt" id="aHard"   onclick="setAIDiff('hard')"><div class="sopt-ico">💀</div><div class="sopt-lbl">Hard</div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">Click a column to drop your disc</p>
   </div>
-  <div class="opt-row" id="aiDiffRow">
-    <button class="opt-btn sel" id="aEasy"   onclick="setAIDiff('easy')">Easy</button>
-    <button class="opt-btn" id="aNormal" onclick="setAIDiff('normal')">Normal</button>
-    <button class="opt-btn" id="aHard"   onclick="setAIDiff('hard')">Hard</button>
-  </div>
-  <button class="play-btn" onclick="beginGame()">Play</button>
 </div>
 
 <!-- Game area -->
 <div id="gameArea">
   <div class="hud">
-    <div class="score-box">
-      <div class="disc-sm disc-r"></div>
-      <div class="score-val" id="s1">0</div>
-    </div>
-    <div class="turn-box" id="turnBox">
-      <div class="disc-sm disc-r" id="turnDisc"></div>
-      <span id="turnText">Red's turn</span>
-    </div>
-    <div class="score-box">
-      <div class="disc-sm disc-y"></div>
-      <div class="score-val" id="s2">0</div>
-    </div>
+    <div class="score-box"><div class="disc-sm disc-r"></div><div class="score-val" id="s1">0</div></div>
+    <div class="turn-box" id="turnBox"><div class="disc-sm disc-r" id="turnDisc"></div><span id="turnText">Red's turn</span></div>
+    <div class="score-box"><div class="disc-sm disc-y"></div><div class="score-val" id="s2">0</div></div>
   </div>
   <div class="board-wrap">
     <div class="hover-row" id="hoverRow"></div>
@@ -109,278 +114,101 @@ html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,
   </div>
   <div class="status" id="status"></div>
   <div class="bot-row" id="botRow">
-    <button class="bot-btn sel" id="bEasy"   onclick="switchAIDiff('easy')">Easy</button>
-    <button class="bot-btn" id="bNormal" onclick="switchAIDiff('normal')">Normal</button>
-    <button class="bot-btn" id="bHard"   onclick="switchAIDiff('hard')">Hard</button>
+    <div class="sopt" id="bEasy"   onclick="switchAIDiff('easy')"  style="flex:none;padding:7px 14px;"><div class="sopt-lbl">Easy</div></div>
+    <div class="sopt" id="bNormal" onclick="switchAIDiff('normal')" style="flex:none;padding:7px 14px;"><div class="sopt-lbl">Normal</div></div>
+    <div class="sopt" id="bHard"   onclick="switchAIDiff('hard')"   style="flex:none;padding:7px 14px;"><div class="sopt-lbl">Hard</div></div>
   </div>
-  <div style="display:flex;gap:10px">
-    <button class="new-btn" onclick="resetGame()">New Game</button>
-    <button class="back-btn" onclick="showStart()">&#8592; Menu</button>
+  <div style="display:flex;gap:8px">
+    <button class="gbtn ghost" style="max-width:140px;padding:10px" onclick="resetGame()">&#8635;&ensp;New Game</button>
+    <button class="gbtn ghost" style="max-width:120px;padding:10px" onclick="showMenu()">&#8592;&ensp;Menu</button>
   </div>
 </div>
 
-<div id="volWrap">
-  <label>Vol</label>
-  <input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)">
-</div>
+<div id="volWrap"><label>Vol</label><input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)"></div>
 
 <script>
-// ── Audio ──────────────────────────────────────────────
 const ac=new(window.AudioContext||window.webkitAudioContext)();
 const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
 function setVol(v){mg.gain.value=v/100;}
 function tone(freq,dur=0.08,type='sine',vol=0.5){
   if(ac.state==='suspended')ac.resume();
   const o=ac.createOscillator(),g=ac.createGain();
-  o.type=type;o.frequency.value=freq;
-  g.gain.setValueAtTime(vol,ac.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
-  o.connect(g);g.connect(mg);
-  o.start();o.stop(ac.currentTime+dur+0.02);
+  o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+dur+.02);
 }
-const SFX={
-  drop:()=>tone(220,0.1,'sine',0.45),
-  win: ()=>{[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,0.15,'sine'),i*120));},
-  draw:()=>tone(200,0.3,'sawtooth',0.3),
-  click:()=>tone(300,0.04,'sine',0.2)
-};
+const SFX={drop:()=>tone(220,.1,'sine',.45),win:()=>{[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine'),i*120));},draw:()=>tone(200,.3,'sawtooth',.3)};
 
-// ── State ──────────────────────────────────────────────
 const ROWS=6,COLS=7;
 let board,turn,gameOver,scores={1:0,2:0};
-let gameMode='ai',aiDiff='easy';
-let aiThinking=false;
-
-// AI difficulty timing
+let gameMode='ai',aiDiff='easy',aiThinking=false;
 const AI_DELAY={easy:[600,900],normal:[400,700],hard:[300,550]};
 
-function setMode(m){
-  gameMode=m;
-  document.getElementById('oAI').classList.toggle('sel',m==='ai');
-  document.getElementById('o2P').classList.toggle('sel',m==='2p');
-  document.getElementById('aiDiffRow').style.display=m==='ai'?'flex':'none';
-  SFX.click();
-}
-function setAIDiff(d){
-  aiDiff=d;
-  ['easy','normal','hard'].forEach(x=>document.getElementById('a'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('sel',x===d));
-  SFX.click();
-}
-function switchAIDiff(d){
-  aiDiff=d;
-  ['easy','normal','hard'].forEach(x=>document.getElementById('b'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('sel',x===d));
-  SFX.click();
-}
+function setMode(m){gameMode=m;document.getElementById('oAI').classList.toggle('on',m==='ai');document.getElementById('o2P').classList.toggle('on',m==='2p');document.getElementById('aiDiffRow').style.display=m==='ai'?'flex':'none';}
+function setAIDiff(d){aiDiff=d;['easy','normal','hard'].forEach(x=>document.getElementById('a'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',x===d));}
+function switchAIDiff(d){aiDiff=d;['easy','normal','hard'].forEach(x=>document.getElementById('b'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',x===d));}
 
 function beginGame(){
-  document.getElementById('startScreen').classList.add('hidden');
-  document.getElementById('gameArea').classList.add('show');
-  // sync diff buttons
-  switchAIDiff(aiDiff);
-  // show/hide bot row
-  document.getElementById('botRow').style.display=gameMode==='ai'?'flex':'none';
-  resetGame();
+  document.getElementById('menuOv').classList.remove('open');document.getElementById('gameArea').classList.add('show');
+  switchAIDiff(aiDiff);document.getElementById('botRow').style.display=gameMode==='ai'?'flex':'none';resetGame();
 }
-
-function showStart(){
-  document.getElementById('startScreen').classList.remove('hidden');
-  document.getElementById('gameArea').classList.remove('show');
-  SFX.click();
-}
-
+function showMenu(){document.getElementById('menuOv').classList.add('open');document.getElementById('gameArea').classList.remove('show');}
 function resetGame(){
-  board=Array.from({length:ROWS},()=>Array(COLS).fill(0));
-  turn=1;gameOver=false;aiThinking=false;
-  document.getElementById('status').textContent='';
-  document.getElementById('status').className='status';
-  render();updateTurn();
-  SFX.click();
+  board=Array.from({length:ROWS},()=>Array(COLS).fill(0));turn=1;gameOver=false;aiThinking=false;
+  document.getElementById('status').textContent='';document.getElementById('status').className='status';render();updateTurn();
 }
 
-// ── Sizing ─────────────────────────────────────────────
 function cellSize(){
-  const maxW=Math.min(window.innerWidth-32,520);
-  const maxH=window.innerHeight-230;
-  const byW=Math.floor((maxW-12-COLS*6)/COLS);
-  const byH=Math.floor((maxH-12-ROWS*6)/ROWS);
-  return Math.max(Math.min(byW,byH,72),36);
+  const maxW=Math.min(window.innerWidth-32,500),maxH=window.innerHeight-210;
+  const byW=Math.floor((maxW-12-COLS*6)/COLS),byH=Math.floor((maxH-12-ROWS*6)/ROWS);
+  return Math.max(34,Math.min(byW,byH,68));
 }
-
-// ── Render ─────────────────────────────────────────────
 function render(){
-  const sz=cellSize();
-  const gap=Math.min(6,Math.floor(sz*.1));
+  const sz=cellSize(),gap=Math.min(6,Math.floor(sz*.1));
   const bd=document.getElementById('board');
-  bd.style.gridTemplateColumns=`repeat(${COLS},${sz}px)`;
-  bd.style.gap=gap+'px';
-  bd.style.padding=gap+'px';
+  bd.style.gridTemplateColumns=`repeat(${COLS},${sz}px)`;bd.style.gap=gap+'px';bd.style.padding=gap+'px';
   bd.innerHTML='';
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const el=document.createElement('div');
-      el.className='cell'+(board[r][c]?' p'+board[r][c]:'');
-      el.style.width=el.style.height=sz+'px';
-      el.dataset.col=c;
-      el.addEventListener('click',()=>drop(c));
-      bd.appendChild(el);
-    }
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const el=document.createElement('div');el.className='cell'+(board[r][c]?' p'+board[r][c]:'');
+    el.style.width=el.style.height=sz+'px';el.dataset.col=c;el.addEventListener('click',()=>drop(c));bd.appendChild(el);
   }
-  // Hover row
-  const hr=document.getElementById('hoverRow');
-  hr.style.gap=gap+'px';
-  hr.style.padding=`0 ${gap}px`;
-  if(gameOver||aiThinking){hr.classList.add('hidden');return;}
-  hr.classList.remove('hidden');
-  hr.innerHTML='';
+  const hr=document.getElementById('hoverRow');hr.style.gap=gap+'px';hr.style.padding=`0 ${gap}px`;
+  if(gameOver||aiThinking){hr.classList.add('hidden');return;}hr.classList.remove('hidden');hr.innerHTML='';
   for(let c=0;c<COLS;c++){
-    const h=document.createElement('div');
-    h.className='h-cell';
-    h.style.width=sz+'px';
-    const disc=document.createElement('div');
-    disc.className='h-disc '+(turn===1?'disc-r':'disc-y');
-    disc.style.width=disc.style.height=Math.floor(sz*.28)+'px';
-    h.appendChild(disc);
-    const col=c;
-    h.addEventListener('mouseenter',()=>{if(!gameOver&&!aiThinking)h.classList.add('active');});
-    h.addEventListener('mouseleave',()=>h.classList.remove('active'));
-    h.addEventListener('click',()=>drop(col));
-    hr.appendChild(h);
+    const h=document.createElement('div');h.className='h-cell';h.style.width=sz+'px';
+    const disc=document.createElement('div');disc.className='h-disc '+(turn===1?'disc-r':'disc-y');disc.style.width=disc.style.height=Math.floor(sz*.28)+'px';h.appendChild(disc);
+    const col=c;h.addEventListener('mouseenter',()=>{if(!gameOver&&!aiThinking)h.classList.add('active');});h.addEventListener('mouseleave',()=>h.classList.remove('active'));
+    h.addEventListener('click',()=>drop(col));hr.appendChild(h);
   }
 }
-
 function drop(col){
-  if(gameOver||aiThinking)return;
-  if(gameMode==='ai'&&turn===2)return;
-  doMove(col);
-  if(!gameOver&&gameMode==='ai'&&turn===2){
-    aiThinking=true;
-    render();
-    document.getElementById('turnBox').querySelector('span').innerHTML='AI <span class="thinking">thinking...</span>';
-    const [lo,hi]=AI_DELAY[aiDiff];
-    const delay=lo+Math.random()*(hi-lo);
-    setTimeout(()=>{aiThinking=false;doMove(aiPick());},delay);
-  }
+  if(gameOver||aiThinking)return;if(gameMode==='ai'&&turn===2)return;
+  doMove(col);if(!gameOver&&gameMode==='ai'&&turn===2){aiThinking=true;render();document.getElementById('turnText').innerHTML='AI <span class="thinking">thinking...</span>';
+  const[lo,hi]=AI_DELAY[aiDiff];setTimeout(()=>{aiThinking=false;doMove(aiPick());},lo+Math.random()*(hi-lo));}
 }
-
 function doMove(col){
-  const row=getRow(col);
-  if(row<0)return;
-  board[row][col]=turn;
-  SFX.drop();
-
+  const row=getRow(col);if(row<0)return;board[row][col]=turn;SFX.drop();
   const wins=checkWin(row,col,turn);
-  if(wins){
-    gameOver=true;
-    scores[turn]++;
-    document.getElementById('s'+turn).textContent=scores[turn];
-    document.getElementById('status').textContent=`${turn===1?'Red':'Yellow'} wins!`;
-    document.getElementById('status').className='status'+(turn===2?' lose':'');
-    SFX.win();
-    render();
-    setTimeout(()=>highlightWin(wins),350);
-    document.getElementById('hoverRow').classList.add('hidden');
-    return;
-  }
-  if(board[0].every((_,c)=>board[0][c]!==0)){
-    gameOver=true;
-    document.getElementById('status').textContent='Draw!';
-    document.getElementById('status').className='status draw';
-    SFX.draw();
-    render();return;
-  }
-  turn=turn===1?2:1;
-  updateTurn();
-  render();
+  if(wins){gameOver=true;scores[turn]++;document.getElementById('s'+turn).textContent=scores[turn];
+    document.getElementById('status').textContent=`${turn===1?'Red':'Yellow'} wins! 🎉`;document.getElementById('status').className='status'+(turn===2?' lose':'');
+    SFX.win();render();setTimeout(()=>highlightWin(wins),350);document.getElementById('hoverRow').classList.add('hidden');return;}
+  if(board[0].every((_,c)=>board[0][c]!==0)){gameOver=true;document.getElementById('status').textContent='Draw!';document.getElementById('status').className='status draw';SFX.draw();render();return;}
+  turn=turn===1?2:1;updateTurn();render();
 }
-
-function highlightWin(cells){
-  cells.forEach(([r,c])=>{
-    const el=document.querySelector(`#board .cell:nth-child(${r*COLS+c+1})`);
-    if(el)el.classList.add('win-cell');
-  });
-}
-
-function getRow(col){
-  for(let r=ROWS-1;r>=0;r--) if(!board[r][col]) return r;
-  return -1;
-}
-
+function highlightWin(cells){cells.forEach(([r,c])=>{const el=document.querySelector(`#board .cell:nth-child(${r*COLS+c+1})`);if(el)el.classList.add('win-cell');});}
+function getRow(col){for(let r=ROWS-1;r>=0;r--)if(!board[r][col])return r;return -1;}
 function checkWin(row,col,p){
   const dirs=[[0,1],[1,0],[1,1],[1,-1]];
-  for(const [dr,dc] of dirs){
-    const cells=[[row,col]];
-    for(let i=1;i<4;i++){const r=row+dr*i,c=col+dc*i;if(r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===p)cells.push([r,c]);else break;}
-    for(let i=1;i<4;i++){const r=row-dr*i,c=col-dc*i;if(r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===p)cells.push([r,c]);else break;}
-    if(cells.length>=4)return cells.slice(0,4);
-  }
-  return null;
+  for(const[dr,dc]of dirs){const cells=[[row,col]];for(let i=1;i<4;i++){const r=row+dr*i,c=col+dc*i;if(r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===p)cells.push([r,c]);else break;}for(let i=1;i<4;i++){const r=row-dr*i,c=col-dc*i;if(r>=0&&r<ROWS&&c>=0&&c<COLS&&board[r][c]===p)cells.push([r,c]);else break;}if(cells.length>=4)return cells.slice(0,4);}return null;
 }
-
-// ── AI ─────────────────────────────────────────────────
-function aiPick(){
-  if(aiDiff==='easy') return aiRandom();
-  if(aiDiff==='normal') return aiNormal();
-  return aiHard();
-}
-
-function aiRandom(){
-  const open=[];for(let c=0;c<COLS;c++)if(getRow(c)>=0)open.push(c);
-  // easy occasionally just picks center bias
-  if(Math.random()<0.4) return open.sort((a,b)=>Math.abs(a-3)-Math.abs(b-3))[0];
-  return open[Math.floor(Math.random()*open.length)];
-}
-
-function aiNormal(){
-  // win if can
-  for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=2;if(checkWin(r,c,2)){board[r][c]=0;return c;}board[r][c]=0;}}
-  // block
-  for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=1;if(checkWin(r,c,1)){board[r][c]=0;return c;}board[r][c]=0;}}
-  // prefer center
-  const pref=[3,2,4,1,5,0,6];
-  for(const c of pref) if(getRow(c)>=0) return c;
-  return 0;
-}
-
-function aiHard(){
-  // win
-  for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=2;if(checkWin(r,c,2)){board[r][c]=0;return c;}board[r][c]=0;}}
-  // block
-  for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=1;if(checkWin(r,c,1)){board[r][c]=0;return c;}board[r][c]=0;}}
-  // score columns
-  const scores=Array(COLS).fill(0);
-  for(let c=0;c<COLS;c++){
-    const r=getRow(c);if(r<0)continue;
-    // center bias
-    scores[c]+=Math.max(0,3-Math.abs(c-3))*3;
-    // count threats
-    board[r][c]=2;scores[c]+=countThreats(2)*2;board[r][c]=0;
-    board[r][c]=1;scores[c]-=countThreats(1)*2;board[r][c]=0;
-  }
-  let best=-Infinity,bestCol=3;
-  for(let c=0;c<COLS;c++) if(getRow(c)>=0&&scores[c]>best){best=scores[c];bestCol=c;}
-  return bestCol;
-}
-
-function countThreats(p){
-  let n=0;
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(board[r][c]===p){
-    const dirs=[[0,1],[1,0],[1,1],[1,-1]];
-    for(const [dr,dc] of dirs){
-      let count=1;
-      for(let i=1;i<4;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&board[nr][nc]===p)count++;else break;}
-      if(count>=3)n++;
-    }
-  }
-  return n;
-}
-
+function aiPick(){if(aiDiff==='easy')return aiRandom();if(aiDiff==='normal')return aiNormal();return aiHard();}
+function aiRandom(){const open=[];for(let c=0;c<COLS;c++)if(getRow(c)>=0)open.push(c);if(Math.random()<.4)return open.sort((a,b)=>Math.abs(a-3)-Math.abs(b-3))[0];return open[Math.floor(Math.random()*open.length)];}
+function aiNormal(){for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=2;if(checkWin(r,c,2)){board[r][c]=0;return c;}board[r][c]=0;}}for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=1;if(checkWin(r,c,1)){board[r][c]=0;return c;}board[r][c]=0;}}const pref=[3,2,4,1,5,0,6];for(const c of pref)if(getRow(c)>=0)return c;return 0;}
+function aiHard(){for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=2;if(checkWin(r,c,2)){board[r][c]=0;return c;}board[r][c]=0;}}for(let c=0;c<COLS;c++){const r=getRow(c);if(r>=0){board[r][c]=1;if(checkWin(r,c,1)){board[r][c]=0;return c;}board[r][c]=0;}}const sc=Array(COLS).fill(0);for(let c=0;c<COLS;c++){const r=getRow(c);if(r<0)continue;sc[c]+=Math.max(0,3-Math.abs(c-3))*3;board[r][c]=2;sc[c]+=countThreats(2)*2;board[r][c]=0;board[r][c]=1;sc[c]-=countThreats(1)*2;board[r][c]=0;}let best=-Infinity,bestCol=3;for(let c=0;c<COLS;c++)if(getRow(c)>=0&&sc[c]>best){best=sc[c];bestCol=c;}return bestCol;}
+function countThreats(p){let n=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(board[r][c]===p){const dirs=[[0,1],[1,0],[1,1],[1,-1]];for(const[dr,dc]of dirs){let count=1;for(let i=1;i<4;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&board[nr][nc]===p)count++;else break;}if(count>=3)n++;}}return n;}
 function updateTurn(){
-  const disc=document.getElementById('turnDisc');
-  const txt=document.getElementById('turnText');
-  disc.className='disc-sm '+(turn===1?'disc-r':'disc-y');
-  txt.textContent=turn===1?`Red's turn`:`Yellow's turn${gameMode==='ai'?' (AI)':''}`;
+  document.getElementById('turnDisc').className='disc-sm '+(turn===1?'disc-r':'disc-y');
+  document.getElementById('turnText').textContent=turn===1?`Red's turn`:`Yellow's turn${gameMode==='ai'?' (AI)':''}`;
 }
-
 window.addEventListener('resize',()=>{if(document.getElementById('gameArea').classList.contains('show'))render();});
 </script>
 </body>

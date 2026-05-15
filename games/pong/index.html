@@ -5,406 +5,247 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pong</title>
 <style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#13131f;font-family:Inter,system-ui,sans-serif;color:#fff;user-select:none}
-canvas{display:block;position:absolute;top:0;left:0}
-#ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-/* ── Screen overlays ── */
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(19,19,31,.96);transition:opacity .3s}
-.screen.hidden{opacity:0;pointer-events:none}
-.logo{font-size:3rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#7c5cfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.subtitle{font-size:.9rem;color:#9898b8;margin-top:-10px}
-.diff-row{display:flex;gap:10px;margin-top:4px}
-.diff-btn{padding:10px 24px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:#252538;color:#9898b8;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;pointer-events:auto}
-.diff-btn:hover,.diff-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
-.mode-row{display:flex;gap:10px}
-.mode-btn{padding:10px 24px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:#252538;color:#9898b8;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;pointer-events:auto}
-.mode-btn:hover,.mode-btn.sel{background:#1c1c2e;color:#fff;border-color:rgba(124,92,252,.5)}
-.play-btn{padding:14px 48px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:1.05rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;pointer-events:auto;margin-top:4px}
-.play-btn:hover{background:#6a4de0}
-.hint-text{font-size:.78rem;color:#9898b8}
-/* win screen */
-#winScreen .win-title{font-size:2.2rem;font-weight:900;color:#7c5cfc}
-#winScreen .win-score{font-size:1.3rem;font-weight:700;color:#fff;margin-top:-8px}
-#winScreen .win-sub{font-size:.85rem;color:#9898b8}
-.restart-btn{padding:13px 42px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;pointer-events:auto}
-.restart-btn:hover{background:#6a4de0}
-/* countdown overlay */
-#countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
-#countdown.show{opacity:1}
-#countNum{font-size:8rem;font-weight:900;color:#fff;text-shadow:0 0 60px rgba(124,92,252,.8);line-height:1}
-/* mobile touch areas */
-#touchL,#touchR{position:absolute;top:0;bottom:0;width:50%;z-index:10;display:none}
-#touchL{left:0}#touchR{right:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;user-select:none}
+button{font:inherit;cursor:pointer;border:none;}
+canvas{position:absolute;inset:0;display:block}
+
+/* ── Overlay / Card ── */
+.ov{position:absolute;inset:0;z-index:10;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+#winOv{background:rgba(13,13,25,.92);backdrop-filter:blur(6px);}
+
+.menu-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 48px rgba(124,92,252,.07);}
+.game-title{font-size:clamp(2.2rem,9vw,3.2rem);font-weight:950;letter-spacing:-.03em;color:#fff;}
+.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+
+/* option tiles */
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.5rem;line-height:1.2;text-align:center;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;}
+.sopt.on .sopt-lbl{color:var(--text);}
+
+/* buttons */
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;line-height:1.5;}
+
+/* win card */
+.win-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(320px,90vw);box-shadow:0 20px 56px rgba(0,0,0,.5);}
+.win-card h2{font-size:clamp(1.8rem,6vw,2.4rem);font-weight:950;}
+.stat-row{display:flex;align-items:center;gap:24px;}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.stat-val{font-size:2rem;font-weight:900;color:var(--accent);}
+.stat-label{font-size:.68rem;color:var(--text2);}
+.stat-div{width:1px;height:40px;background:var(--border);}
+
+/* countdown */
+#countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s;z-index:15;}
+#countdown.show{opacity:1;}
+#countNum{font-size:8rem;font-weight:900;color:#fff;text-shadow:0 0 60px rgba(124,92,252,.8);line-height:1;}
+
 /* volume */
-#volWrap{position:absolute;bottom:12px;right:16px;display:flex;align-items:center;gap:8px;opacity:.55;transition:opacity .2s;pointer-events:auto}
-#volWrap:hover{opacity:1}
-#volWrap label{font-size:.7rem;color:#9898b8}
-#volSlider{width:72px;accent-color:#7c5cfc}
+#volWrap{position:absolute;bottom:12px;right:16px;display:flex;align-items:center;gap:8px;opacity:.45;transition:opacity .2s;z-index:20;}
+#volWrap:hover{opacity:1;}
+#volWrap label{font-size:.68rem;color:var(--text2);}
+#volSlider{width:72px;accent-color:var(--accent);}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
-<!-- Start screen -->
-<div class="screen" id="startScreen">
-  <div class="logo">PONG</div>
-  <div class="subtitle">First to 7 wins</div>
-  <div class="diff-row">
-    <button class="diff-btn" id="dEasy" onclick="setDiff('easy')">Easy</button>
-    <button class="diff-btn sel" id="dNormal" onclick="setDiff('normal')">Normal</button>
-    <button class="diff-btn" id="dHard" onclick="setDiff('hard')">Hard</button>
+<!-- Menu -->
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">BON<span>KER</span> PONG</div>
+    <div class="game-sub">First to 7 wins</div>
+    <div class="scat">
+      <div class="scat-label">Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">🐢</div><div class="sopt-lbl">Easy</div></div>
+        <div class="sopt on" id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🏓</div><div class="sopt-lbl">Normal</div></div>
+        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">⚡</div><div class="sopt-lbl">Hard</div></div>
+      </div>
+    </div>
+    <div class="scat">
+      <div class="scat-label">Mode</div>
+      <div class="scat-row">
+        <div class="sopt on" id="mAI" onclick="setMode('ai')"><div class="sopt-ico">🤖</div><div class="sopt-lbl">vs AI</div></div>
+        <div class="sopt" id="m2P" onclick="setMode('2p')"><div class="sopt-ico">👥</div><div class="sopt-lbl">2 Players</div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">W/S &nbsp;·&nbsp; Arrow keys &nbsp;·&nbsp; Touch to move</p>
   </div>
-  <div class="mode-row">
-    <button class="mode-btn sel" id="mAI" onclick="setMode('ai')">vs AI</button>
-    <button class="mode-btn" id="m2P" onclick="setMode('2p')">2 Players</button>
-  </div>
-  <button class="play-btn" onclick="beginGame()">Play</button>
-  <div class="hint-text">W/S &nbsp;|&nbsp; Arrow keys &nbsp;|&nbsp; Touch to move</div>
 </div>
 
 <!-- Win screen -->
-<div class="screen hidden" id="winScreen">
-  <div class="win-title" id="winTitle">Left Wins!</div>
-  <div class="win-score" id="winScore">7 &mdash; 4</div>
-  <div class="win-sub">Great game!</div>
-  <button class="restart-btn" onclick="showStart()">Play Again</button>
+<div class="ov" id="winOv">
+  <div class="win-card">
+    <h2 id="winTitle">Left Wins!</h2>
+    <div class="stat-row">
+      <div class="stat-item"><div class="stat-val" id="winS1">0</div><div class="stat-label">Left</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-item"><div class="stat-val" id="winS2">0</div><div class="stat-label">Right</div></div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play Again</button>
+    <button class="gbtn ghost" onclick="showMenu()">&#8592;&ensp;Menu</button>
+  </div>
 </div>
 
-<!-- Countdown overlay -->
+<!-- Countdown -->
 <div id="countdown"><div id="countNum">3</div></div>
 
-<!-- Mobile touch zones (shown on touch devices) -->
-<div id="touchL"></div>
-<div id="touchR"></div>
-
-<!-- Volume -->
-<div id="volWrap">
-  <label>Vol</label>
-  <input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)">
-</div>
+<div id="volWrap"><label>Vol</label><input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)"></div>
 
 <script>
-// ── Audio ──────────────────────────────────────────────
 const ac=new(window.AudioContext||window.webkitAudioContext)();
-let masterGain=ac.createGain();masterGain.gain.value=0.22;masterGain.connect(ac.destination);
-
-function setVol(v){masterGain.gain.value=v/100;}
-
+const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
+function setVol(v){mg.gain.value=v/100;}
 function beep(freq,dur=0.06,type='square'){
   if(ac.state==='suspended')ac.resume();
   const o=ac.createOscillator(),g=ac.createGain();
   o.type=type;o.frequency.value=freq;
   g.gain.setValueAtTime(0.6,ac.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
-  o.connect(g);g.connect(masterGain);
-  o.start();o.stop(ac.currentTime+dur+0.01);
+  o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+dur+.01);
 }
-
 const SFX={
-  paddle:()=>beep(320,0.05,'square'),
-  wall:()=>beep(180,0.04,'square'),
-  score:()=>beep(120,0.18,'sawtooth'),
-  win:()=>{beep(523,0.12,'sine');setTimeout(()=>beep(659,0.12,'sine'),130);setTimeout(()=>beep(784,0.22,'sine'),260);},
-  countdown:()=>beep(440,0.08,'sine'),
-  go:()=>{beep(523,0.1,'sine');setTimeout(()=>beep(784,0.18,'sine'),100);}
+  paddle:()=>beep(320,.05,'square'),
+  wall:()=>beep(180,.04,'square'),
+  score:()=>beep(120,.18,'sawtooth'),
+  win:()=>{beep(523,.12,'sine');setTimeout(()=>beep(659,.12,'sine'),130);setTimeout(()=>beep(784,.22,'sine'),260);},
+  countdown:()=>beep(440,.08,'sine'),
+  go:()=>{beep(523,.1,'sine');setTimeout(()=>beep(784,.18,'sine'),100);}
 };
 
-// ── Canvas + sizing ────────────────────────────────────
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
 let W,H;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+window.addEventListener('resize',()=>{resize();if(running)initPositions();});
 
-function resize(){
-  W=canvas.width=window.innerWidth;
-  H=canvas.height=window.innerHeight;
-}
-window.addEventListener('resize',()=>{resize();initPositions();});
-
-// ── Game state ─────────────────────────────────────────
-const WIN_SCORE=7;
-const PW=14,PH=85,BR=6; // paddle width, height; ball radius
-
-const DIFFS={
-  easy:  {ballSpd:220,aiSpd:170,maxSpd:560,incr:1.03},
-  normal:{ballSpd:260,aiSpd:210,maxSpd:560,incr:1.03},
-  hard:  {ballSpd:310,aiSpd:260,maxSpd:560,incr:1.03}
-};
-
-let diff='normal',gameMode='ai';
-let p1,p2,ball,score1,score2;
-let running=false,animId=null,lastTs=null;
+const WIN_SCORE=7,PW=14,PH=85,BR=6;
+const DIFFS={easy:{ballSpd:220,aiSpd:170,maxSpd:560,incr:1.03},normal:{ballSpd:260,aiSpd:210,maxSpd:560,incr:1.03},hard:{ballSpd:310,aiSpd:260,maxSpd:560,incr:1.03}};
+let diff='normal',gameMode='ai',p1,p2,ball,score1,score2,running=false,animId=null,lastTs=null;
 
 function setDiff(d){
   diff=d;
-  ['easy','normal','hard'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('sel',x===d));
+  ['easy','normal','hard'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',x===d));
 }
 function setMode(m){
   gameMode=m;
-  document.getElementById('mAI').classList.toggle('sel',m==='ai');
-  document.getElementById('m2P').classList.toggle('sel',m==='2p');
-  // show/hide mobile touch zones
-  if('ontouchstart' in window){
-    document.getElementById('touchL').style.display=m==='2p'?'block':'none';
-    document.getElementById('touchR').style.display='block';
-  }
+  document.getElementById('mAI').classList.toggle('on',m==='ai');
+  document.getElementById('m2P').classList.toggle('on',m==='2p');
 }
+function showMenu(){
+  running=false;if(animId)cancelAnimationFrame(animId);animId=null;
+  open('menuOv');close('winOv');
+}
+function open(id){document.getElementById(id).classList.add('open');}
+function close(id){document.getElementById(id).classList.remove('open');}
 
 function initPositions(){
-  if(!W)return;
-  p1={x:30,y:H/2-PH/2,dy:0};
-  p2={x:W-30-PW,y:H/2-PH/2,dy:0};
-  serveBall(true);
+  p1={x:30,y:H/2-PH/2};p2={x:W-30-PW,y:H/2-PH/2};serveBall(true);
 }
-
 function serveBall(newRound){
-  const cfg=DIFFS[diff];
-  const angle=(Math.random()*.6-.3); // ±~17°
-  const dir=newRound?(Math.random()>.5?1:-1):ball.lastDir||1;
-  const spd=cfg.ballSpd/60; // px per frame at 60fps baseline, we'll use delta-time properly
-  ball={
-    x:W/2,y:H/2,
-    vx:dir*cfg.ballSpd*(Math.cos(angle)),
-    vy:cfg.ballSpd*(Math.sin(angle)),
-    r:BR,
-    speed:cfg.ballSpd,
-    lastDir:dir
-  };
+  const cfg=DIFFS[diff],angle=(Math.random()*.6-.3),dir=newRound?(Math.random()>.5?1:-1):ball?.lastDir||1;
+  ball={x:W/2,y:H/2,vx:dir*cfg.ballSpd*Math.cos(angle),vy:cfg.ballSpd*Math.sin(angle),r:BR,speed:cfg.ballSpd,lastDir:dir};
 }
 
-// ── Keys ───────────────────────────────────────────────
 const keys={};
-document.addEventListener('keydown',e=>{
-  keys[e.code]=true;
-  if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();
-});
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 
-// ── Touch controls ─────────────────────────────────────
-let touch1Y=null,touch2Y=null;
-function setupTouch(){
-  const tL=document.getElementById('touchL');
-  const tR=document.getElementById('touchR');
-  // Right paddle (or single player — right side always moves right paddle)
-  function handleTouchMove(e){
-    e.preventDefault();
-    for(const t of e.changedTouches){
-      const x=t.clientX;
-      if(x<W/2) touch1Y=t.clientY;
-      else touch2Y=t.clientY;
-    }
-  }
-  function handleTouchEnd(e){
-    for(const t of e.changedTouches){
-      if(t.clientX<W/2) touch1Y=null;
-      else touch2Y=null;
-    }
-  }
-  canvas.addEventListener('touchmove',handleTouchMove,{passive:false});
-  canvas.addEventListener('touchend',handleTouchEnd,{passive:false});
-  canvas.addEventListener('touchcancel',handleTouchEnd,{passive:false});
-}
+let touch2Y=null,touch1Y=null;
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  for(const t of e.changedTouches){if(t.clientX<W/2)touch1Y=t.clientY;else touch2Y=t.clientY;}
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  for(const t of e.changedTouches){if(t.clientX<W/2)touch1Y=null;else touch2Y=null;}
+},{passive:false});
 
-// ── Countdown then play ────────────────────────────────
 function beginGame(){
-  document.getElementById('startScreen').classList.add('hidden');
-  document.getElementById('winScreen').classList.add('hidden');
-  score1=0;score2=0;
-  initPositions();
-  startCountdown(()=>{
-    running=true;
-    lastTs=null;
-    if(animId)cancelAnimationFrame(animId);
-    animId=requestAnimationFrame(loop);
-  });
+  close('menuOv');close('winOv');score1=0;score2=0;resize();initPositions();
+  startCountdown(()=>{running=true;lastTs=null;if(animId)cancelAnimationFrame(animId);animId=requestAnimationFrame(loop);});
 }
-
 function startCountdown(cb){
-  const el=document.getElementById('countdown');
-  const num=document.getElementById('countNum');
-  let n=3;
-  el.classList.add('show');
-  num.textContent=n;
-  SFX.countdown();
-  const iv=setInterval(()=>{
-    n--;
-    if(n>0){num.textContent=n;SFX.countdown();}
-    else{
-      num.textContent='GO!';
-      SFX.go();
-      setTimeout(()=>{el.classList.remove('show');clearInterval(iv);cb();},600);
-    }
-  },800);
+  const el=document.getElementById('countdown'),num=document.getElementById('countNum');
+  let n=3;el.classList.add('show');num.textContent=n;SFX.countdown();
+  const iv=setInterval(()=>{n--;if(n>0){num.textContent=n;SFX.countdown();}else{num.textContent='GO!';SFX.go();setTimeout(()=>{el.classList.remove('show');clearInterval(iv);cb();},600);}},800);
 }
-
-function countdownForNewRound(cb){
-  // shorter: just 1-2-GO not needed, just a brief pause then go
-  setTimeout(cb,600);
-}
-
-// ── Game loop ──────────────────────────────────────────
 function loop(ts){
   if(!running){animId=null;return;}
   if(!lastTs)lastTs=ts;
-  let dt=Math.min((ts-lastTs)/1000, 0.05); // cap at 50ms
-  lastTs=ts;
-  update(dt);
-  draw();
-  animId=requestAnimationFrame(loop);
+  const dt=Math.min((ts-lastTs)/1000,.05);lastTs=ts;
+  update(dt);draw();animId=requestAnimationFrame(loop);
 }
-
-const PAD_SPD=420; // px/s for player paddles
-
+const PAD_SPD=420;
 function update(dt){
   const cfg=DIFFS[diff];
-  // Player 1 (W/S or left touch)
-  if(keys['KeyW']&&p1.y>0) p1.y-=PAD_SPD*dt;
-  if(keys['KeyS']&&p1.y<H-PH) p1.y+=PAD_SPD*dt;
-  if(touch1Y!==null&&gameMode==='2p'){
-    const target=touch1Y-PH/2;
-    p1.y+=(target-p1.y)*0.18;
-  }
+  if(keys['KeyW']&&p1.y>0)p1.y-=PAD_SPD*dt;if(keys['KeyS']&&p1.y<H-PH)p1.y+=PAD_SPD*dt;
+  if(touch1Y!==null&&gameMode==='2p'){p1.y+=(touch1Y-PH/2-p1.y)*.18;}
   p1.y=Math.max(0,Math.min(H-PH,p1.y));
-
-  // Player 2 / AI
   if(gameMode==='2p'){
-    if(keys['ArrowUp']&&p2.y>0) p2.y-=PAD_SPD*dt;
-    if(keys['ArrowDown']&&p2.y<H-PH) p2.y+=PAD_SPD*dt;
-    if(touch2Y!==null){
-      const target=touch2Y-PH/2;
-      p2.y+=(target-p2.y)*0.18;
-    }
-  } else {
-    // AI tracks ball with configured speed
-    const mid=p2.y+PH/2;
-    const aiSpd=cfg.aiSpd*dt;
-    if(mid<ball.y-4) p2.y=Math.min(p2.y+aiSpd,H-PH);
-    else if(mid>ball.y+4) p2.y=Math.max(p2.y-aiSpd,0);
+    if(keys['ArrowUp']&&p2.y>0)p2.y-=PAD_SPD*dt;if(keys['ArrowDown']&&p2.y<H-PH)p2.y+=PAD_SPD*dt;
+    if(touch2Y!==null){p2.y+=(touch2Y-PH/2-p2.y)*.18;}
+  }else{
+    const mid=p2.y+PH/2,aiSpd=cfg.aiSpd*dt;
+    if(mid<ball.y-4)p2.y=Math.min(p2.y+aiSpd,H-PH);else if(mid>ball.y+4)p2.y=Math.max(p2.y-aiSpd,0);
   }
   p2.y=Math.max(0,Math.min(H-PH,p2.y));
-
-  // Ball movement
-  ball.x+=ball.vx*dt;
-  ball.y+=ball.vy*dt;
-
-  // Wall bounce (top/bottom)
+  ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
   if(ball.y-ball.r<=0){ball.y=ball.r;ball.vy=Math.abs(ball.vy);SFX.wall();}
   if(ball.y+ball.r>=H){ball.y=H-ball.r;ball.vy=-Math.abs(ball.vy);SFX.wall();}
-
-  // Paddle 1 collision
-  if(ball.vx<0 && ball.x-ball.r<=p1.x+PW && ball.x+ball.r>=p1.x && ball.y+ball.r>=p1.y && ball.y-ball.r<=p1.y+PH){
-    ball.x=p1.x+PW+ball.r;
-    const rel=(ball.y-(p1.y+PH/2))/(PH/2);
-    const angle=rel*0.8; // max ~45°
-    ball.speed=Math.min(ball.speed*cfg.incr, cfg.maxSpd);
-    ball.vx=ball.speed*Math.cos(angle);
-    ball.vy=ball.speed*Math.sin(angle);
-    SFX.paddle();
+  if(ball.vx<0&&ball.x-ball.r<=p1.x+PW&&ball.x+ball.r>=p1.x&&ball.y+ball.r>=p1.y&&ball.y-ball.r<=p1.y+PH){
+    ball.x=p1.x+PW+ball.r;const rel=(ball.y-(p1.y+PH/2))/(PH/2),angle=rel*.8;
+    ball.speed=Math.min(ball.speed*cfg.incr,cfg.maxSpd);ball.vx=ball.speed*Math.cos(angle);ball.vy=ball.speed*Math.sin(angle);SFX.paddle();
   }
-  // Paddle 2 collision
-  if(ball.vx>0 && ball.x+ball.r>=p2.x && ball.x-ball.r<=p2.x+PW && ball.y+ball.r>=p2.y && ball.y-ball.r<=p2.y+PH){
-    ball.x=p2.x-ball.r;
-    const rel=(ball.y-(p2.y+PH/2))/(PH/2);
-    const angle=rel*0.8;
-    ball.speed=Math.min(ball.speed*cfg.incr, cfg.maxSpd);
-    ball.vx=-ball.speed*Math.cos(angle);
-    ball.vy=ball.speed*Math.sin(angle);
-    SFX.paddle();
+  if(ball.vx>0&&ball.x+ball.r>=p2.x&&ball.x-ball.r<=p2.x+PW&&ball.y+ball.r>=p2.y&&ball.y-ball.r<=p2.y+PH){
+    ball.x=p2.x-ball.r;const rel=(ball.y-(p2.y+PH/2))/(PH/2),angle=rel*.8;
+    ball.speed=Math.min(ball.speed*cfg.incr,cfg.maxSpd);ball.vx=-ball.speed*Math.cos(angle);ball.vy=ball.speed*Math.sin(angle);SFX.paddle();
   }
-
-  // Score
-  if(ball.x+ball.r<0){
-    score2++;
-    SFX.score();
-    if(score2>=WIN_SCORE){endGame(2);return;}
-    running=false;
-    initPositions();
-    ball.lastDir=1;
-    setTimeout(()=>{running=true;lastTs=null;animId=requestAnimationFrame(loop);},900);
-  }
-  if(ball.x-ball.r>W){
-    score1++;
-    SFX.score();
-    if(score1>=WIN_SCORE){endGame(1);return;}
-    running=false;
-    initPositions();
-    ball.lastDir=-1;
-    setTimeout(()=>{running=true;lastTs=null;animId=requestAnimationFrame(loop);},900);
-  }
+  if(ball.x+ball.r<0){score2++;SFX.score();if(score2>=WIN_SCORE){endGame(2);return;}running=false;initPositions();ball.lastDir=1;setTimeout(()=>{running=true;lastTs=null;animId=requestAnimationFrame(loop);},900);}
+  if(ball.x-ball.r>W){score1++;SFX.score();if(score1>=WIN_SCORE){endGame(1);return;}running=false;initPositions();ball.lastDir=-1;setTimeout(()=>{running=true;lastTs=null;animId=requestAnimationFrame(loop);},900);}
 }
-
-// ── Draw ───────────────────────────────────────────────
 function draw(){
-  ctx.fillStyle='#13131f';
-  ctx.fillRect(0,0,W,H);
-
-  // Center dashed line
-  ctx.save();
-  ctx.setLineDash([8,12]);
-  ctx.strokeStyle='rgba(255,255,255,.08)';
-  ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-
-  // Scores
-  ctx.fillStyle='rgba(255,255,255,.12)';
-  ctx.font=`bold ${Math.min(H*.24,120)}px Inter,system-ui,sans-serif`;
-  ctx.textAlign='center';
-  ctx.fillText(score1,W*.25,H*.33);
-  ctx.fillText(score2,W*.75,H*.33);
-
-  // Paddles
-  ctx.fillStyle='#7c5cfc';
-  rr(ctx,p1.x,p1.y,PW,PH,5);
-  ctx.fillStyle='#a78bfa';
-  rr(ctx,p2.x,p2.y,PW,PH,5);
-
-  // Ball + glow
+  ctx.fillStyle='#0e0e1a';ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.setLineDash([8,12]);ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.1)';ctx.font=`bold ${Math.min(H*.22,110)}px Inter,system-ui`;ctx.textAlign='center';
+  ctx.fillText(score1,W*.25,H*.32);ctx.fillText(score2,W*.75,H*.32);
+  ctx.fillStyle='#7c5cfc';rr(ctx,p1.x,p1.y,PW,PH,5);
+  ctx.fillStyle='#a78bfa';rr(ctx,p2.x,p2.y,PW,PH,5);
   const grd=ctx.createRadialGradient(ball.x,ball.y,0,ball.x,ball.y,ball.r*4);
-  grd.addColorStop(0,'rgba(255,255,255,.25)');
-  grd.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r*4,0,Math.PI*2);
-  ctx.fillStyle=grd;ctx.fill();
-  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
-  ctx.fillStyle='#fff';ctx.fill();
+  grd.addColorStop(0,'rgba(255,255,255,.2)');grd.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r*4,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();
+  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
 }
-
-function rr(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.roundRect(x,y,w,h,r);
-  ctx.fill();
-}
-
-// ── End game ───────────────────────────────────────────
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
 function endGame(winner){
-  running=false;
-  if(animId)cancelAnimationFrame(animId);
-  animId=null;
-  SFX.win();
-  draw(); // final frame
+  running=false;if(animId)cancelAnimationFrame(animId);animId=null;SFX.win();draw();
   setTimeout(()=>{
-    const ws=document.getElementById('winScreen');
-    document.getElementById('winTitle').textContent=winner===1?'Left Wins!':'Right Wins!';
-    document.getElementById('winScore').textContent=`${score1} — ${score2}`;
-    ws.classList.remove('hidden');
+    document.getElementById('winTitle').textContent=winner===1?'Left Wins! 🎉':'Right Wins! 🎉';
+    document.getElementById('winS1').textContent=score1;document.getElementById('winS2').textContent=score2;
+    open('winOv');
   },600);
 }
-
-function showStart(){
-  document.getElementById('winScreen').classList.add('hidden');
-  document.getElementById('startScreen').classList.remove('hidden');
-}
-
-// ── Init ───────────────────────────────────────────────
-resize();
-setupTouch();
-if('ontouchstart' in window){
-  document.getElementById('touchR').style.display='block';
-}
-// Draw idle state
-initPositions();
-draw();
+resize();initPositions();
+// draw idle
+(function idle(){if(!running){ctx.fillStyle='#0e0e1a';ctx.fillRect(0,0,W,H);requestAnimationFrame(idle);}})();
 </script>
 </body>
 </html>

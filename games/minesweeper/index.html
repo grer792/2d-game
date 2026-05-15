@@ -5,79 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Minesweeper</title>
 <style>
+:root{--bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;--accent:#7c5cfc;--accent-h:#6a4de0;--text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none}
+html,body{width:100%;height:100%;background:#0e0e1a;font-family:Inter,system-ui,sans-serif;color:#fff;overflow:hidden;user-select:none;}
+button{font:inherit;cursor:pointer;border:none;}
 
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#13131f;z-index:20;transition:opacity .3s}
-.screen.hidden{opacity:0;pointer-events:none}
-.logo{font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#7c5cfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.sub{font-size:.85rem;color:#9898b8;margin-top:-10px}
-.diff-row{display:flex;gap:10px}
-.diff-btn{padding:9px 22px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:#252538;color:#9898b8;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.diff-btn:hover,.diff-btn.sel{background:#7c5cfc;color:#fff;border-color:#7c5cfc}
-.play-btn{padding:13px 48px;border-radius:12px;border:none;background:#7c5cfc;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s}
-.play-btn:hover{background:#6a4de0}
-.diff-info{background:#1c1c2e;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 16px;font-size:.78rem;color:#9898b8;text-align:center;line-height:1.7}
-.diff-info b{color:#a78bfa}
+.ov{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+#menuOv{background:rgba(13,13,25,.72);backdrop-filter:blur(2px);}
+
+.menu-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(340px,92vw);box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 48px rgba(124,92,252,.07);}
+.game-title{font-size:clamp(1.9rem,7vw,2.8rem);font-weight:950;letter-spacing:-.03em;}
+.game-title span{color:var(--accent);}
+.game-sub{font-size:.8rem;color:var(--text2);margin-top:-8px;}
+
+.scat{width:100%;display:flex;flex-direction:column;gap:6px;}
+.scat-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.scat-row{display:flex;gap:6px;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);cursor:pointer;transition:all .13s;}
+.sopt:hover{border-color:rgba(124,92,252,.5);}
+.sopt.on{border-color:var(--accent);background:rgba(124,92,252,.13);}
+.sopt-ico{font-size:1.5rem;line-height:1.2;}
+.sopt-lbl{font-size:.68rem;font-weight:700;color:var(--text2);text-align:center;line-height:1.5;}
+.sopt.on .sopt-lbl{color:var(--text);}
+
+.gbtn{width:100%;padding:14px 20px;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
+.gbtn:active{transform:scale(.97);}
+.gbtn.accent{background:var(--accent);color:#fff;}
+.gbtn.accent:hover{background:var(--accent-h);}
+.gbtn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
+.hint{font-size:.69rem;color:var(--text2);text-align:center;}
 
 /* ── Game area ── */
-#gameArea{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .3s}
-#gameArea.show{opacity:1;pointer-events:auto}
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+#gameArea.show{display:flex;}
 
-.topbar{display:flex;align-items:center;gap:16px}
-.stat-box{display:flex;align-items:center;gap:7px;background:#1c1c2e;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 14px;font-size:.82rem}
-.stat-val{font-size:1.1rem;font-weight:800;color:#fff}
-.face-btn{background:#252538;border:1.5px solid rgba(255,255,255,.07);border-radius:10px;padding:6px 16px;cursor:pointer;font-size:1.4rem;transition:background .15s;line-height:1}
-.face-btn:hover{background:#2e2e45}
+.topbar{display:flex;align-items:center;gap:12px;}
+.stat-box{display:flex;align-items:center;gap:7px;background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:7px 14px;}
+.stat-val{font-size:1.1rem;font-weight:800;}
+.face-btn{background:rgba(37,37,56,.9);border:1.5px solid var(--border);border-radius:10px;padding:6px 16px;font-size:1.4rem;transition:background .15s;line-height:1;}
+.face-btn:hover{background:var(--bg4);}
 
-/* ── Grid wrapper (scrollable on small screens) ── */
-#gridWrap{overflow:auto;max-width:100vw;max-height:calc(100vh - 160px);border-radius:14px}
-#gridWrap::-webkit-scrollbar{width:0;height:0}
-.grid{display:inline-grid;gap:3px;background:#1c1c2e;padding:8px;border-radius:14px;border:1.5px solid rgba(255,255,255,.07)}
-
-/* ── Cells ── */
-.cell{border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;border:none;outline:none;font-family:inherit;transition:background .08s,transform .08s;flex-shrink:0}
-.cell.hidden{background:#252538;color:#fff}
-.cell.hidden:hover{background:#2e2e45}
-.cell.flagged{background:#252538}
-.cell.revealed{background:#13131f;cursor:default}
-.cell.mine-hit{background:#ff4d6d!important;animation:boom .25s ease}
-.cell.mine-show{background:#252538}
+#gridWrap{overflow:auto;max-width:100vw;max-height:calc(100vh - 170px);border-radius:14px;}
+#gridWrap::-webkit-scrollbar{width:0;height:0;}
+.grid{display:inline-grid;gap:3px;background:rgba(22,22,36,.9);padding:8px;border-radius:14px;border:1.5px solid var(--border);}
+.cell{border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;border:none;outline:none;font-family:inherit;transition:background .08s;}
+.cell.hidden{background:var(--bg3);}.cell.hidden:hover{background:var(--bg4);}
+.cell.flagged{background:var(--bg3);}.cell.revealed{background:#0e0e1a;cursor:default;}
+.cell.mine-hit{background:#ff4d6d!important;animation:boom .25s ease;}
+.cell.mine-show{background:var(--bg3);}
 @keyframes boom{0%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes winPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
-.cell.win-flash{animation:winPop .4s ease}
-.n1{color:#4a9eff}.n2{color:#4ade80}.n3{color:#ff4d6d}.n4{color:#c084fc}.n5{color:#f59e0b}.n6{color:#06b6d4}.n7{color:#ec4899}.n8{color:#9898b8}
+.cell.win-flash{animation:winPop .4s ease;}
+.n1{color:#4a9eff}.n2{color:#4ade80}.n3{color:#ff4d6d}.n4{color:#c084fc}.n5{color:#f59e0b}.n6{color:#06b6d4}.n7{color:#ec4899}.n8{color:var(--text2);}
 
-/* ── Status bar ── */
-.msg{font-size:.9rem;font-weight:700;color:#4ade80;min-height:1.2rem;text-align:center}
-.msg.lose{color:#ff4d6d}
+.msg{font-size:.88rem;font-weight:700;color:#4ade80;min-height:1.2rem;text-align:center;}
+.msg.lose{color:#ff4d6d;}
 
-.bot-row{display:flex;gap:8px}
-.bot-btn{padding:8px 18px;border-radius:9px;border:1.5px solid rgba(255,255,255,.08);background:#252538;color:#9898b8;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
-.bot-btn:hover{background:#2e2e45;color:#fff}
-.back-btn{padding:8px 18px;border-radius:9px;border:1.5px solid rgba(255,255,255,.08);background:transparent;color:#9898b8;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
-.back-btn:hover{color:#fff;background:#252538}
-
-#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.5;transition:opacity .2s}
-#volWrap:hover{opacity:1}
-#volWrap label{font-size:.68rem;color:#9898b8}
-#volSlider{width:68px;accent-color:#7c5cfc}
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap:hover{opacity:1;}
+#volWrap label{font-size:.68rem;color:var(--text2);}
+#volSlider{width:68px;accent-color:var(--accent);}
 </style>
 </head>
 <body>
 
-<!-- Start screen -->
-<div class="screen" id="startScreen">
-  <div class="logo">Minesweeper</div>
-  <div class="sub">Clear the board without hitting mines</div>
-  <div class="diff-row">
-    <button class="diff-btn sel" id="dEasy"   onclick="setDiff('easy')">Easy</button>
-    <button class="diff-btn" id="dMedium" onclick="setDiff('medium')">Medium</button>
-    <button class="diff-btn" id="dHard"   onclick="setDiff('hard')">Hard</button>
+<!-- Menu -->
+<div class="ov open" id="menuOv">
+  <div class="menu-card">
+    <div class="game-title">Mine<span>sweeper</span></div>
+    <div class="game-sub">Clear the board without hitting mines</div>
+    <div class="scat">
+      <div class="scat-label">Difficulty</div>
+      <div class="scat-row">
+        <div class="sopt on" id="dEasy"   onclick="setDiff('easy')"><div class="sopt-ico">😊</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">9×9 · 10</em></div></div>
+        <div class="sopt" id="dMedium" onclick="setDiff('medium')"><div class="sopt-ico">😤</div><div class="sopt-lbl">Medium<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">16×16 · 40</em></div></div>
+        <div class="sopt" id="dHard"   onclick="setDiff('hard')"><div class="sopt-ico">💀</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">20×24 · 99</em></div></div>
+      </div>
+    </div>
+    <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
+    <p class="hint">Right-click or long-press to flag a mine</p>
   </div>
-  <div class="diff-info" id="diffInfo">9&times;9 &bull; <b>10</b> mines</div>
-  <button class="play-btn" onclick="beginGame()">Play</button>
-  <div style="font-size:.75rem;color:#9898b8">Right-click or long-press to flag</div>
 </div>
 
 <!-- Game area -->
@@ -89,210 +98,94 @@ html,body{width:100%;height:100%;background:#13131f;font-family:Inter,system-ui,
   </div>
   <div id="gridWrap"><div class="grid" id="grid"></div></div>
   <div class="msg" id="msg"></div>
-  <div class="bot-row">
-    <button class="bot-btn" onclick="newGame()">New Game</button>
-    <button class="back-btn" onclick="showStart()">&#8592; Menu</button>
+  <div style="display:flex;gap:8px">
+    <button class="gbtn ghost" style="max-width:140px;padding:10px" onclick="newGame()">&#8635;&ensp;New Game</button>
+    <button class="gbtn ghost" style="max-width:120px;padding:10px" onclick="showMenu()">&#8592;&ensp;Menu</button>
   </div>
 </div>
 
-<div id="volWrap">
-  <label>Vol</label>
-  <input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)">
-</div>
+<div id="volWrap"><label>Vol</label><input type="range" id="volSlider" min="0" max="100" value="22" oninput="setVol(this.value)"></div>
 
 <script>
-// ── Audio ──────────────────────────────────────────────
 const ac=new(window.AudioContext||window.webkitAudioContext)();
 const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
 function setVol(v){mg.gain.value=v/100;}
 function tone(freq,dur=0.08,type='sine',vol=0.45){
   if(ac.state==='suspended')ac.resume();
   const o=ac.createOscillator(),g=ac.createGain();
-  o.type=type;o.frequency.value=freq;
-  g.gain.setValueAtTime(vol,ac.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
-  o.connect(g);g.connect(mg);
-  o.start();o.stop(ac.currentTime+dur+0.02);
+  o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+dur+.02);
 }
-const SFX={
-  reveal:()=>tone(380,0.05,'sine',0.3),
-  flag:()=>tone(440,0.06,'sine',0.35),
-  boom:()=>{tone(80,0.3,'sawtooth',0.7);setTimeout(()=>tone(60,0.4,'sawtooth',0.5),80);},
-  win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.15,'sine'),i*100));}
-};
+const SFX={reveal:()=>tone(380,.05,'sine',.3),flag:()=>tone(440,.06,'sine',.35),boom:()=>{tone(80,.3,'sawtooth',.7);setTimeout(()=>tone(60,.4,'sawtooth',.5),80);},win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine'),i*100));}};
 
-// ── Difficulties ───────────────────────────────────────
-const DIFFS={
-  easy:  {r:9, c:9, m:10},
-  medium:{r:16,c:16,m:40},
-  hard:  {r:20,c:24,m:99}
-};
-const DIFF_LABELS={easy:'9\xd79 • 10 mines',medium:'16\xd716 • 40 mines',hard:'20\xd724 • 99 mines'};
-let diff='easy';
+const DIFFS={easy:{r:9,c:9,m:10},medium:{r:16,c:16,m:40},hard:{r:20,c:24,m:99}};
+let diff='easy',rows,cols,mines,board,revealed,flagged,gameOver,firstClick,timerVal,timerInterval,longPressTimer=null;
 
 function setDiff(d){
   diff=d;
-  ['easy','medium','hard'].forEach(x=>{
-    const el=document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1));
-    if(el)el.classList.toggle('sel',x===d);
-  });
-  document.getElementById('diffInfo').innerHTML=DIFF_LABELS[d].replace(' • ','&bull; ').replace(/(\d+ mines)/,'<b>$1</b>');
+  ['easy','medium','hard'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',x===d));
 }
-
-// ── State ──────────────────────────────────────────────
-let rows,cols,mines,board,revealed,flagged,gameOver,firstClick,timerVal,timerInterval;
-let longPressTimer=null;
-
-function beginGame(){
-  document.getElementById('startScreen').classList.add('hidden');
-  document.getElementById('gameArea').classList.add('show');
-  newGame();
-}
-
-function showStart(){
-  clearInterval(timerInterval);
-  document.getElementById('startScreen').classList.remove('hidden');
-  document.getElementById('gameArea').classList.remove('show');
-}
-
+function beginGame(){document.getElementById('menuOv').classList.remove('open');document.getElementById('gameArea').classList.add('show');newGame();}
+function showMenu(){clearInterval(timerInterval);document.getElementById('menuOv').classList.add('open');document.getElementById('gameArea').classList.remove('show');}
 function newGame(){
-  clearInterval(timerInterval);
-  const D=DIFFS[diff];rows=D.r;cols=D.c;mines=D.m;
+  clearInterval(timerInterval);const D=DIFFS[diff];rows=D.r;cols=D.c;mines=D.m;
   board=Array.from({length:rows},()=>Array(cols).fill(0));
   revealed=Array.from({length:rows},()=>Array(cols).fill(false));
   flagged=Array.from({length:rows},()=>Array(cols).fill(false));
   gameOver=false;firstClick=true;timerVal=0;
-  document.getElementById('mcount').textContent=mines;
-  document.getElementById('timer').textContent='0';
-  document.getElementById('face').innerHTML='&#128512;';
-  document.getElementById('msg').textContent='';
-  document.getElementById('msg').className='msg';
+  document.getElementById('mcount').textContent=mines;document.getElementById('timer').textContent='0';
+  document.getElementById('face').innerHTML='&#128512;';document.getElementById('msg').textContent='';document.getElementById('msg').className='msg';
   renderGrid();
 }
-
 function cellSize(){
-  const maxW=window.innerWidth-32;
-  const maxH=window.innerHeight-200;
-  const byW=Math.floor((maxW-16-cols*3)/cols);
-  const byH=Math.floor((maxH-16-rows*3)/rows);
-  return Math.max(20,Math.min(byW,byH,40));
+  const maxW=window.innerWidth-32,maxH=window.innerHeight-200;
+  const byW=Math.floor((maxW-16-cols*3)/cols),byH=Math.floor((maxH-16-rows*3)/rows);
+  return Math.max(20,Math.min(byW,byH,38));
 }
-
 function placeMines(skipR,skipC){
-  let placed=0;
-  while(placed<mines){
-    const r=Math.floor(Math.random()*rows),c=Math.floor(Math.random()*cols);
-    if(board[r][c]===-1)continue;
-    if(Math.abs(r-skipR)<=1&&Math.abs(c-skipC)<=1)continue;
-    board[r][c]=-1;placed++;
-  }
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    if(board[r][c]===-1)continue;
-    board[r][c]=nbrs(r,c).filter(([nr,nc])=>board[nr][nc]===-1).length;
-  }
+  let placed=0;while(placed<mines){const r=Math.floor(Math.random()*rows),c=Math.floor(Math.random()*cols);if(board[r][c]===-1)continue;if(Math.abs(r-skipR)<=1&&Math.abs(c-skipC)<=1)continue;board[r][c]=-1;placed++;}
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){if(board[r][c]===-1)continue;board[r][c]=nbrs(r,c).filter(([nr,nc])=>board[nr][nc]===-1).length;}
 }
-
-function nbrs(r,c){
-  const n=[];
-  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
-    if(!dr&&!dc)continue;const nr=r+dr,nc=c+dc;
-    if(nr>=0&&nr<rows&&nc>=0&&nc<cols)n.push([nr,nc]);
-  }return n;
-}
-
-function reveal(r,c){
-  if(revealed[r][c]||flagged[r][c])return;
-  revealed[r][c]=true;
-  if(board[r][c]===0)nbrs(r,c).forEach(([nr,nc])=>reveal(nr,nc));
-}
-
+function nbrs(r,c){const n=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const nr=r+dr,nc=c+dc;if(nr>=0&&nr<rows&&nc>=0&&nc<cols)n.push([nr,nc]);}return n;}
+function reveal(r,c){if(revealed[r][c]||flagged[r][c])return;revealed[r][c]=true;if(board[r][c]===0)nbrs(r,c).forEach(([nr,nc])=>reveal(nr,nc));}
 function clickCell(r,c){
   if(gameOver||revealed[r][c]||flagged[r][c])return;
-  if(firstClick){
-    firstClick=false;
-    placeMines(r,c);
-    timerInterval=setInterval(()=>{timerVal++;document.getElementById('timer').textContent=timerVal;},1000);
-  }
+  if(firstClick){firstClick=false;placeMines(r,c);timerInterval=setInterval(()=>{timerVal++;document.getElementById('timer').textContent=timerVal;},1000);}
   if(board[r][c]===-1){
-    revealed[r][c]=true;gameOver=true;
-    SFX.boom();
-    document.getElementById('face').innerHTML='&#128565;';
-    document.getElementById('msg').textContent='BOOM! Game over.';
-    document.getElementById('msg').className='msg lose';
-    clearInterval(timerInterval);
-    for(let rr=0;rr<rows;rr++)for(let cc=0;cc<cols;cc++)if(board[rr][cc]===-1)revealed[rr][cc]=true;
-    renderGrid(r,c);return;
+    revealed[r][c]=true;gameOver=true;SFX.boom();
+    document.getElementById('face').innerHTML='&#128565;';document.getElementById('msg').textContent='BOOM! Game over.';document.getElementById('msg').className='msg lose';
+    clearInterval(timerInterval);for(let rr=0;rr<rows;rr++)for(let cc=0;cc<cols;cc++)if(board[rr][cc]===-1)revealed[rr][cc]=true;renderGrid(r,c);return;
   }
-  SFX.reveal();
-  reveal(r,c);
-  checkWin();
-  renderGrid();
+  SFX.reveal();reveal(r,c);checkWin();renderGrid();
 }
-
 function toggleFlag(r,c){
-  if(gameOver||revealed[r][c])return;
-  SFX.flag();
-  flagged[r][c]=!flagged[r][c];
+  if(gameOver||revealed[r][c])return;SFX.flag();flagged[r][c]=!flagged[r][c];
   let fc=0;for(let rr=0;rr<rows;rr++)for(let cc=0;cc<cols;cc++)if(flagged[rr][cc])fc++;
-  document.getElementById('mcount').textContent=Math.max(0,mines-fc);
-  renderGrid();
+  document.getElementById('mcount').textContent=Math.max(0,mines-fc);renderGrid();
 }
-
 function checkWin(){
-  let unrevealed=0;
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(!revealed[r][c])unrevealed++;
-  if(unrevealed===mines){
-    gameOver=true;clearInterval(timerInterval);
-    SFX.win();
-    document.getElementById('face').innerHTML='&#129395;';
-    document.getElementById('msg').textContent=`You won in ${timerVal}s!`;
-    // Animate safe cells
-    setTimeout(()=>{
-      document.querySelectorAll('.cell.revealed').forEach((el,i)=>{
-        setTimeout(()=>el.classList.add('win-flash'),i*3);
-      });
-    },200);
-  }
+  let unrevealed=0;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(!revealed[r][c])unrevealed++;
+  if(unrevealed===mines){gameOver=true;clearInterval(timerInterval);SFX.win();document.getElementById('face').innerHTML='&#129395;';document.getElementById('msg').textContent=`You won in ${timerVal}s! 🎉`;
+  setTimeout(()=>{document.querySelectorAll('.cell.revealed').forEach((el,i)=>setTimeout(()=>el.classList.add('win-flash'),i*3));},200);}
 }
-
 function renderGrid(hitR,hitC){
-  const sz=cellSize();
-  const fs=Math.max(10,Math.floor(sz*.5));
-  const g=document.getElementById('grid');
-  g.style.gridTemplateColumns=`repeat(${cols},${sz}px)`;
-  g.innerHTML='';
+  const sz=cellSize(),fs=Math.max(10,Math.floor(sz*.5)),g=document.getElementById('grid');
+  g.style.gridTemplateColumns=`repeat(${cols},${sz}px)`;g.innerHTML='';
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const el=document.createElement('button');
-    el.style.width=el.style.height=sz+'px';
-    el.style.fontSize=fs+'px';
-    const isHit=hitR===r&&hitC===c;
-    if(revealed[r][c]){
-      if(board[r][c]===-1){
-        el.className='cell '+(isHit?'mine-hit':'mine-show');
-        el.innerHTML='&#128163;';
-      }else{
-        el.className='cell revealed'+(board[r][c]>0?' n'+board[r][c]:'');
-        el.textContent=board[r][c]||'';
-      }
-    }else if(flagged[r][c]){
-      el.className='cell flagged';
-      el.innerHTML='&#127988;';
-    }else{
-      el.className='cell hidden';
-    }
+    const el=document.createElement('button'),isHit=hitR===r&&hitC===c;
+    el.style.width=el.style.height=sz+'px';el.style.fontSize=fs+'px';
+    if(revealed[r][c]){if(board[r][c]===-1){el.className='cell '+(isHit?'mine-hit':'mine-show');el.innerHTML='&#128163;';}else{el.className='cell revealed'+(board[r][c]>0?' n'+board[r][c]:'');el.textContent=board[r][c]||'';}}
+    else if(flagged[r][c]){el.className='cell flagged';el.innerHTML='&#127988;';}
+    else{el.className='cell hidden';}
     const rr=r,cc=c;
     el.addEventListener('click',()=>clickCell(rr,cc));
     el.addEventListener('contextmenu',e=>{e.preventDefault();toggleFlag(rr,cc);});
-    // Long press for mobile flag
-    el.addEventListener('touchstart',e=>{
-      longPressTimer=setTimeout(()=>{toggleFlag(rr,cc);longPressTimer=null;},500);
-    },{passive:true});
+    el.addEventListener('touchstart',()=>{longPressTimer=setTimeout(()=>{toggleFlag(rr,cc);longPressTimer=null;},500);},{passive:true});
     el.addEventListener('touchend',()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}},{passive:true});
     el.addEventListener('touchmove',()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}},{passive:true});
     g.appendChild(el);
   }
 }
-
 window.addEventListener('resize',()=>{if(document.getElementById('gameArea').classList.contains('show'))renderGrid();});
 </script>
 </body>
