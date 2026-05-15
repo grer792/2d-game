@@ -35,33 +35,80 @@ button{font:inherit;cursor:pointer;border:none;}
 
 #gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 #gameArea.show{display:flex;}
-.hud{display:flex;gap:16px;align-items:center;}
+.hud{display:flex;gap:14px;align-items:center;}
 .hud-box{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:12px;padding:8px 20px;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .hud-val{font-size:1.4rem;font-weight:900;}
 .hud-val.accent{color:var(--accent);}
 .hud-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
 
-#timer-bar{width:240px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+#timer-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
 #timer-fill{height:100%;background:var(--accent);transition:width .5s linear;width:100%;}
 
-#hole-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.hole{border-radius:50%;background:#130e05;position:relative;overflow:hidden;cursor:pointer;border:4px solid #0a0702;box-shadow:inset 0 4px 12px rgba(0,0,0,.7);}
-.mole{position:absolute;bottom:-110%;left:50%;transform:translateX(-50%);width:80%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#6b3a1a;transition:bottom .15s ease;pointer-events:none;box-shadow:0 -3px 8px rgba(0,0,0,.4);}
-.mole-face{font-size:1.8rem;line-height:1;}
-.hole.active .mole{bottom:-8%;}
-.hole.whacked .mole{bottom:-110%;transition:bottom .1s ease;}
-@keyframes scoreFloat{0%{opacity:1;transform:translate(-50%,-10px)}100%{opacity:0;transform:translate(-50%,-50px)}}
-.score-pop{position:absolute;left:50%;top:20%;color:#4ade80;font-size:1.1rem;font-weight:900;pointer-events:none;animation:scoreFloat .6s ease forwards;}
+/* Hole grid */
+#hole-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:18px;background:rgba(12,8,3,.5);border-radius:20px;border:1px solid rgba(60,35,12,.4);}
 
+/* Each hole */
+.hole{
+  border-radius:50%;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  background:radial-gradient(ellipse at 38% 28%, #241405, #060200);
+  box-shadow:inset 0 8px 24px rgba(0,0,0,.98), inset 0 -2px 6px rgba(70,35,8,.25), 0 4px 12px rgba(0,0,0,.6);
+  border:4px solid #2e1608;
+  transition:box-shadow .12s;
+  z-index:1;
+}
+.hole.active{z-index:3;}
+.hole:hover{box-shadow:inset 0 8px 24px rgba(0,0,0,.98), inset 0 -2px 6px rgba(70,35,8,.25), 0 4px 12px rgba(0,0,0,.6), 0 0 0 2px rgba(124,92,252,.3);}
+
+/* Mole wrapper — slides up from below */
+.mole{
+  position:absolute;
+  bottom:-105%;
+  left:50%;
+  transform:translateX(-50%);
+  width:84%;
+  transition:bottom .32s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;
+}
+.mole svg{display:block;width:100%;height:auto;}
+.hole.active .mole{bottom:8%;}
+
+/* Whack squish */
+@keyframes squish{
+  0%  {transform:translateX(-50%) scaleX(1)   scaleY(1);}
+  25% {transform:translateX(-50%) scaleX(1.35) scaleY(0.65);}
+  55% {transform:translateX(-50%) scaleX(0.88) scaleY(1.15);}
+  100%{transform:translateX(-50%) scaleX(1)   scaleY(1);}
+}
+.hole.whacking .mole{animation:squish .22s ease;}
+
+/* Score pop */
+@keyframes scoreFloat{
+  0%  {opacity:1;transform:translate(-50%,-5px) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-55px) scale(1.3);}
+}
+.score-pop{position:absolute;left:50%;top:15%;color:#ffd700;font-size:1.1rem;font-weight:900;pointer-events:none;animation:scoreFloat .55s ease forwards;text-shadow:0 2px 6px rgba(0,0,0,.6);}
+
+/* Star particles */
+@keyframes starOut{
+  0%  {opacity:1;transform:translate(-50%,-50%) scale(0) rotate(0deg);}
+  60% {opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(120deg);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(0.5) rotate(240deg);}
+}
+.star-pop{position:absolute;color:#ffd700;font-size:.85rem;pointer-events:none;animation:starOut .5s ease forwards;}
+
+/* End card */
 .end-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(320px,90vw);}
 .end-card h2{font-size:2rem;font-weight:950;}
-.stat-row{display:flex;gap:16px;}
+.stat-row{display:flex;gap:14px;}
 .stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .stat-box b{font-size:1.4rem;font-weight:800;color:var(--accent);}
 .stat-box small{font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
-.new-best{font-size:.8rem;color:#4ade80;font-weight:700;}
+.new-best{font-size:.82rem;color:#4ade80;font-weight:700;}
 
-#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.4;transition:opacity .2s;z-index:30;}
 #volWrap:hover{opacity:1;}
 #volWrap label{font-size:.68rem;color:var(--text2);}
 #volSlider{width:68px;accent-color:var(--accent);}
@@ -72,13 +119,13 @@ button{font:inherit;cursor:pointer;border:none;}
 <div class="ov open" id="menuOv">
   <div class="menu-card">
     <div class="game-title">Whack-a-<span>Mole</span></div>
-    <div class="game-sub">Tap moles as fast as you can!</div>
+    <div class="game-sub">Bonk moles as fast as you can!</div>
     <div class="scat">
       <div class="scat-label">Difficulty</div>
       <div class="scat-row">
-        <div class="sopt on" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">🐢</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">60 sec · Slow</em></div></div>
-        <div class="sopt" id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🏃</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">45 sec · Fast</em></div></div>
-        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">⚡</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">30 sec · Rapid</em></div></div>
+        <div class="sopt on" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">🐢</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">60s · Slow</em></div></div>
+        <div class="sopt" id="dNormal" onclick="setDiff('normal')"><div class="sopt-ico">🏃</div><div class="sopt-lbl">Normal<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">45s · Fast</em></div></div>
+        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">⚡</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">30s · Rapid</em></div></div>
       </div>
     </div>
     <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
@@ -92,7 +139,7 @@ button{font:inherit;cursor:pointer;border:none;}
     <div class="stat-row">
       <div class="stat-box"><b id="endScore">0</b><small>Score</small></div>
       <div class="stat-box"><b id="endBest">0</b><small>Best</small></div>
-      <div class="stat-box"><b id="endMisses">0</b><small>Misses</small></div>
+      <div class="stat-box"><b id="endMisses">0</b><small>Missed</small></div>
     </div>
     <div class="new-best" id="newBest" style="display:none">⭐ New best!</div>
     <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play Again</button>
@@ -117,10 +164,57 @@ const ac=new(window.AudioContext||window.webkitAudioContext)();
 const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
 function setVol(v){mg.gain.value=v/100;}
 function tone(f,d=.08,t='sine',v=.4){if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+d+.02);}
-const SFX={whack:()=>{tone(300,.05,'square',.4);tone(200,.08,'square',.3);},miss:()=>tone(160,.07,'sawtooth',.2),end:()=>{[523,440,330].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.3),i*100));}};
+const SFX={
+  whack:()=>{tone(380,.04,'square',.5);setTimeout(()=>tone(240,.07,'square',.35),35);},
+  miss: ()=>tone(150,.07,'sawtooth',.18),
+  end:  ()=>{[523,440,330].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.3),i*110));}
+};
+
+/* Custom mole SVG — drawn once, inserted into each hole */
+const MOLE_SVG=`<svg viewBox="0 0 100 105" xmlns="http://www.w3.org/2000/svg">
+  <!-- Body -->
+  <ellipse cx="50" cy="90" rx="34" ry="22" fill="#5e3418"/>
+  <!-- Left paw -->
+  <ellipse cx="14" cy="72" rx="13" ry="9" fill="#7a4828" transform="rotate(-18 14 72)"/>
+  <line x1="5"  y1="65" x2="2"  y2="57" stroke="#3a1c08" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="11" y1="63" x2="9"  y2="55" stroke="#3a1c08" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="17" y1="62" x2="16" y2="54" stroke="#3a1c08" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Right paw -->
+  <ellipse cx="86" cy="72" rx="13" ry="9" fill="#7a4828" transform="rotate(18 86 72)"/>
+  <line x1="95" y1="65" x2="98" y2="57" stroke="#3a1c08" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="89" y1="63" x2="91" y2="55" stroke="#3a1c08" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="83" y1="62" x2="84" y2="54" stroke="#3a1c08" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Head -->
+  <ellipse cx="50" cy="43" rx="34" ry="31" fill="#8b5535"/>
+  <!-- Left ear -->
+  <ellipse cx="19" cy="18" rx="13" ry="16" fill="#7a4528"/>
+  <ellipse cx="19" cy="18" rx="8"  ry="10" fill="#e8907a"/>
+  <!-- Right ear -->
+  <ellipse cx="81" cy="18" rx="13" ry="16" fill="#7a4528"/>
+  <ellipse cx="81" cy="18" rx="8"  ry="10" fill="#e8907a"/>
+  <!-- Left eye -->
+  <circle cx="33" cy="37" r="9.5" fill="#110600"/>
+  <circle cx="30" cy="34" r="3.5" fill="#fff" opacity=".88"/>
+  <circle cx="34" cy="33" r="1.5" fill="#fff" opacity=".5"/>
+  <!-- Right eye -->
+  <circle cx="67" cy="37" r="9.5" fill="#110600"/>
+  <circle cx="64" cy="34" r="3.5" fill="#fff" opacity=".88"/>
+  <circle cx="68" cy="33" r="1.5" fill="#fff" opacity=".5"/>
+  <!-- Snout -->
+  <ellipse cx="50" cy="55" rx="17" ry="13" fill="#c47a5a"/>
+  <!-- Nose -->
+  <ellipse cx="50" cy="49" rx="9"  ry="7.5" fill="#110600"/>
+  <ellipse cx="46" cy="49.5" rx="2.8" ry="2" fill="#2a0c00"/>
+  <ellipse cx="54" cy="49.5" rx="2.8" ry="2" fill="#2a0c00"/>
+  <!-- Whiskers left -->
+  <line x1="33" y1="56" x2="5"  y2="51" stroke="#9a6840" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+  <line x1="33" y1="59" x2="5"  y2="61" stroke="#9a6840" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+  <!-- Whiskers right -->
+  <line x1="67" y1="56" x2="95" y2="51" stroke="#9a6840" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+  <line x1="67" y1="59" x2="95" y2="61" stroke="#9a6840" stroke-width="1.5" stroke-linecap="round" opacity=".65"/>
+</svg>`;
 
 const DIFFS={easy:{gameTime:60,moleTime:1800,spawnMs:1200},normal:{gameTime:45,moleTime:1100,spawnMs:800},hard:{gameTime:30,moleTime:650,spawnMs:500}};
-const MOLE_FACES=['🐹','🐭','🐀','🦫'];
 
 let diff='easy',score=0,misses=0,timeLeft=0,gameOver=false,bestScores={easy:0,normal:0,hard:0};
 let moleActive=Array(9).fill(false),moleTimers=Array(9).fill(null),spawnTimer=null,countTimer=null;
@@ -145,15 +239,12 @@ function beginGame(){
   document.getElementById('timeDisp').textContent=timeLeft;
   document.getElementById('bestDisp').textContent=bestScores[diff];
   buildGrid();sizeHoles();
-  // reset timer bar
   const fill=document.getElementById('timer-fill');
   fill.style.transition='none';fill.style.width='100%';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     fill.style.transition=`width ${cfg.gameTime}s linear`;fill.style.width='0%';
   }));
-  // hide all moles
-  document.querySelectorAll('.hole').forEach(h=>h.classList.remove('active','whacked'));
-  // start spawning
+  document.querySelectorAll('.hole').forEach(h=>h.classList.remove('active','whacking'));
   spawnMole();
   countTimer=setInterval(()=>{
     timeLeft--;document.getElementById('timeDisp').textContent=timeLeft;
@@ -173,8 +264,7 @@ function buildGrid(){
   const grid=document.getElementById('hole-grid');grid.innerHTML='';
   for(let i=0;i<9;i++){
     const hole=document.createElement('div');hole.className='hole';hole.id='hole'+i;
-    const face=MOLE_FACES[Math.floor(Math.random()*MOLE_FACES.length)];
-    hole.innerHTML=`<div class="mole"><div class="mole-face">${face}</div></div>`;
+    hole.innerHTML=`<div class="mole">${MOLE_SVG}</div>`;
     hole.addEventListener('click',()=>whack(i));
     hole.addEventListener('touchstart',e=>{e.preventDefault();whack(i);},{passive:false});
     grid.appendChild(hole);
@@ -182,13 +272,11 @@ function buildGrid(){
 }
 
 function sizeHoles(){
-  const avW=Math.min(window.innerWidth-40,400),avH=window.innerHeight-220;
-  const byW=Math.floor((avW-2*14)/3),byH=Math.floor((avH-2*14)/3);
-  const sz=Math.max(70,Math.min(byW,byH,120));
+  const avW=Math.min(window.innerWidth-40,440),avH=window.innerHeight-230;
+  const byW=Math.floor((avW-2*14-2*18)/3),byH=Math.floor((avH-2*14-2*18)/3);
+  const sz=Math.max(72,Math.min(byW,byH,130));
   document.querySelectorAll('.hole').forEach(h=>{h.style.width=h.style.height=sz+'px';});
-  document.querySelector('.mole-face').style.fontSize=Math.floor(sz*.4)+'px';
-  document.querySelectorAll('.mole-face').forEach(f=>f.style.fontSize=Math.floor(sz*.4)+'px');
-  document.getElementById('timer-bar').style.width=Math.min(sz*3+2*14,360)+'px';
+  document.getElementById('timer-bar').style.width=Math.min(sz*3+2*14+2*18,420)+'px';
 }
 
 function spawnMole(){
@@ -208,8 +296,17 @@ function spawnMole(){
       if(!gameOver)spawnTimer=setTimeout(spawnMole,DIFFS[diff].spawnMs);
     },DIFFS[diff].moleTime);
   } else {
-    spawnTimer=setTimeout(spawnMole,200);
+    spawnTimer=setTimeout(spawnMole,180);
   }
+}
+
+function spawnStars(hole){
+  const positions=[[28,30],[72,28],[50,18],[20,55],[80,52]];
+  positions.forEach(([l,t],i)=>{
+    const s=document.createElement('div');s.className='star-pop';
+    s.textContent='★';s.style.cssText=`left:${l}%;top:${t}%;animation-delay:${i*30}ms`;
+    hole.appendChild(s);setTimeout(()=>s.remove(),600);
+  });
 }
 
 function whack(idx){
@@ -218,13 +315,17 @@ function whack(idx){
   clearTimeout(moleTimers[idx]);
   score++;document.getElementById('scoreDisp').textContent=score;
   const hole=document.getElementById('hole'+idx);
-  hole.classList.remove('active');hole.classList.add('whacked');
-  setTimeout(()=>hole.classList.remove('whacked'),200);
-  // floating score pop
+  // squish then retreat
+  hole.classList.add('whacking');
+  setTimeout(()=>{
+    hole.classList.remove('active','whacking');
+  },150);
+  // score pop
   const pop=document.createElement('div');pop.className='score-pop';pop.textContent='+1';
   hole.appendChild(pop);setTimeout(()=>pop.remove(),600);
+  spawnStars(hole);
   SFX.whack();
-  if(!gameOver)spawnTimer=setTimeout(spawnMole,DIFFS[diff].spawnMs*0.6);
+  if(!gameOver)spawnTimer=setTimeout(spawnMole,DIFFS[diff].spawnMs*0.55);
 }
 
 function endGame(){

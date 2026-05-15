@@ -33,26 +33,37 @@ button{font:inherit;cursor:pointer;border:none;}
 .gbtn.ghost:hover{background:var(--bg4);color:var(--text);}
 .hint{font-size:.69rem;color:var(--text2);text-align:center;}
 
-#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px;}
+#gameArea{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;}
 #gameArea.show{display:flex;}
 .topbar{display:flex;align-items:center;gap:10px;}
 .stat-pill{background:rgba(22,22,36,.9);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:.8rem;font-weight:700;}
 .back-btn{background:rgba(37,37,56,.9);border:1.5px solid var(--border);border-radius:10px;padding:6px 12px;font-size:.8rem;font-weight:700;color:var(--text2);transition:all .13s;}
 .back-btn:hover{background:var(--bg4);color:var(--text);}
 
-#gallows-wrap{background:rgba(22,22,36,.7);border:1px solid var(--border);border-radius:14px;padding:8px;}
-#gallows{display:block;}
+/* Gallows */
+#gallows-wrap{background:rgba(18,14,8,.8);border:1px solid rgba(80,50,20,.35);border-radius:16px;padding:10px 12px;display:flex;align-items:center;justify-content:center;}
+#gallows{display:block;overflow:visible;}
+
+/* Body parts — start invisible, animate in */
+.bpart{opacity:0;}
+.bpart.vis{animation:partReveal .4s ease forwards;}
+@keyframes partReveal{
+  0%  {opacity:0;filter:drop-shadow(0 0 10px #ff7040);}
+  25% {opacity:1;filter:drop-shadow(0 0 7px #ff5020);}
+  70% {opacity:1;filter:drop-shadow(0 0 2px rgba(255,80,30,.2));}
+  100%{opacity:1;filter:none;}
+}
 
 #word-display{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
-.letter-blank{width:28px;height:36px;display:flex;align-items:flex-end;justify-content:center;border-bottom:3px solid rgba(255,255,255,.4);font-size:1.3rem;font-weight:900;text-transform:uppercase;padding-bottom:2px;transition:color .2s;}
-.letter-blank.revealed{border-color:var(--accent);color:#fff;}
-.letter-blank.wrong{color:#ff4d6d;}
+.letter-blank{width:28px;height:36px;display:flex;align-items:flex-end;justify-content:center;border-bottom:3px solid rgba(255,255,255,.3);font-size:1.3rem;font-weight:900;text-transform:uppercase;padding-bottom:2px;transition:color .2s,border-color .2s;}
+.letter-blank.revealed{border-color:var(--accent);}
+.letter-blank.wrong-reveal{color:#ff4d6d;border-color:#ff4d6d;}
 
 #letter-grid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:340px;}
-.lbtn{width:36px;height:36px;border-radius:8px;background:var(--bg3);color:#fff;font-size:.82rem;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-transform:uppercase;transition:background .13s,color .13s;border:1.5px solid var(--border);}
-.lbtn:disabled{opacity:.35;cursor:default;}
-.lbtn.hit{background:rgba(124,92,252,.25);border-color:var(--accent);color:var(--accent);}
-.lbtn.miss{background:rgba(255,77,109,.15);border-color:#ff4d6d;color:#ff4d6d;}
+.lbtn{width:34px;height:34px;border-radius:8px;background:var(--bg3);color:#fff;font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-transform:uppercase;transition:background .13s,color .13s,border-color .13s;border:1.5px solid var(--border);}
+.lbtn:disabled{opacity:.3;cursor:default;}
+.lbtn.hit{background:rgba(124,92,252,.2);border-color:var(--accent);color:var(--accent);}
+.lbtn.miss{background:rgba(255,77,109,.12);border-color:#ff4d6d;color:#ff4d6d;}
 
 .end-card{background:rgba(22,22,36,.97);border:1px solid rgba(124,92,252,.25);border-radius:22px;padding:28px 26px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;width:min(320px,90vw);}
 .end-title{font-size:1.8rem;font-weight:950;}
@@ -60,7 +71,7 @@ button{font:inherit;cursor:pointer;border:none;}
 .answer-lbl{font-size:.88rem;color:var(--text2);}
 .answer-lbl b{color:#fff;text-transform:uppercase;letter-spacing:.1em;}
 
-#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.45;transition:opacity .2s;z-index:30;}
+#volWrap{position:absolute;bottom:10px;right:14px;display:flex;align-items:center;gap:6px;opacity:.4;transition:opacity .2s;z-index:30;}
 #volWrap:hover{opacity:1;}
 #volWrap label{font-size:.68rem;color:var(--text2);}
 #volSlider{width:68px;accent-color:var(--accent);}
@@ -71,13 +82,13 @@ button{font:inherit;cursor:pointer;border:none;}
 <div class="ov open" id="menuOv">
   <div class="menu-card">
     <div class="game-title">Hang<span>man</span></div>
-    <div class="game-sub">Guess the word before time runs out</div>
+    <div class="game-sub">Guess the word before you're hanged</div>
     <div class="scat">
       <div class="scat-label">Difficulty</div>
       <div class="scat-row">
-        <div class="sopt on" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">😊</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">8 wrong</em></div></div>
-        <div class="sopt" id="dMedium" onclick="setDiff('medium')"><div class="sopt-ico">😤</div><div class="sopt-lbl">Medium<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">6 wrong</em></div></div>
-        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">💀</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">4 wrong</em></div></div>
+        <div class="sopt on" id="dEasy" onclick="setDiff('easy')"><div class="sopt-ico">😊</div><div class="sopt-lbl">Easy<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">8 lives</em></div></div>
+        <div class="sopt" id="dMedium" onclick="setDiff('medium')"><div class="sopt-ico">😤</div><div class="sopt-lbl">Medium<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">6 lives</em></div></div>
+        <div class="sopt" id="dHard" onclick="setDiff('hard')"><div class="sopt-ico">💀</div><div class="sopt-lbl">Hard<br><em style="font-weight:400;color:rgba(255,255,255,.35);font-size:.85em">4 lives</em></div></div>
       </div>
     </div>
     <button class="gbtn accent" onclick="beginGame()">&#9654;&ensp;Play</button>
@@ -96,27 +107,60 @@ button{font:inherit;cursor:pointer;border:none;}
 
 <div id="gameArea">
   <div class="topbar">
-    <div class="stat-pill" id="wrongLeft">8 wrong left</div>
+    <div class="stat-pill" id="wrongLeft"></div>
     <button class="back-btn" onclick="showMenu()">&#8592; Menu</button>
   </div>
+
   <div id="gallows-wrap">
-    <svg id="gallows" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
-      <!-- Gallows structure (always visible) -->
-      <line x1="15" y1="172" x2="145" y2="172" stroke="#4a4a70" stroke-width="5" stroke-linecap="round"/>
-      <line x1="45" y1="172" x2="45" y2="8" stroke="#4a4a70" stroke-width="5" stroke-linecap="round"/>
-      <line x1="45" y1="8" x2="105" y2="8" stroke="#4a4a70" stroke-width="5" stroke-linecap="round"/>
-      <line x1="105" y1="8" x2="105" y2="28" stroke="#4a4a70" stroke-width="3" stroke-linecap="round"/>
-      <!-- Body parts -->
-      <circle id="p0" cx="105" cy="42" r="14" fill="none" stroke="#c8c0f8" stroke-width="3" style="display:none"/>
-      <line id="p1" x1="105" y1="56" x2="105" y2="100" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
-      <line id="p2" x1="105" y1="68" x2="84" y2="90" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
-      <line id="p3" x1="105" y1="68" x2="126" y2="90" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
-      <line id="p4" x1="105" y1="100" x2="88" y2="132" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
-      <line id="p5" x1="105" y1="100" x2="122" y2="132" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
-      <line id="p6" x1="84" y1="90" x2="72" y2="82" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
-      <line id="p7" x1="126" y1="90" x2="138" y2="82" stroke="#c8c0f8" stroke-width="3" stroke-linecap="round" style="display:none"/>
+    <!-- viewBox 210×230 -->
+    <svg id="gallows" viewBox="0 0 210 230" xmlns="http://www.w3.org/2000/svg">
+      <!-- Base -->
+      <rect x="5" y="218" width="200" height="11" rx="5" fill="#5a3818"/>
+      <!-- Vertical post -->
+      <rect x="46" y="10" width="14" height="210" rx="5" fill="#6e4422"/>
+      <!-- Horizontal beam -->
+      <rect x="53" y="10" width="112" height="12" rx="5" fill="#6e4422"/>
+      <!-- Diagonal brace -->
+      <line x1="60" y1="22" x2="90" y2="56" stroke="#5a3818" stroke-width="9" stroke-linecap="round"/>
+      <!-- Noose rope -->
+      <line x1="161" y1="22" x2="161" y2="47" stroke="#9a7a50" stroke-width="3" stroke-linecap="round"/>
+      <!-- Noose loop -->
+      <ellipse cx="161" cy="57" rx="8" ry="9" fill="none" stroke="#9a7a50" stroke-width="2.5"/>
+
+      <!-- p0: Head + face -->
+      <g id="p0" class="bpart">
+        <circle cx="161" cy="75" r="17" fill="none" stroke="#c8bff8" stroke-width="3.5"/>
+        <g id="face-alive">
+          <circle cx="155" cy="72" r="2.5" fill="#c8bff8"/>
+          <circle cx="167" cy="72" r="2.5" fill="#c8bff8"/>
+          <path d="M154 80 Q161 85 168 80" stroke="#c8bff8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+        <g id="face-dead" style="display:none">
+          <line x1="152" y1="69" x2="158" y2="75" stroke="#ff4d6d" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="158" y1="69" x2="152" y2="75" stroke="#ff4d6d" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="164" y1="69" x2="170" y2="75" stroke="#ff4d6d" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="170" y1="69" x2="164" y2="75" stroke="#ff4d6d" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M154 82 Q161 78 168 82" stroke="#ff4d6d" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- p1: Body -->
+      <line id="p1" class="bpart" x1="161" y1="92" x2="161" y2="148" stroke="#c8bff8" stroke-width="4" stroke-linecap="round"/>
+      <!-- p2: Left arm -->
+      <line id="p2" class="bpart" x1="161" y1="108" x2="130" y2="136" stroke="#c8bff8" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- p3: Right arm -->
+      <line id="p3" class="bpart" x1="161" y1="108" x2="192" y2="136" stroke="#c8bff8" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- p4: Left leg -->
+      <line id="p4" class="bpart" x1="161" y1="148" x2="132" y2="190" stroke="#c8bff8" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- p5: Right leg -->
+      <line id="p5" class="bpart" x1="161" y1="148" x2="190" y2="190" stroke="#c8bff8" stroke-width="3.5" stroke-linecap="round"/>
+      <!-- p6: Left foot -->
+      <line id="p6" class="bpart" x1="132" y1="190" x2="112" y2="184" stroke="#c8bff8" stroke-width="3" stroke-linecap="round"/>
+      <!-- p7: Right foot -->
+      <line id="p7" class="bpart" x1="190" y1="190" x2="210" y2="184" stroke="#c8bff8" stroke-width="3" stroke-linecap="round"/>
     </svg>
   </div>
+
   <div id="word-display"></div>
   <div id="letter-grid"></div>
 </div>
@@ -128,12 +172,17 @@ const ac=new(window.AudioContext||window.webkitAudioContext)();
 const mg=ac.createGain();mg.gain.value=0.22;mg.connect(ac.destination);
 function setVol(v){mg.gain.value=v/100;}
 function tone(f,d=.08,t='sine',v=.4){if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(mg);o.start();o.stop(ac.currentTime+d+.02);}
-const SFX={hit:()=>{tone(440,.08,'sine',.3);setTimeout(()=>tone(550,.1,'sine',.25),70);},miss:()=>tone(180,.18,'sawtooth',.4),win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.35),i*90));},lose:()=>{tone(220,.15,'sawtooth',.5);setTimeout(()=>tone(165,.25,'sawtooth',.4),150);}};
+const SFX={
+  hit:()=>{tone(440,.08,'sine',.3);setTimeout(()=>tone(600,.1,'sine',.25),70);},
+  miss:()=>{tone(180,.12,'sawtooth',.5);setTimeout(()=>tone(140,.15,'sawtooth',.4),80);},
+  win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'sine',.35),i*100));},
+  lose:()=>{tone(220,.15,'sawtooth',.5);setTimeout(()=>tone(165,.25,'sawtooth',.45),150);}
+};
 
 const WORDS={
-  easy:['cat','dog','sun','hat','fox','bee','ant','owl','pig','hen','fish','fire','tree','book','door','hand','cake','bird','moon','star','ball','rock','sand','wind','rain','rose','frog','bear','duck','lamp','leaf','milk','ring','snow','wave','wood','wolf','worm','crab','ship','flag','king','gold','bell','coin','corn','farm','dart','fawn','gust','hive','jade','knot','lime','maze','newt','opal','palm','quiz','reed','sage','toad','urge','veil','wasp','yolk','zinc'],
+  easy:['cat','dog','sun','hat','fox','bee','ant','owl','pig','hen','fish','fire','tree','book','door','hand','cake','bird','moon','star','ball','rock','sand','wind','rain','rose','frog','bear','duck','lamp','leaf','milk','ring','snow','wave','wood','wolf','worm','crab','ship','flag','king','gold','bell','coin','corn','farm','dart','fawn','hive','jade','knot','lime','maze','newt','opal','palm','reed','sage','toad','veil','wasp','yolk','zinc'],
   medium:['castle','rocket','bridge','butter','candle','silver','carpet','pencil','basket','bottle','mirror','pillow','window','flower','stream','planet','sunset','winter','forest','desert','dragon','soccer','tennis','camera','farmer','garden','rabbit','turtle','spider','monkey','violin','jungle','pirate','wizard','knight','goblin','lantern','potion','saddle','tavern','temple','glacier','horizon','kingdom','library','compass','dolphin','penguin','vulture','walrus'],
-  hard:['whisper','abandon','eclipse','mystery','phantom','ancient','balance','crystal','dolphin','lantern','silence','triumph','volcano','warrior','capture','gravity','kingdom','library','blizzard','carnival','fortress','labyrinth','mountain','obstacle','universe','adventure','celebrate','hibernate','hibernate','parachute','telescope','ambassador','catastrophe','championship']
+  hard:['whisper','abandon','eclipse','mystery','phantom','ancient','balance','crystal','silence','triumph','volcano','warrior','capture','gravity','blizzard','carnival','fortress','labyrinth','mountain','obstacle','universe','adventure','celebrate','hibernate','parachute','telescope','ambassador','catastrophe','championship']
 };
 const DIFFS={easy:{max:8,parts:[0,1,2,3,4,5,6,7]},medium:{max:6,parts:[0,1,2,3,4,5]},hard:{max:4,parts:[0,1,2,3]}};
 
@@ -141,9 +190,7 @@ let diff='easy',word='',guessed=new Set(),wrongCount=0,gameOver=false;
 
 function setDiff(d){
   diff=d;
-  document.getElementById('dEasy').classList.toggle('on',d==='easy');
-  document.getElementById('dMedium').classList.toggle('on',d==='medium');
-  document.getElementById('dHard').classList.toggle('on',d==='hard');
+  ['Easy','Medium','Hard'].forEach(n=>document.getElementById('d'+n).classList.toggle('on',d===n.toLowerCase()));
 }
 
 function beginGame(){
@@ -152,7 +199,7 @@ function beginGame(){
   document.getElementById('gameArea').classList.add('show');
   const list=WORDS[diff];word=list[Math.floor(Math.random()*list.length)];
   guessed=new Set();wrongCount=0;gameOver=false;
-  resetGallows();buildWordDisplay();buildLetterGrid();updateWrongPill();
+  resetGallows();buildWordDisplay();buildLetterGrid();updatePill();
   sizeGallows();
 }
 
@@ -163,26 +210,49 @@ function showMenu(){
 }
 
 function sizeGallows(){
-  const avH=Math.min(window.innerHeight*0.32,180),avW=Math.min(window.innerWidth*0.55,180);
-  const sz=Math.max(120,Math.min(avH,avW));
-  document.getElementById('gallows').style.width=document.getElementById('gallows').style.height=sz+'px';
+  const avH=Math.min(window.innerHeight*0.36,230),avW=Math.min(window.innerWidth*0.55,210);
+  const h=Math.max(110,Math.min(avH,avW*230/210));
+  const g=document.getElementById('gallows');
+  g.style.height=h+'px';
+  g.style.width=(h*210/230)+'px';
 }
 
 function resetGallows(){
-  for(let i=0;i<8;i++){const el=document.getElementById('p'+i);if(el)el.style.display='none';}
-  document.querySelectorAll('#gallows [id^="p"]').forEach(el=>el.setAttribute('stroke','#c8c0f8'));
+  document.querySelectorAll('.bpart').forEach(el=>{
+    el.classList.remove('vis');
+    el.style.opacity='0';
+    el.style.animation='none';
+    el.querySelectorAll('[stroke]').forEach(s=>s.getAttribute('stroke')&&s.getAttribute('stroke')!=='none'&&s.setAttribute('stroke','#c8bff8'));
+    el.querySelectorAll('[fill]').forEach(s=>{if(s.getAttribute('fill')&&s.getAttribute('fill')!=='none')s.setAttribute('fill','#c8bff8');});
+  });
+  document.getElementById('face-alive').removeAttribute('style');
+  document.getElementById('face-dead').style.display='none';
 }
 
-function showBodyPart(idx,dead=false){
+function showBodyPart(idx){
   const el=document.getElementById('p'+idx);
-  if(el){el.style.display='';if(dead)el.setAttribute('stroke','#ff4d6d');}
+  if(!el||el.classList.contains('vis'))return;
+  el.style.animation='none';
+  el.offsetHeight;
+  el.style.animation='';
+  el.style.opacity='';
+  el.classList.add('vis');
+}
+
+function killFigure(){
+  document.querySelectorAll('.bpart.vis').forEach(el=>{
+    el.querySelectorAll('[stroke]').forEach(s=>{if(s.getAttribute('stroke')&&s.getAttribute('stroke')!=='none')s.setAttribute('stroke','#ff4d6d');});
+    el.querySelectorAll('[fill]').forEach(s=>{if(s.getAttribute('fill')&&s.getAttribute('fill')!=='none')s.setAttribute('fill','#ff4d6d');});
+  });
+  document.getElementById('face-alive').style.display='none';
+  document.getElementById('face-dead').removeAttribute('style');
 }
 
 function buildWordDisplay(){
   const wd=document.getElementById('word-display');wd.innerHTML='';
   for(const ch of word){
-    const span=document.createElement('div');span.className='letter-blank';span.dataset.ch=ch;
-    wd.appendChild(span);
+    const d=document.createElement('div');d.className='letter-blank';d.dataset.ch=ch;
+    wd.appendChild(d);
   }
 }
 
@@ -202,9 +272,10 @@ function updateWordDisplay(ch){
   });
 }
 
-function updateWrongPill(){
+function updatePill(){
   const left=DIFFS[diff].max-wrongCount;
-  document.getElementById('wrongLeft').textContent=`${left} wrong left`;
+  const hearts='❤️'.repeat(left)+'🖤'.repeat(DIFFS[diff].max-left);
+  document.getElementById('wrongLeft').textContent=`${left} left`;
 }
 
 function guess(ch){
@@ -214,18 +285,24 @@ function guess(ch){
   if(word.includes(ch)){
     btn.classList.add('hit');btn.disabled=true;
     updateWordDisplay(ch);SFX.hit();
-    const won=[...word].every(l=>guessed.has(l));
-    if(won){gameOver=true;setTimeout(()=>{SFX.win();endGame(true);},400);}
+    if([...word].every(l=>guessed.has(l))){
+      gameOver=true;setTimeout(()=>{SFX.win();endGame(true);},400);
+    }
   } else {
     btn.classList.add('miss');btn.disabled=true;
     const partIdx=DIFFS[diff].parts[wrongCount];
     showBodyPart(partIdx);SFX.miss();
-    wrongCount++;updateWrongPill();
+    wrongCount++;updatePill();
     if(wrongCount>=DIFFS[diff].max){
       gameOver=true;
-      DIFFS[diff].parts.forEach(i=>showBodyPart(i,true));
-      document.querySelectorAll('.letter-blank').forEach(el=>{if(!guessed.has(el.dataset.ch)){el.textContent=el.dataset.ch;el.classList.add('wrong');}});
-      setTimeout(()=>{SFX.lose();endGame(false);},500);
+      DIFFS[diff].parts.forEach(i=>showBodyPart(i));
+      setTimeout(()=>{
+        killFigure();
+        document.querySelectorAll('.letter-blank').forEach(el=>{
+          if(!guessed.has(el.dataset.ch)){el.textContent=el.dataset.ch;el.classList.add('wrong-reveal');}
+        });
+        setTimeout(()=>{SFX.lose();endGame(false);},500);
+      },300);
     }
   }
 }
@@ -234,14 +311,14 @@ function endGame(won){
   document.getElementById('endTitle').textContent=won?'You Won! 🎉':'You Lost 💀';
   document.getElementById('endTitle').className='end-title '+(won?'win':'lose');
   document.getElementById('endWord').textContent=word;
-  setTimeout(()=>document.getElementById('endOv').classList.add('open'),won?800:600);
+  setTimeout(()=>document.getElementById('endOv').classList.add('open'),won?700:900);
 }
 
 document.addEventListener('keydown',e=>{
   if(e.ctrlKey||e.altKey||e.metaKey)return;
-  if(/^[a-zA-Z]$/.test(e.key))guess(e.key.toLowerCase());
+  if(/^[a-zA-Z]$/.test(e.key)&&document.getElementById('gameArea').classList.contains('show'))guess(e.key.toLowerCase());
 });
-window.addEventListener('resize',sizeGallows);
+window.addEventListener('resize',()=>{if(document.getElementById('gameArea').classList.contains('show'))sizeGallows();});
 </script>
 </body>
 </html>
