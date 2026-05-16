@@ -139,14 +139,23 @@ body.sb-on .sidebar:hover .sb-copy{opacity:1}
 .breadcrumb a:hover{color:var(--accent)}
 .breadcrumb .sep{opacity:.4}
 .g-title{font-size:clamp(1.3rem,2.5vw,1.8rem);font-weight:800;margin-bottom:14px}
-.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
-.meta-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px}
-.meta-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:2px}
-.meta-val{font-size:.82rem;font-weight:600}
+/* Meta table (label: value rows) */
+.meta-table{display:flex;flex-direction:column;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.meta-row{display:flex;align-items:baseline;gap:0;padding:9px 14px;border-bottom:1px solid var(--border)}
+.meta-row:last-child{border-bottom:none}
+.meta-row:nth-child(odd){background:rgba(255,255,255,.02)}
+.meta-k{width:100px;flex-shrink:0;font-size:.82rem;color:var(--text2);font-weight:500}
+.meta-v{flex:1;font-size:.85rem;font-weight:700;color:var(--text)}
+/* Share button */
+.share-btn{display:inline-flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:8px 18px;font-size:.84rem;font-weight:600;color:var(--text2);cursor:pointer;transition:background .15s,color .15s,border-color .15s;margin-bottom:16px;font-family:'Inter',sans-serif}
+.share-btn:hover{background:var(--bg4);color:var(--text);border-color:rgba(255,255,255,.15)}
+.share-btn svg{width:15px;height:15px;fill:currentColor}
+.share-btn.copied{color:var(--accent);border-color:var(--accent);background:rgba(124,92,252,.1)}
+/* Tags */
 .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.tag{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.7rem;font-weight:600;color:var(--text2);cursor:pointer;transition:background .15s,color .15s}
-.tag:hover{background:var(--bg4);color:var(--text)}
-.tag.hl{background:rgba(124,92,252,.15);border-color:rgba(124,92,252,.4);color:var(--accent)}
+.tag{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.78rem;font-weight:600;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s}
+.tag:hover{background:var(--bg4);border-color:rgba(255,255,255,.14)}
+.tag .cnt{color:var(--accent);font-weight:700}
 .info-sec{margin-bottom:22px}
 .info-sec h2{font-size:1rem;font-weight:700;margin-bottom:9px}
 .info-sec h3{font-size:.87rem;font-weight:700;margin:12px 0 6px}
@@ -322,22 +331,27 @@ body.sb-on .sidebar:hover .sb-copy{opacity:1}
 
           <h1 class="g-title">Bonker Survival</h1>
 
-          <div class="meta-grid">
-            <div class="meta-item"><div class="meta-lbl">Developer</div><div class="meta-val">BonkerGames</div></div>
-            <div class="meta-item"><div class="meta-lbl">Released</div><div class="meta-val">2024</div></div>
-            <div class="meta-item"><div class="meta-lbl">Technology</div><div class="meta-val">HTML5 · Phaser.js</div></div>
-            <div class="meta-item"><div class="meta-lbl">Platforms</div><div class="meta-val">Browser · Desktop · Mobile</div></div>
+          <button class="share-btn" id="shareBtn" onclick="shareGame()">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+            Share
+          </button>
+
+          <div class="meta-table">
+            <div class="meta-row"><span class="meta-k">Developer</span><span class="meta-v">BonkerGames</span></div>
+            <div class="meta-row"><span class="meta-k">Released</span><span class="meta-v">2024</span></div>
+            <div class="meta-row"><span class="meta-k">Technology</span><span class="meta-v">HTML5 · Phaser.js</span></div>
+            <div class="meta-row"><span class="meta-k">Platforms</span><span class="meta-v">Browser (desktop, mobile, tablet)</span></div>
           </div>
 
           <div class="tag-row">
-            <span class="tag hl">Survival</span>
-            <span class="tag hl">Action</span>
-            <span class="tag">Arcade</span>
-            <span class="tag">Single Player</span>
-            <span class="tag">High Score</span>
-            <span class="tag">Leaderboard</span>
-            <span class="tag">Free</span>
-            <span class="tag">Mobile Friendly</span>
+            <span class="tag">Survival <span class="cnt">21</span></span>
+            <span class="tag">Action <span class="cnt">148</span></span>
+            <span class="tag">Arcade <span class="cnt">93</span></span>
+            <span class="tag">Single Player <span class="cnt">312</span></span>
+            <span class="tag">High Score <span class="cnt">44</span></span>
+            <span class="tag">Free <span class="cnt">1.2k</span></span>
+            <span class="tag">Mobile <span class="cnt">207</span></span>
+            <span class="tag">Browser Game <span class="cnt">580</span></span>
           </div>
 
           <div class="info-sec">
@@ -489,6 +503,7 @@ function tDislike(){dlk=!dlk;if(dlk)lk=false;document.getElementById('dislikeBtn
 function tFav(){fv=!fv;document.getElementById('favBtn').style.color=fv?'#ff4d6d':'';document.getElementById('favBtn').style.background=fv?'rgba(255,77,109,.1)':''}
 function goFS(){const f=document.getElementById('gameFrame');if(f.requestFullscreen)f.requestFullscreen();else if(f.webkitRequestFullscreen)f.webkitRequestFullscreen()}
 function tFaq(el){const was=el.classList.contains('open');document.querySelectorAll('.faq-q.open').forEach(q=>{q.classList.remove('open');q.nextElementSibling.classList.remove('open')});if(!was){el.classList.add('open');el.nextElementSibling.classList.add('open')}}
+function shareGame(){const url='https://www.bonkergames.com/game/bonker-survival';navigator.clipboard.writeText(url).then(()=>{const b=document.getElementById('shareBtn');b.classList.add('copied');b.querySelector('svg').style.display='none';b.childNodes[b.childNodes.length-1].textContent=' Link copied!';setTimeout(()=>{b.classList.remove('copied');b.querySelector('svg').style.display='';b.childNodes[b.childNodes.length-1].textContent=' Share'},2000)}).catch(()=>{prompt('Copy this link:',url)})}
 </script>
 <script type="module" src="/assets/header-auth.js"></script>
 </body>
