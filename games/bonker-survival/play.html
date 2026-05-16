@@ -51,11 +51,17 @@ a{text-decoration:none;color:inherit}
 .hdiv{width:1px;height:24px;background:var(--border);margin:0 4px}
 .btn-login{background:var(--accent);border:none;color:#fff;padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;margin-left:4px}
 .btn-login:hover{background:var(--accent-h)}
-/* Avatar: ID selector beats header-auth.js class selector regardless of load order */
-#u-avatar{width:32px!important;height:32px!important;min-width:32px;min-height:32px;max-width:32px;max-height:32px;border-radius:50%!important;overflow:hidden!important;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-#u-avatar img{display:block!important;width:32px!important;height:32px!important;min-width:0;min-height:0;max-width:32px!important;max-height:32px!important;object-fit:cover!important;border-radius:50%!important}
-#prof-avatar{width:84px!important;height:84px!important;max-width:84px;max-height:84px;overflow:hidden!important;border-radius:50%!important;flex-shrink:0}
-#prof-avatar img{display:block!important;width:84px!important;height:84px!important;max-width:84px!important;max-height:84px!important;object-fit:cover!important;border-radius:50%!important}
+/* ── Avatar size locks — belt-and-suspenders for all avatar contexts ── */
+#u-avatar{width:32px!important;height:32px!important;max-width:32px!important;max-height:32px!important;overflow:hidden!important;border-radius:50%!important;flex-shrink:0!important}
+#u-avatar img,#u-avatar *{display:block!important;width:32px!important;height:32px!important;max-width:32px!important;max-height:32px!important;object-fit:cover!important;border-radius:50%!important}
+#prof-avatar{width:84px!important;height:84px!important;max-width:84px!important;max-height:84px!important;overflow:hidden!important;border-radius:50%!important;flex-shrink:0!important}
+#prof-avatar img,#prof-avatar *{display:block!important;width:84px!important;height:84px!important;max-width:84px!important;max-height:84px!important;object-fit:cover!important;border-radius:50%!important}
+/* Avatar picker grid inside profile panel */
+.avatar-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:8px!important;width:100%!important}
+.avatar-opt{overflow:hidden!important;aspect-ratio:1!important;border-radius:12px!important;max-width:72px!important;max-height:72px!important}
+.avatar-opt img{display:block!important;width:100%!important;height:100%!important;max-width:72px!important;max-height:72px!important;object-fit:cover!important}
+/* Clip header so any avatar overflow can't escape */
+.hdr{overflow:hidden}
 /* ── LAYOUT: sidebar + one-scroll area ── */
 .layout{display:flex;height:calc(100vh - var(--hh));margin-top:var(--hh);overflow:hidden}
 
