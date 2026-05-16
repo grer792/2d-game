@@ -51,6 +51,9 @@ a{text-decoration:none;color:inherit}
 .hdiv{width:1px;height:24px;background:var(--border);margin:0 4px}
 .btn-login{background:var(--accent);border:none;color:#fff;padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;margin-left:4px}
 .btn-login:hover{background:var(--accent-h)}
+/* Avatar: ID selector beats header-auth.js class selector regardless of load order */
+#u-avatar{width:32px!important;height:32px!important;min-width:32px;min-height:32px;max-width:32px;max-height:32px;border-radius:50%!important;overflow:hidden!important;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#u-avatar img{display:block!important;width:32px!important;height:32px!important;min-width:0;min-height:0;max-width:32px!important;max-height:32px!important;object-fit:cover!important;border-radius:50%!important}
 /* ── LAYOUT: sidebar + one-scroll area ── */
 .layout{display:flex;height:calc(100vh - var(--hh));margin-top:var(--hh);overflow:hidden}
 
