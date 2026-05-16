@@ -5,314 +5,235 @@
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <base href="/games/bonker-survival/">
-<title>Bonker Survival - Free Online Game | BonkerGames</title>
-<meta name="description" content="Play Bonker Survival free in your browser — no download needed. Survive as long as you can and compete for the top score. Play now on BonkerGames!">
-<meta property="og:title" content="Bonker Survival - Free Online Game | BonkerGames">
-<meta property="og:description" content="Play Bonker Survival free in your browser — no download needed. Survive as long as you can!">
+<title>Bonker Survival - Free Online Survival Game | BonkerGames</title>
+<meta name="description" content="Play Bonker Survival free in your browser — dodge relentless enemy waves, survive as long as possible, and climb the global leaderboard. No download needed!">
+<meta property="og:title" content="Bonker Survival - Free Online Survival Game | BonkerGames">
+<meta property="og:description" content="Play Bonker Survival free in your browser — dodge relentless enemy waves and compete for the top score!">
 <meta property="og:image" content="/games/bonker-survival/thumb.png">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://www.bonkergames.com/game/bonker-survival">
-<style>
-.game-info-section{margin-top:8px;border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:6px}
-.gi-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-top:4px}
-.gi-text{font-size:.78rem;color:var(--text2);line-height:1.5}
-.gi-list{font-size:.78rem;color:var(--text2);line-height:1.5;padding-left:14px}
-.gi-q{font-size:.78rem;font-weight:600;color:var(--text);margin-top:2px}
-.gi-a{font-size:.78rem;color:var(--text2);line-height:1.5}
-</style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --sw-icon: 62px;
-  --header-h: 64px;
-  --bar-h: 52px;
-  --pn-w: 250px;
-  --bg: #13131f;
-  --bg2: #1c1c2e;
-  --bg3: #252538;
-  --bg4: #2e2e45;
-  --accent: #7c5cfc;
-  --accent-h: #6a4de0;
-  --text: #ffffff;
-  --text2: #9898b8;
-  --border: rgba(255,255,255,0.07);
-  --red: #ff4d6d;
-  --ease: 0.22s ease;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg); color: var(--text);
-  height: 100vh; overflow: hidden;
-}
-a { text-decoration: none; color: inherit; }
-
-/* ── HEADER ── */
-.header {
-  position: fixed; top: 0; left: 0; right: 0;
-  height: var(--header-h);
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-  padding: 0 16px; gap: 0; z-index: 300;
-}
-.header-left { display: flex; align-items: center; gap: 6px; flex: 1; }
-.hamburger {
-  width: 40px; height: 40px; flex-shrink: 0;
-  background: transparent; border: none; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--text2); transition: background 0.15s, color 0.15s;
-}
-.hamburger:hover { background: var(--bg3); color: var(--text); }
-.hamburger svg { width: 24px; height: 24px; fill: currentColor; }
-.header-logo {
-  display: flex; align-items: center; padding: 4px 8px;
-  border-radius: 10px; transition: background 0.15s; text-decoration: none; color: inherit;
-}
-.header-logo:hover { background: var(--bg3); }
-.logo-img { height: 56px; width: auto; mix-blend-mode: screen; display: block; }
-.header-search { flex: 0 0 420px; position: relative; margin: 0 16px; }
-.header-search input {
-  width: 100%; background: var(--bg3); border: 1.5px solid var(--border);
-  color: var(--text); padding: 10px 18px 10px 44px; border-radius: 10px;
-  font-family: 'Inter', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
-}
-.header-search input:focus { border-color: var(--accent); }
-.header-search input::placeholder { color: var(--text2); }
-.search-ico {
-  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  color: var(--text2); display: flex; align-items: center; pointer-events: none;
-}
-.search-ico svg { width: 19px; height: 19px; fill: currentColor; }
-.header-right { display: flex; align-items: center; gap: 4px; flex: 1; justify-content: flex-end; }
-.icon-btn {
-  width: 44px; height: 44px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--text2); background: transparent; border: none;
-  transition: background 0.15s, color 0.15s; position: relative;
-}
-.icon-btn:hover { background: var(--bg3); color: var(--text); }
-.icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
-.notif-dot {
-  position: absolute; top: 7px; right: 7px; width: 8px; height: 8px;
-  background: var(--red); border-radius: 50%; border: 2px solid var(--bg2);
-}
-.header-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
-.btn-login {
-  background: var(--accent); border: none; color: white;
-  padding: 10px 22px; border-radius: 10px;
-  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700;
-  cursor: pointer; transition: background 0.2s; margin-left: 4px;
-}
-.btn-login:hover { background: var(--accent-h); }
-
-/* ── LAYOUT ── */
-.layout {
-  display: flex;
-  height: calc(100vh - var(--header-h));
-  margin-top: var(--header-h);
-}
-
-/* ── SIDEBAR ── */
-body.sidebar-off .sidebar { width: 0; border-right: none; }
-body.sidebar-on  .sidebar { width: var(--sw-icon); }
-.sidebar {
-  flex-shrink: 0;
-  background: var(--bg2); border-right: 1px solid var(--border);
-  height: 100%; overflow: hidden; display: flex; flex-direction: column;
-  transition: width var(--ease), box-shadow var(--ease), border-color var(--ease);
-}
-body.sidebar-on .sidebar:hover { width: 230px; box-shadow: 4px 0 32px rgba(0,0,0,0.5); }
-.sidebar-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 8px 7px 4px; display: flex; flex-direction: column;
-}
-.sidebar-scroll::-webkit-scrollbar { width: 0; }
-.sidebar-group { display: flex; flex-direction: column; gap: 2px; }
-.sidebar-label {
-  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.8px; color: var(--text2);
-  padding: 10px 8px 4px; white-space: nowrap;
-  opacity: 0; transition: opacity var(--ease);
-}
-body.sidebar-on .sidebar:hover .sidebar-label { opacity: 1; }
-.sidebar-item {
-  display: flex; align-items: center; gap: 13px;
-  padding: 11px 9px; border-radius: 9px; cursor: pointer;
-  color: var(--text2); font-size: 0.875rem; font-weight: 500;
-  white-space: nowrap; overflow: hidden; transition: background 0.15s, color 0.15s;
-}
-.sidebar-item:hover { background: var(--bg3); color: var(--text); }
-.sidebar-item.active { background: var(--bg3); color: var(--text); }
-.sidebar-item .ico { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.sidebar-item .ico svg { width: 22px; height: 22px; fill: currentColor; }
-.sidebar-item .label { opacity: 0; transition: opacity var(--ease); pointer-events: none; }
-body.sidebar-on .sidebar:hover .sidebar-item .label { opacity: 1; }
-.sidebar-bottom { border-top: 1px solid var(--border); padding: 8px 7px 10px; display: flex; flex-direction: column; gap: 2px; }
-.sb-item {
-  display: flex; align-items: center; gap: 13px;
-  padding: 10px 9px; border-radius: 9px; cursor: pointer;
-  color: var(--text2); font-size: 0.875rem; font-weight: 500;
-  white-space: nowrap; overflow: hidden; transition: background 0.15s, color 0.15s;
-}
-.sb-item:hover { background: var(--bg3); color: var(--text); }
-.sb-item .ico { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.sb-item .ico svg { width: 22px; height: 22px; fill: currentColor; }
-.sb-item .label { opacity: 0; transition: opacity var(--ease); }
-body.sidebar-on .sidebar:hover .sb-item .label { opacity: 1; }
-.sb-contact {
-  display: flex; align-items: center; gap: 13px;
-  padding: 10px 9px; border-radius: 9px; cursor: pointer;
-  background: var(--accent); color: white;
-  font-size: 0.875rem; font-weight: 600; white-space: nowrap; overflow: hidden; transition: background 0.15s;
-}
-.sb-contact:hover { background: var(--accent-h); }
-.sb-contact .ico { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.sb-contact .ico svg { width: 22px; height: 22px; fill: white; }
-.sb-contact .label { opacity: 0; transition: opacity var(--ease); }
-body.sidebar-on .sidebar:hover .sb-contact .label { opacity: 1; }
-.sb-footer { padding: 0 8px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; overflow: hidden; max-height: 0; opacity: 0; pointer-events: none; transition: max-height 0.25s ease, opacity 0.25s ease; transition-delay: 0.15s; }
-body.sidebar-on .sidebar:hover .sb-footer { max-height: 300px; opacity: 1; pointer-events: auto; padding: 10px 8px 4px; transition-delay: 0s; }
-.sb-footer-title { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); white-space: nowrap; opacity: 0; transition: opacity var(--ease); padding: 0 8px; }
-body.sidebar-on .sidebar:hover .sb-footer-title { opacity: 1; }
-.sb-socials { display: flex; gap: 6px; padding: 0 4px; opacity: 0; transition: opacity var(--ease); flex-wrap: wrap; }
-body.sidebar-on .sidebar:hover .sb-socials { opacity: 1; }
-.sb-social { width: 34px; height: 34px; background: var(--bg3); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); transition: background 0.2s, color 0.2s; }
-.sb-social:hover { background: var(--bg4); color: var(--text); }
-.sb-social svg { width: 16px; height: 16px; fill: currentColor; }
-.sb-links { display: flex; gap: 16px; padding: 4px 8px 6px; opacity: 0; transition: opacity var(--ease); flex-wrap: wrap; }
-body.sidebar-on .sidebar:hover .sb-links { opacity: 1; }
-.sb-links a { color: var(--text2); font-size: 0.75rem; transition: color 0.2s; white-space: nowrap; }
-.sb-links a:hover { color: var(--text); }
-.sb-copy { padding: 0 8px 8px; opacity: 0; transition: opacity var(--ease); }
-body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
-.sb-copy span { font-size: 0.72rem; color: var(--text2); white-space: nowrap; }
-
-/* ── PLAY MAIN ── */
-.play-main {
-  flex: 1; min-width: 0;
-  display: flex; gap: 12px;
-  padding: 12px; overflow: hidden;
-}
-
-/* ── GAME SECTION ── */
-.game-section {
-  flex: 1; min-width: 0;
-  display: flex; flex-direction: column;
-}
-.game-frame-wrap {
-  flex: 1; position: relative;
-  background: #000; border-radius: 12px 12px 0 0;
-  overflow: hidden; min-height: 0;
-}
-.game-iframe { width: 100%; height: 100%; border: none; display: block; }
-
-/* ── GAME BAR ── */
-.game-bar {
-  height: var(--bar-h); flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 14px;
-  background: var(--bg2);
-  border: 1px solid var(--border); border-top: none;
-  border-radius: 0 0 12px 12px;
-}
-.game-bar-left { display: flex; align-items: center; gap: 10px; }
-.bar-logo-wrap {
-  width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-}
-.bar-logo-emoji { font-size: 30px; line-height: 1; }
-.bar-game-title { font-size: 0.95rem; font-weight: 700; }
-.game-bar-actions { display: flex; align-items: center; gap: 4px; }
-.bar-btn {
-  display: flex; align-items: center; gap: 5px;
-  padding: 7px 11px; border-radius: 8px;
-  background: var(--bg3); border: 1px solid var(--border);
-  color: var(--text2); font-size: 0.78rem; font-weight: 600;
-  cursor: pointer; transition: background 0.15s, color 0.15s;
-  font-family: 'Inter', sans-serif; white-space: nowrap;
-}
-.bar-btn:hover { background: var(--bg4); color: var(--text); }
-.bar-btn svg { width: 17px; height: 17px; fill: currentColor; flex-shrink: 0; }
-.bar-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
-
-/* ── PLAY NEXT ── */
-.play-next {
-  width: var(--pn-w); flex-shrink: 0;
-  display: flex; flex-direction: column; gap: 8px;
-  overflow-y: auto; padding-right: 2px;
-}
-.play-next::-webkit-scrollbar { width: 0; }
-.pn-title { font-size: 0.88rem; font-weight: 700; padding: 2px 0 4px; }
-.pn-card {
-  display: flex; align-items: center;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
-  cursor: pointer; transition: border-color 0.2s, transform 0.15s;
-  text-decoration: none; color: inherit;
-}
-.pn-card:hover { border-color: rgba(124,92,252,0.4); transform: translateX(3px); }
-.pn-thumb {
-  width: 80px; height: 64px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.8rem; position: relative;
-}
-.pn-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pn-overlay {
-  position: absolute; inset: 0; background: rgba(13,13,25,0.55);
-  display: flex; align-items: center; justify-content: center;
-}
-.pn-pill {
-  background: var(--bg2); border: 1px solid var(--border);
-  color: var(--text2); font-size: 0.58rem; font-weight: 700;
-  padding: 3px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.pn-info { flex: 1; padding: 0 10px; }
-.pn-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 3px; }
-.pn-meta { font-size: 0.7rem; color: var(--text2); }
-
-/* ── NOTIFICATION PANEL ── */
-#notif-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:298;backdrop-filter:blur(3px);}
-#notif-overlay.open{display:block;}
-#notif-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
-#notif-panel.open{transform:translateX(0);}
-.notif-panel-head{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;padding:18px 16px 14px;flex-shrink:0;border-bottom:1px solid var(--border);}
-.notif-panel-title{font-size:1rem;font-weight:800;text-align:center;}
-.notif-panel-close{background:transparent;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;justify-self:end;}
-.notif-panel-close:hover{background:var(--bg3);color:var(--text);}
-.notif-scroll{flex:1;overflow-y:auto;padding:12px;}
-.notif-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;}
-.notif-card-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;}
-.notif-card-body{padding:12px 14px 14px;}
-.notif-card-tag{font-size:0.68rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
-.notif-card-title{font-size:0.92rem;font-weight:800;color:var(--text);margin-bottom:10px;line-height:1.3;}
-.notif-play-btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s;}
-.notif-play-btn:hover{background:var(--accent-h);}
-.notif-play-btn svg{width:14px;height:14px;fill:#fff;}
-</style>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "VideoGame",
   "name": "Bonker Survival",
   "url": "https://www.bonkergames.com/game/bonker-survival",
-  "description": "Play Bonker Survival free in your browser — no download needed. Survive as long as you can and compete for the top score.",
-  "genre": ["Survival", "Action"],
+  "description": "Fast-paced arcade survival game. Control a bomb character and dodge relentless enemy waves. Survive as long as possible and compete on the global leaderboard.",
+  "genre": ["Survival","Action","Arcade"],
   "playMode": "SinglePlayer",
   "applicationCategory": "Game",
   "operatingSystem": "Web Browser",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "BonkerGames",
-    "url": "https://www.bonkergames.com"
-  }
+  "offers": {"@type":"Offer","price":"0","priceCurrency":"USD"},
+  "publisher": {"@type":"Organization","name":"BonkerGames","url":"https://www.bonkergames.com"}
 }
 </script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --sw-icon:62px;
+  --header-h:64px;
+  --bar-h:52px;
+  --rc-w:270px;
+  --bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;
+  --accent:#7c5cfc;--accent-h:#6a4de0;
+  --text:#fff;--text2:#9898b8;--border:rgba(255,255,255,0.07);
+  --red:#ff4d6d;--ease:0.22s ease;
+}
+
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+a{text-decoration:none;color:inherit}
+
+/* ── HEADER ── */
+.header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;z-index:300}
+.header-left{display:flex;align-items:center;gap:6px;flex:1}
+.hamburger{width:40px;height:40px;flex-shrink:0;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:background .15s,color .15s}
+.hamburger:hover{background:var(--bg3);color:var(--text)}
+.hamburger svg{width:24px;height:24px;fill:currentColor}
+.header-logo{display:flex;align-items:center;padding:4px 8px;border-radius:10px;transition:background .15s;text-decoration:none;color:inherit}
+.header-logo:hover{background:var(--bg3)}
+.logo-img{height:56px;width:auto;mix-blend-mode:screen;display:block}
+.header-search{flex:0 0 420px;position:relative;margin:0 16px}
+.header-search input{width:100%;background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:10px 18px 10px 44px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
+.header-search input:focus{border-color:var(--accent)}
+.header-search input::placeholder{color:var(--text2)}
+.search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);display:flex;align-items:center;pointer-events:none}
+.search-ico svg{width:19px;height:19px;fill:currentColor}
+.header-right{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end}
+.icon-btn{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);background:transparent;border:none;transition:background .15s,color .15s;position:relative}
+.icon-btn:hover{background:var(--bg3);color:var(--text)}
+.icon-btn svg{width:24px;height:24px;fill:currentColor}
+.notif-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg2)}
+.header-divider{width:1px;height:24px;background:var(--border);margin:0 4px}
+.btn-login{background:var(--accent);border:none;color:white;padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;margin-left:4px}
+.btn-login:hover{background:var(--accent-h)}
+
+/* ── LAYOUT ── */
+.layout{display:flex;height:calc(100vh - var(--header-h));margin-top:var(--header-h);overflow:hidden}
+
+/* ── SIDEBAR ── */
+body.sidebar-off .sidebar{width:0;border-right:none}
+body.sidebar-on  .sidebar{width:var(--sw-icon)}
+.sidebar{flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);height:100%;overflow:hidden;display:flex;flex-direction:column;transition:width var(--ease),box-shadow var(--ease)}
+body.sidebar-on .sidebar:hover{width:230px;box-shadow:4px 0 32px rgba(0,0,0,.5)}
+.sidebar-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 7px 4px;display:flex;flex-direction:column}
+.sidebar-scroll::-webkit-scrollbar{width:0}
+.sidebar-group{display:flex;flex-direction:column;gap:2px}
+.sidebar-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);padding:10px 8px 4px;white-space:nowrap;opacity:0;transition:opacity var(--ease)}
+body.sidebar-on .sidebar:hover .sidebar-label{opacity:1}
+.sidebar-item{display:flex;align-items:center;gap:13px;padding:11px 9px;border-radius:9px;cursor:pointer;color:var(--text2);font-size:.875rem;font-weight:500;white-space:nowrap;overflow:hidden;transition:background .15s,color .15s}
+.sidebar-item:hover{background:var(--bg3);color:var(--text)}
+.sidebar-item.active{background:var(--bg3);color:var(--text)}
+.sidebar-item .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sidebar-item .ico svg{width:22px;height:22px;fill:currentColor}
+.sidebar-item .label{opacity:0;transition:opacity var(--ease);pointer-events:none}
+body.sidebar-on .sidebar:hover .sidebar-item .label{opacity:1}
+.sidebar-bottom{border-top:1px solid var(--border);padding:8px 7px 10px;display:flex;flex-direction:column;gap:2px}
+.sb-item{display:flex;align-items:center;gap:13px;padding:10px 9px;border-radius:9px;cursor:pointer;color:var(--text2);font-size:.875rem;font-weight:500;white-space:nowrap;overflow:hidden;transition:background .15s,color .15s}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sb-item .ico svg{width:22px;height:22px;fill:currentColor}
+.sb-item .label{opacity:0;transition:opacity var(--ease)}
+body.sidebar-on .sidebar:hover .sb-item .label{opacity:1}
+.sb-contact{display:flex;align-items:center;gap:13px;padding:10px 9px;border-radius:9px;cursor:pointer;background:var(--accent);color:white;font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;transition:background .15s}
+.sb-contact:hover{background:var(--accent-h)}
+.sb-contact .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sb-contact .ico svg{width:22px;height:22px;fill:white}
+.sb-contact .label{opacity:0;transition:opacity var(--ease)}
+body.sidebar-on .sidebar:hover .sb-contact .label{opacity:1}
+.sb-footer{padding:0 8px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;overflow:hidden;max-height:0;opacity:0;pointer-events:none;transition:max-height .25s ease,opacity .25s ease;transition-delay:.15s}
+body.sidebar-on .sidebar:hover .sb-footer{max-height:300px;opacity:1;pointer-events:auto;padding:10px 8px 4px;transition-delay:0s}
+.sb-footer-title{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);white-space:nowrap;opacity:0;transition:opacity var(--ease);padding:0 8px}
+body.sidebar-on .sidebar:hover .sb-footer-title{opacity:1}
+.sb-socials{display:flex;gap:6px;padding:0 4px;opacity:0;transition:opacity var(--ease);flex-wrap:wrap}
+body.sidebar-on .sidebar:hover .sb-socials{opacity:1}
+.sb-social{width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:background .2s,color .2s}
+.sb-social:hover{background:var(--bg4);color:var(--text)}
+.sb-social svg{width:16px;height:16px;fill:currentColor}
+.sb-links{display:flex;gap:16px;padding:4px 8px 6px;opacity:0;transition:opacity var(--ease);flex-wrap:wrap}
+body.sidebar-on .sidebar:hover .sb-links{opacity:1}
+.sb-links a{color:var(--text2);font-size:.75rem;transition:color .2s;white-space:nowrap}
+.sb-links a:hover{color:var(--text)}
+.sb-copy{padding:0 8px 8px;opacity:0;transition:opacity var(--ease)}
+body.sidebar-on .sidebar:hover .sb-copy{opacity:1}
+.sb-copy span{font-size:.72rem;color:var(--text2);white-space:nowrap}
+
+/* ── CONTENT WRAP (everything right of sidebar) ── */
+.content-wrap{flex:1;display:flex;overflow:hidden;min-width:0}
+
+/* ── LEFT COL (game + info, scrollable) ── */
+.left-col{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+.left-col::-webkit-scrollbar{width:6px}
+.left-col::-webkit-scrollbar-track{background:transparent}
+.left-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── GAME SECTION ── */
+.game-section{flex-shrink:0;display:flex;flex-direction:column;padding:12px 12px 0}
+.game-frame-wrap{position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;height:clamp(320px,58vh,580px)}
+.game-iframe{width:100%;height:100%;border:none;display:block}
+
+/* ── GAME BAR ── */
+.game-bar{height:var(--bar-h);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px}
+.game-bar-left{display:flex;align-items:center;gap:10px}
+.bar-logo-wrap{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.bar-game-title{font-size:.95rem;font-weight:700}
+.game-bar-actions{display:flex;align-items:center;gap:4px}
+.bar-btn{display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:.78rem;font-weight:600;cursor:pointer;transition:background .15s,color .15s;font-family:'Inter',sans-serif;white-space:nowrap}
+.bar-btn:hover{background:var(--bg4);color:var(--text)}
+.bar-btn svg{width:17px;height:17px;fill:currentColor;flex-shrink:0}
+.bar-sep{width:1px;height:22px;background:var(--border);margin:0 2px}
+
+/* ── GAME INFO (below game, inside left col) ── */
+.game-info{padding:20px 12px 32px}
+
+.breadcrumb{font-size:.75rem;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.breadcrumb a{color:var(--text2);transition:color .15s}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb .sep{opacity:.4}
+
+.game-title{font-size:clamp(1.4rem,3vw,2rem);font-weight:800;margin-bottom:16px;line-height:1.2}
+
+/* Meta grid */
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.meta-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+.meta-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:3px}
+.meta-val{font-size:.85rem;font-weight:600;color:var(--text)}
+
+/* Tags */
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.tag{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.72rem;font-weight:600;color:var(--text2);cursor:pointer;transition:background .15s,color .15s}
+.tag:hover{background:var(--bg4);color:var(--text)}
+.tag.hl{background:rgba(124,92,252,.15);border-color:rgba(124,92,252,.4);color:var(--accent)}
+
+/* Inline ad (between meta and description) */
+.ad-inline{background:var(--bg2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;height:90px;position:relative;overflow:hidden}
+.ad-inline::before{content:'Advertisement';position:absolute;top:6px;left:10px;font-size:.6rem;color:var(--text2);opacity:.6;letter-spacing:.04em}
+
+/* Description content */
+.info-section{margin-bottom:24px}
+.info-section h2{font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text)}
+.info-section h3{font-size:.9rem;font-weight:700;margin-bottom:6px;margin-top:14px;color:var(--text)}
+.info-section p{font-size:.88rem;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.info-section ul{padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.info-section ul li{font-size:.88rem;color:var(--text2);line-height:1.6}
+.info-section ul li strong{color:var(--text)}
+
+/* FAQ */
+.faq-item{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.faq-q{padding:12px 16px;font-size:.87rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .15s}
+.faq-q:hover{background:var(--bg3)}
+.faq-q svg{width:16px;height:16px;fill:currentColor;color:var(--text2);flex-shrink:0;transition:transform .2s}
+.faq-q.open svg{transform:rotate(180deg)}
+.faq-a{padding:0 16px;max-height:0;overflow:hidden;transition:max-height .2s ease,padding .2s ease}
+.faq-a.open{padding:0 16px 14px;max-height:200px}
+.faq-a p{font-size:.85rem;color:var(--text2);line-height:1.6}
+
+/* ── RIGHT COL (ad + play next, scrollable) ── */
+.right-col{width:var(--rc-w);flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border);overflow-y:auto;background:var(--bg)}
+.right-col::-webkit-scrollbar{width:0}
+
+.ad-box{flex-shrink:0;margin:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:260px;position:relative;overflow:hidden}
+.ad-box-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);opacity:.7}
+.ad-box-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+/* Replace .ad-box-inner content with actual ad code (e.g. Google AdSense) */
+
+.pn-header{padding:6px 14px 4px;font-size:.8rem;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);flex-shrink:0}
+.pn-list{display:flex;flex-direction:column;gap:1px;padding:6px 8px 16px}
+
+.pn-card{display:flex;align-items:center;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;text-decoration:none;color:inherit;margin-bottom:5px}
+.pn-card:hover{border-color:rgba(124,92,252,.4);transform:translateX(2px)}
+.pn-thumb{width:74px;height:58px;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden}
+.pn-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pn-info{flex:1;padding:0 10px;min-width:0}
+.pn-name{font-size:.8rem;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pn-meta{font-size:.68rem;color:var(--text2)}
+
+/* ── NOTIF PANEL ── */
+#notif-overlay{display:none;position:fixed;top:var(--header-h);left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:298;backdrop-filter:blur(3px)}
+#notif-overlay.open{display:block}
+#notif-panel{position:fixed;top:var(--header-h);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+#notif-panel.open{transform:translateX(0)}
+.notif-panel-head{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;padding:18px 16px 14px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.notif-panel-title{font-size:1rem;font-weight:800;text-align:center}
+.notif-panel-close{background:transparent;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;justify-self:end}
+.notif-panel-close:hover{background:var(--bg3);color:var(--text)}
+.notif-scroll{flex:1;overflow-y:auto;padding:12px}
+.notif-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px}
+.notif-card-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.notif-card-body{padding:12px 14px 14px}
+.notif-card-tag{font-size:.68rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.notif-card-title{font-size:.92rem;font-weight:800;color:var(--text);margin-bottom:10px;line-height:1.3}
+.notif-play-btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s}
+.notif-play-btn:hover{background:var(--accent-h)}
+.notif-play-btn svg{width:14px;height:14px;fill:#fff}
+
+/* user badge */
+.user-badge{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 10px;border-radius:10px;transition:background .15s}
+.user-badge:hover{background:var(--bg3)}
+.u-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;flex-shrink:0}
+.u-name{font-size:.85rem;font-weight:600;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
 </head>
 <body class="sidebar-on">
 
@@ -327,9 +248,7 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
     </a>
   </div>
   <div class="header-search">
-    <span class="search-ico">
-      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </span>
+    <span class="search-ico"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
     <input type="text" placeholder="Search games and categories">
   </div>
   <div class="header-right">
@@ -383,9 +302,8 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
         <a class="sb-social" href="https://www.tiktok.com/@bonkergames" target="_blank" rel="noopener" title="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.54V6.79a4.85 4.85 0 01-1.02-.1z"/></svg></a>
         <a class="sb-social" href="https://www.youtube.com/@bonkergames" target="_blank" rel="noopener" title="YouTube"><svg viewBox="0 0 24 24"><path d="M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5.2 3-5.2 3z"/></svg></a>
         <a class="sb-social" href="https://www.facebook.com/profile.php?id=61589739772355" target="_blank" rel="noopener" title="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
-        <a class="sb-social" href="https://www.linkedin.com/company/bonkergames/about/?viewAsMember=true" target="_blank" rel="noopener" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
-        <a class="sb-social" href="https://www.instagram.com/bonkergames/" target="_blank" rel="noopener" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
         <a class="sb-social" href="https://x.com/bonkergames" target="_blank" rel="noopener" title="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.622 5.905-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+        <a class="sb-social" href="https://www.instagram.com/bonkergames/" target="_blank" rel="noopener" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
       </div>
       <div class="sb-footer-title" style="margin-top:4px">Links</div>
       <div class="sb-links">
@@ -395,114 +313,226 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
     </div>
   </aside>
 
-  <!-- PLAY MAIN -->
-  <main class="play-main">
+  <!-- CONTENT WRAP -->
+  <div class="content-wrap">
 
-    <!-- Game + bar -->
-    <div class="game-section">
-      <div class="game-frame-wrap" id="gameWrap">
-        <iframe class="game-iframe" id="gameFrame" src="index.html" allowfullscreen allow="fullscreen *"></iframe>
-      </div>
-      <div class="game-bar">
-        <div class="game-bar-left">
-          <div class="bar-logo-wrap">
-            <img src="/assets/bomb-character.png" alt="Bonker" style="width:40px;height:40px;object-fit:contain;">
+    <!-- LEFT COL: game + scrollable info -->
+    <div class="left-col">
+
+      <!-- Game -->
+      <div class="game-section">
+        <div class="game-frame-wrap" id="gameWrap">
+          <iframe class="game-iframe" id="gameFrame" src="index.html" allowfullscreen allow="fullscreen *"></iframe>
+        </div>
+        <div class="game-bar">
+          <div class="game-bar-left">
+            <div class="bar-logo-wrap">
+              <img src="/assets/bomb-character.png" alt="Bonker" style="width:38px;height:38px;object-fit:contain">
+            </div>
+            <h1 class="bar-game-title">Bonker Survival</h1>
           </div>
-          <h1 class="bar-game-title" style="margin:0">Bonker Survival</h1>
-        </div>
-        <div class="game-bar-actions">
-          <button class="bar-btn" id="likeBtn" onclick="window._toggleLiked?window._toggleLiked('bonker-survival'):toggleLike()">
-            <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
-            173K
-          </button>
-          <button class="bar-btn" id="dislikeBtn" onclick="toggleDislike()">
-            <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
-          </button>
-          <div class="bar-sep"></div>
-          <button class="bar-btn" id="favBtn" onclick="window._toggleFav?window._toggleFav('bonker-survival'):toggleFav()">
-            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            Favorite
-          </button>
-          <div class="bar-sep"></div>
-          <button class="bar-btn" onclick="goFullscreen()">
-            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-            Fullscreen
-          </button>
+          <div class="game-bar-actions">
+            <button class="bar-btn" id="likeBtn" onclick="window._toggleLiked?window._toggleLiked('bonker-survival'):toggleLike()">
+              <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+              Like
+            </button>
+            <button class="bar-btn" id="dislikeBtn" onclick="toggleDislike()">
+              <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L10.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+            </button>
+            <div class="bar-sep"></div>
+            <button class="bar-btn" id="favBtn" onclick="window._toggleFav?window._toggleFav('bonker-survival'):toggleFav()">
+              <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              Favorite
+            </button>
+            <div class="bar-sep"></div>
+            <button class="bar-btn" onclick="goFullscreen()">
+              <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+              Fullscreen
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Play next -->
-    <div class="play-next">
-      <div class="pn-title">Play next</div>
-      <a class="pn-card" href="/game/bonker-chess">
-        <div class="pn-thumb">
-          <img src="/games/bonker-chess/thumb.png" alt="Bonker Chess">
-        </div>
-        <div class="pn-info">
-          <div class="pn-name">Bonker Chess</div>
-          <div class="pn-meta">Strategy · 2 Player</div>
-        </div>
-      </a>
-      <a class="pn-card" href="/game/tic-tac-toe">
-        <div class="pn-thumb">
-          <img src="/games/tic-tac-toe-online/thumb.png" alt="Tic Tac Toe">
-        </div>
-        <div class="pn-info">
-          <div class="pn-name">Tic Tac Toe</div>
-          <div class="pn-meta">Strategy · Multiplayer</div>
-        </div>
-      </a>
-      <div class="pn-card">
-        <div class="pn-thumb" style="background:linear-gradient(135deg,#1a1230,#2a1a50);">🏎️
-          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
-        </div>
-        <div class="pn-info">
-          <div class="pn-name">Bonker Racer</div>
-          <div class="pn-meta">Racing · Multiplayer</div>
-        </div>
-      </div>
-      <div class="pn-card">
-        <div class="pn-thumb" style="background:linear-gradient(135deg,#0f2a1a,#1a3a2a);">🧩
-          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
-        </div>
-        <div class="pn-info">
-          <div class="pn-name">Block Bonker</div>
-          <div class="pn-meta">Puzzle · Solo</div>
-        </div>
-      </div>
-      <div class="pn-card">
-        <div class="pn-thumb" style="background:linear-gradient(135deg,#0a0a2a,#1a1a3a);">🌌
-          <div class="pn-overlay"><span class="pn-pill">Coming soon</span></div>
-        </div>
-        <div class="pn-info">
-          <div class="pn-name">Space Bonker</div>
-          <div class="pn-meta">Shooting · Multiplayer</div>
-        </div>
-      </div>
-      <div class="game-info-section">
-        <div class="gi-label">About</div>
-        <p class="gi-text">Control a bomb character and dodge relentless waves of enemies. Survive as long as possible and compete for the top score.</p>
-        <div class="gi-label">How to Play</div>
-        <ul class="gi-list">
-          <li>Dodge enemies — don't let them touch you</li>
-          <li>The longer you survive, the harder it gets</li>
-          <li>Collect power-ups to stay alive longer</li>
-        </ul>
-        <div class="gi-label">Controls</div>
-        <ul class="gi-list">
-          <li>Arrow keys / WASD — move</li>
-        </ul>
-        <div class="gi-label">FAQ</div>
-        <div class="gi-q">Is it free?</div>
-        <div class="gi-a">Yes, completely free — no download needed.</div>
-        <div class="gi-q">Are scores saved?</div>
-        <div class="gi-a">Log in to save your high score to the leaderboard.</div>
-      </div>
-    </div>
+      <!-- Info section -->
+      <div class="game-info">
 
-  </main>
-</div>
+        <nav class="breadcrumb">
+          <a href="/">BonkerGames</a><span class="sep">»</span>
+          <a href="/?cat=action">Action</a><span class="sep">»</span>
+          <span>Bonker Survival</span>
+        </nav>
+
+        <h1 class="game-title">Bonker Survival</h1>
+
+        <div class="meta-grid">
+          <div class="meta-item"><div class="meta-lbl">Developer</div><div class="meta-val">BonkerGames</div></div>
+          <div class="meta-item"><div class="meta-lbl">Released</div><div class="meta-val">2024</div></div>
+          <div class="meta-item"><div class="meta-lbl">Technology</div><div class="meta-val">HTML5 · Phaser.js</div></div>
+          <div class="meta-item"><div class="meta-lbl">Platforms</div><div class="meta-val">Browser · Desktop · Mobile</div></div>
+        </div>
+
+        <div class="tag-row">
+          <span class="tag hl">Survival</span>
+          <span class="tag hl">Action</span>
+          <span class="tag">Arcade</span>
+          <span class="tag">Single Player</span>
+          <span class="tag">High Score</span>
+          <span class="tag">Leaderboard</span>
+          <span class="tag">Free</span>
+          <span class="tag">Browser Game</span>
+          <span class="tag">Mobile Friendly</span>
+        </div>
+
+        <!-- Inline ad slot -->
+        <div class="ad-inline">
+          <!-- Replace this div's content with Google AdSense or other ad code -->
+          <span style="font-size:.75rem;color:var(--text2)">Ad Space</span>
+        </div>
+
+        <!-- Description -->
+        <div class="info-section">
+          <p>Bonker Survival is a fast-paced arcade survival game where you control the iconic Bonker bomb character. Your mission is simple: stay alive for as long as possible while dodging relentless waves of enemies that grow faster and more aggressive with every passing second. Every run is a new challenge — how long can you last?</p>
+          <p>Built with Phaser.js and playable entirely in your browser with no download or sign-up required, Bonker Survival is perfect for quick sessions or marathon survival runs. The game features smooth 60fps gameplay, escalating difficulty, and a global leaderboard where logged-in players can compete for the top spot.</p>
+        </div>
+
+        <div class="info-section">
+          <h2>How to Play Bonker Survival</h2>
+          <p>The goal is survival — dodge everything and keep moving. The arena fills with enemies that hunt you down, and the longer you survive, the more enemies spawn and the faster they move.</p>
+          <ul>
+            <li>Move the Bonker character continuously — stopping even briefly can be fatal</li>
+            <li>Enemies spawn from the edges of the arena and home in on your position</li>
+            <li>The difficulty scales automatically: more enemies, higher speed, each wave</li>
+            <li>Collect power-ups that appear around the arena for temporary advantages</li>
+            <li>Use corners strategically, but never let yourself get trapped</li>
+            <li>Log in to save your high score and compete on the global leaderboard</li>
+          </ul>
+        </div>
+
+        <div class="info-section">
+          <h2>Controls</h2>
+          <h3>Keyboard</h3>
+          <ul>
+            <li><strong>WASD or Arrow Keys</strong> — Move the Bonker character</li>
+            <li><strong>P or Escape</strong> — Pause the game</li>
+            <li><strong>M</strong> — Toggle music on/off</li>
+          </ul>
+          <h3>Mobile / Touch</h3>
+          <ul>
+            <li><strong>Virtual joystick</strong> — Tap and drag anywhere on screen to move</li>
+            <li>Works on all touch-enabled devices including iOS and Android browsers</li>
+          </ul>
+        </div>
+
+        <div class="info-section">
+          <h2>Tips &amp; Strategies</h2>
+          <ul>
+            <li><strong>Keep moving at all times</strong> — a stationary Bonker is an easy target</li>
+            <li><strong>Circle the arena</strong> — moving in wide loops can buy you breathing room</li>
+            <li><strong>Prioritize power-ups</strong> — they can reverse a desperate situation instantly</li>
+            <li><strong>Watch spawn points</strong> — enemies always enter from the arena edges, so avoid hugging the walls early</li>
+            <li><strong>Survive the first 30 seconds</strong> — enemy density is lowest here; use it to learn patterns</li>
+            <li><strong>The center is risky</strong> — enemies converge toward you, so diagonal paths through the center are dangerous</li>
+          </ul>
+        </div>
+
+        <div class="info-section">
+          <h2>Features</h2>
+          <ul>
+            <li>Infinite survival gameplay with procedurally escalating difficulty</li>
+            <li>Global leaderboard — log in to save and compare scores</li>
+            <li>Smooth 60fps gameplay powered by Phaser.js</li>
+            <li>Works on desktop, tablet, and mobile browsers</li>
+            <li>No download, no install, no sign-up required to play</li>
+            <li>Power-up system to keep gameplay dynamic and unpredictable</li>
+          </ul>
+        </div>
+
+        <div class="info-section">
+          <h2>About BonkerGames</h2>
+          <p>Bonker Survival is one of the original games on BonkerGames — a free browser gaming platform with 21+ games spanning arcade, puzzle, strategy, card games, and more. All games are playable instantly in your browser with no downloads required. New games are added regularly.</p>
+        </div>
+
+        <div class="info-section">
+          <h2>FAQ</h2>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Is Bonker Survival free to play?
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="faq-a"><p>Yes, Bonker Survival is completely free. Play instantly in your browser — no download, no account required.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Can I save my high score?
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="faq-a"><p>Yes! Log in with your free BonkerGames account to save your high score and appear on the global leaderboard.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Does Bonker Survival work on mobile?
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="faq-a"><p>Yes — the game includes touch controls and runs well on iOS and Android browsers without any app installation needed.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Does the game end?
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="faq-a"><p>There is no time limit — the game ends when an enemy touches you. The goal is to survive as long as possible and beat your personal best score.</p></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Who made Bonker Survival?
+              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="faq-a"><p>Bonker Survival was created by the BonkerGames development team as one of the flagship games on the platform.</p></div>
+          </div>
+        </div>
+
+      </div><!-- /game-info -->
+    </div><!-- /left-col -->
+
+    <!-- RIGHT COL: ad + all games -->
+    <div class="right-col">
+
+      <!-- Ad box -->
+      <div class="ad-box">
+        <div class="ad-box-lbl">Advertisement</div>
+        <div class="ad-box-inner">
+          <!-- Paste Google AdSense or other ad code here -->
+        </div>
+      </div>
+
+      <!-- All games -->
+      <div class="pn-header">Play next</div>
+      <div class="pn-list">
+        <a class="pn-card" href="/game/bonker-chess"><div class="pn-thumb"><img src="/games/bonker-chess/thumb.png" alt="Bonker Chess" onerror="this.parentNode.textContent='♟️'"></div><div class="pn-info"><div class="pn-name">Bonker Chess</div><div class="pn-meta">Strategy · 2 Player</div></div></a>
+        <a class="pn-card" href="/game/snake"><div class="pn-thumb"><img src="/games/snake/thumb.png" alt="Snake" onerror="this.parentNode.textContent='🐍'"></div><div class="pn-info"><div class="pn-name">Snake</div><div class="pn-meta">Arcade · Solo</div></div></a>
+        <a class="pn-card" href="/game/space-invaders"><div class="pn-thumb"><img src="/games/space-invaders/thumb.png" alt="Space Invaders" onerror="this.parentNode.textContent='👾'"></div><div class="pn-info"><div class="pn-name">Space Invaders</div><div class="pn-meta">Arcade · Solo</div></div></a>
+        <a class="pn-card" href="/game/blackjack"><div class="pn-thumb"><img src="/games/blackjack/thumb.png" alt="Blackjack" onerror="this.parentNode.textContent='🃏'"></div><div class="pn-info"><div class="pn-name">Blackjack</div><div class="pn-meta">Card · Solo</div></div></a>
+        <a class="pn-card" href="/game/tetris"><div class="pn-thumb"><img src="/games/tetris/thumb.png" alt="Tetris" onerror="this.parentNode.textContent='🟦'"></div><div class="pn-info"><div class="pn-name">Tetris</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+        <a class="pn-card" href="/game/2048"><div class="pn-thumb"><img src="/games/2048/thumb.png" alt="2048" onerror="this.parentNode.textContent='🔢'"></div><div class="pn-info"><div class="pn-name">2048</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+        <a class="pn-card" href="/game/sudoku"><div class="pn-thumb"><img src="/games/sudoku/thumb.png" alt="Sudoku" onerror="this.parentNode.textContent='🔢'"></div><div class="pn-info"><div class="pn-name">Sudoku</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+        <a class="pn-card" href="/game/wordle"><div class="pn-thumb"><img src="/games/wordle/thumb.png" alt="Wordle" onerror="this.parentNode.textContent='🔤'"></div><div class="pn-info"><div class="pn-name">Wordle</div><div class="pn-meta">Word · Solo</div></div></a>
+        <a class="pn-card" href="/game/flappy-bird"><div class="pn-thumb"><img src="/games/flappy-bird/thumb.png" alt="Flappy Bird" onerror="this.parentNode.textContent='🐦'"></div><div class="pn-info"><div class="pn-name">Flappy Bird</div><div class="pn-meta">Arcade · Solo</div></div></a>
+        <a class="pn-card" href="/game/breakout"><div class="pn-thumb"><img src="/games/breakout/thumb.png" alt="Breakout" onerror="this.parentNode.textContent='🧱'"></div><div class="pn-info"><div class="pn-name">Breakout</div><div class="pn-meta">Arcade · Solo</div></div></a>
+        <a class="pn-card" href="/game/minesweeper"><div class="pn-thumb"><img src="/games/minesweeper/thumb.png" alt="Minesweeper" onerror="this.parentNode.textContent='💣'"></div><div class="pn-info"><div class="pn-name">Minesweeper</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+        <a class="pn-card" href="/game/typing-speed"><div class="pn-thumb"><img src="/games/typing-speed/thumb.png" alt="Typing Speed" onerror="this.parentNode.textContent='⌨️'"></div><div class="pn-info"><div class="pn-name">Typing Speed</div><div class="pn-meta">Skill · Solo</div></div></a>
+        <a class="pn-card" href="/game/hangman"><div class="pn-thumb"><img src="/games/hangman/thumb.png" alt="Hangman" onerror="this.parentNode.textContent='🪢'"></div><div class="pn-info"><div class="pn-name">Hangman</div><div class="pn-meta">Word · Solo</div></div></a>
+        <a class="pn-card" href="/game/sliding-puzzle"><div class="pn-thumb"><img src="/games/sliding-puzzle/thumb.png" alt="Sliding Puzzle" onerror="this.parentNode.textContent='🧩'"></div><div class="pn-info"><div class="pn-name">Sliding Puzzle</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+        <a class="pn-card" href="/game/connect-four"><div class="pn-thumb"><img src="/games/connect-four/thumb.png" alt="Connect Four" onerror="this.parentNode.textContent='🔴'"></div><div class="pn-info"><div class="pn-name">Connect Four</div><div class="pn-meta">Strategy · 2 Player</div></div></a>
+        <a class="pn-card" href="/game/memory-match"><div class="pn-thumb"><img src="/games/memory-match/thumb.png" alt="Memory Match" onerror="this.parentNode.textContent='🎴'"></div><div class="pn-info"><div class="pn-name">Memory Match</div><div class="pn-meta">Puzzle · Solo</div></div></a>
+        <a class="pn-card" href="/game/whack-a-mole"><div class="pn-thumb"><img src="/games/whack-a-mole/thumb.png" alt="Whack-a-Mole" onerror="this.parentNode.textContent='🔨'"></div><div class="pn-info"><div class="pn-name">Whack-a-Mole</div><div class="pn-meta">Arcade · Solo</div></div></a>
+        <a class="pn-card" href="/game/tic-tac-toe"><div class="pn-thumb"><img src="/games/tic-tac-toe-online/thumb.png" alt="Tic-Tac-Toe" onerror="this.parentNode.textContent='❌'"></div><div class="pn-info"><div class="pn-name">Tic-Tac-Toe</div><div class="pn-meta">Strategy · 2 Player</div></div></a>
+        <a class="pn-card" href="/game/simon-says"><div class="pn-thumb"><img src="/games/simon-says/thumb.png" alt="Simon Says" onerror="this.parentNode.textContent='🔵'"></div><div class="pn-info"><div class="pn-name">Simon Says</div><div class="pn-meta">Memory · Solo</div></div></a>
+        <a class="pn-card" href="/game/pong"><div class="pn-thumb"><img src="/games/pong/thumb.png" alt="Pong" onerror="this.parentNode.textContent='🏓'"></div><div class="pn-info"><div class="pn-name">Pong</div><div class="pn-meta">Arcade · 2 Player</div></div></a>
+      </div>
+    </div><!-- /right-col -->
+
+  </div><!-- /content-wrap -->
+</div><!-- /layout -->
 
 <!-- NOTIFICATION PANEL -->
 <div id="notif-overlay" onclick="closeNotifPanel()"></div>
@@ -518,13 +548,11 @@ body.sidebar-on .sidebar:hover .sb-copy { opacity: 1; }
       <div class="notif-card-body">
         <div class="notif-card-tag">New Release</div>
         <div class="notif-card-title">Bonker Survival is live — survive the chaos!</div>
-        <a class="notif-play-btn" href="/game/bonker-survival">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Play Now
-        </a>
+        <a class="notif-play-btn" href="/game/bonker-survival"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Play Now</a>
       </div>
     </div>
     <div class="notif-card">
-      <div class="notif-card-body" style="display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text2);font-size:0.85rem;">No more notifications</div>
+      <div class="notif-card-body" style="display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text2);font-size:.85rem">No more notifications</div>
     </div>
   </div>
 </div>
@@ -534,42 +562,27 @@ window.CURRENT_GAME_ID='bonker-survival';
 function openNotifPanel(){window._closeAllPanels&&window._closeAllPanels();document.getElementById('notif-overlay').classList.add('open');document.getElementById('notif-panel').classList.add('open');const d=document.querySelector('.notif-dot');if(d)d.style.display='none';}
 function closeNotifPanel(){document.getElementById('notif-overlay').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');}
 window._closeAllPanels=(function(prev){return function(){if(prev)prev();closeNotifPanel();};})(window._closeAllPanels||null);
-function openAuthPanel(){const p=document.getElementById('auth-panel');const o=document.getElementById('auth-overlay');if(p){o.classList.add('open');p.classList.add('open');document.body.style.overflow='hidden';}}
-function closeAuthPanel(){const p=document.getElementById('auth-panel');const o=document.getElementById('auth-overlay');if(p){o.classList.remove('open');p.classList.remove('open');document.body.style.overflow='';}}
+function openAuthPanel(){const p=document.getElementById('auth-panel'),o=document.getElementById('auth-overlay');if(p){o.classList.add('open');p.classList.add('open');document.body.style.overflow='hidden';}}
+function closeAuthPanel(){const p=document.getElementById('auth-panel'),o=document.getElementById('auth-overlay');if(p){o.classList.remove('open');p.classList.remove('open');document.body.style.overflow='';}}
 window._openAuthPanel=openAuthPanel;window._closeAuthPanel=closeAuthPanel;
+
+document.getElementById('sidebarToggle').addEventListener('click',()=>{
+  document.body.classList.toggle('sidebar-on');
+  document.body.classList.toggle('sidebar-off');
+});
+
+let liked=false,disliked=false,faved=false;
+function toggleLike(){liked=!liked;if(liked)disliked=false;document.getElementById('likeBtn').style.color=liked?'#4ade80':'';document.getElementById('dislikeBtn').style.color='';}
+function toggleDislike(){disliked=!disliked;if(disliked)liked=false;document.getElementById('dislikeBtn').style.color=disliked?'#f87171':'';document.getElementById('likeBtn').style.color='';}
+function toggleFav(){faved=!faved;document.getElementById('favBtn').style.color=faved?'#ff4d6d':'';document.getElementById('favBtn').style.background=faved?'rgba(255,77,109,0.1)':'';}
+function goFullscreen(){const f=document.getElementById('gameFrame');if(f.requestFullscreen)f.requestFullscreen();else if(f.webkitRequestFullscreen)f.webkitRequestFullscreen();}
+
+function toggleFaq(el){
+  const wasOpen=el.classList.contains('open');
+  document.querySelectorAll('.faq-q.open').forEach(q=>{q.classList.remove('open');q.nextElementSibling.classList.remove('open');});
+  if(!wasOpen){el.classList.add('open');el.nextElementSibling.classList.add('open');}
+}
 </script>
 <script type="module" src="/assets/header-auth.js"></script>
-<script>
-  document.getElementById('sidebarToggle').addEventListener('click', () => {
-    document.body.classList.toggle('sidebar-on');
-    document.body.classList.toggle('sidebar-off');
-  });
-
-let liked = false, disliked = false, faved = false;
-
-function toggleLike() {
-  liked = !liked;
-  if (liked) disliked = false;
-  document.getElementById('likeBtn').style.color = liked ? '#4ade80' : '';
-  document.getElementById('dislikeBtn').style.color = '';
-}
-function toggleDislike() {
-  disliked = !disliked;
-  if (disliked) liked = false;
-  document.getElementById('dislikeBtn').style.color = disliked ? '#f87171' : '';
-  document.getElementById('likeBtn').style.color = '';
-}
-function toggleFav() {
-  faved = !faved;
-  document.getElementById('favBtn').style.color = faved ? '#ff4d6d' : '';
-  document.getElementById('favBtn').style.background = faved ? 'rgba(255,77,109,0.1)' : '';
-}
-function goFullscreen() {
-  const iframe = document.getElementById('gameFrame');
-  if (iframe.requestFullscreen) iframe.requestFullscreen();
-  else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-  else if (iframe.mozRequestFullScreen) iframe.mozRequestFullScreen();
-}
-</script>
 </body>
 </html>
