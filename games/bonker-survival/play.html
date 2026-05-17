@@ -19,7 +19,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --sw:62px;--hh:64px;--bar:52px;--rc:300px;--lbd:106px;
+  --sw:62px;--hh:64px;--bar:52px;--rc:300px;
   --bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;
   --accent:#7c5cfc;--accent-h:#6a4de0;
   --text:#fff;--text2:#9898b8;--border:rgba(255,255,255,.07);
@@ -118,7 +118,7 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .game-col{flex:1;min-width:0;padding:12px 8px 12px 12px;display:flex;flex-direction:column}
 
 /* Game frame fills viewport on load */
-.game-frame-wrap{position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;height:calc(100vh - var(--hh) - var(--bar) - 12px - var(--lbd))}
+.game-frame-wrap{position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;height:calc(100vh - var(--hh) - var(--bar) - 12px)}
 .game-iframe{width:100%;height:100%;border:none;display:block}
 
 /* Game bar */
@@ -132,9 +132,6 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .bar-btn svg{width:17px;height:17px;fill:currentColor;flex-shrink:0}
 .bar-sep{width:1px;height:22px;background:var(--border);margin:0 2px}
 
-/* ── TOP LEADERBOARD AD ── */
-.leaderboard-wrap{display:flex;justify-content:center;padding:8px 12px;width:100%}
-.leaderboard-ad{width:100%;max-width:728px;height:90px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 
 /* ── ADS UNDER GAME ── */
 .ad-row{display:flex;justify-content:center;margin-bottom:20px}
@@ -294,14 +291,6 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 
   <!-- ── ONE SCROLL ── -->
   <div class="page-scroll">
-
-    <!-- TOP LEADERBOARD BANNER AD (728×90) -->
-    <div class="leaderboard-wrap">
-      <div class="leaderboard-ad">
-        <span class="ad-lbl">Advertisement</span>
-        <!-- 728×90 leaderboard ad slot -->
-      </div>
-    </div>
 
     <div class="page-inner">
 
