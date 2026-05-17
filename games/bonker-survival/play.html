@@ -111,8 +111,11 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .page-scroll::-webkit-scrollbar-track{background:transparent}
 .page-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
 
-/* ── GAME SECTION (full width) ── */
-.game-section{padding:0 12px;display:flex;flex-direction:column}
+/* Inner row: game-col + right-col */
+.page-inner{display:flex;align-items:flex-start}
+
+/* ── GAME COL ── */
+.game-col{flex:1;min-width:0;padding:12px 8px 12px 12px;display:flex;flex-direction:column}
 
 /* Game frame fills viewport on load */
 .game-frame-wrap{position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;height:calc(100vh - var(--hh) - var(--bar) - 12px - var(--lbd))}
@@ -178,10 +181,8 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .faq-a.open{padding:0 14px 13px;max-height:160px}
 .faq-a p{font-size:.84rem;color:var(--text2);line-height:1.65}
 
-/* ── BELOW GAME: info left + ad right ── */
-.below-game{display:flex;align-items:flex-start}
-.info-col{flex:1;min-width:0;padding:12px 20px 24px 12px;display:flex;flex-direction:column}
-.ad-col{width:var(--rc);flex-shrink:0;padding:12px 12px 24px 20px;border-left:1px solid var(--border);display:flex;flex-direction:column;gap:12px}
+/* ── RIGHT COL ── */
+.right-col{width:var(--rc);flex-shrink:0;padding:12px 12px 24px 4px;display:flex;flex-direction:column;gap:12px}
 
 /* Right col 300×250 standard IAB ad */
 .ad-big{width:100%;height:250px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
@@ -302,10 +303,13 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
       </div>
     </div>
 
-    <!-- GAME SECTION: full width -->
-    <div class="game-section">
+    <div class="page-inner">
 
-      <div class="game-frame-wrap" id="gameWrap">
+      <!-- LEFT: game + ads + info -->
+      <div class="game-col">
+
+        <!-- Game iframe fills viewport height -->
+        <div class="game-frame-wrap" id="gameWrap">
           <iframe class="game-iframe" id="gameFrame" src="index.html" allowfullscreen allow="fullscreen *"></iframe>
         </div>
 
@@ -332,12 +336,6 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
             </button>
           </div>
         </div>
-
-    </div><!-- /game-section -->
-
-    <!-- BELOW GAME: info left + ad right, split by border line -->
-    <div class="below-game">
-      <div class="info-col">
 
         <!-- LEADERBOARD AD BELOW GAME (728×90) -->
         <div class="ad-row">
@@ -459,10 +457,10 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
             </div>
           </div>
         </div>
-      </div><!-- /info-col -->
+      </div>
 
-      <!-- AD COLUMN: 300×250 + play next -->
-      <div class="ad-col">
+      <!-- RIGHT COL: big ad + 2-col game grid -->
+      <div class="right-col">
 
         <!-- RIGHT RECTANGLE AD (300×250) -->
         <div class="ad-big">
@@ -493,9 +491,9 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
           <a class="pn-card" href="/game/simon-says"><div class="pn-thumb"><img src="/games/simon-says/thumb.png" alt="Simon Says" onerror="this.parentNode.textContent='🔵'"></div><div class="pn-name">Simon Says</div></a>
           <a class="pn-card" href="/game/pong"><div class="pn-thumb"><img src="/games/pong/thumb.png" alt="Pong" onerror="this.parentNode.textContent='🏓'"></div><div class="pn-name">Pong</div></a>
         </div>
-      </div><!-- /ad-col -->
+      </div>
 
-    </div><!-- /below-game -->
+    </div><!-- /page-inner -->
   </div><!-- /page-scroll -->
 </div><!-- /layout -->
 
