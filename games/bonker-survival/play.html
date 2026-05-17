@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <base href="/games/bonker-survival/">
 <title>Bonker Survival - Free Online Survival Game | BonkerGames</title>
-<meta name="description" content="Play Bonker Survival free in your browser — dodge relentless enemy waves, survive as long as possible, and climb the global leaderboard. No download needed!">
+<meta name="description" content="Play Bonker Survival free in your browser. Dodge relentless enemy waves, survive as long as possible, and climb the global leaderboard. No download needed!">
 <meta property="og:title" content="Bonker Survival - Free Online Survival Game | BonkerGames">
 <meta property="og:description" content="Play Bonker Survival free in your browser — dodge relentless enemy waves and compete for the top score!">
 <meta property="og:image" content="/games/bonker-survival/thumb.png">
@@ -29,28 +29,28 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
 a{text-decoration:none;color:inherit}
 
 /* ── HEADER ── */
-.hdr{position:fixed;top:0;left:0;right:0;height:var(--hh);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;z-index:300;gap:0}
-.hdr-l{display:flex;align-items:center;gap:6px;flex:1}
-.burger{width:40px;height:40px;background:none;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:background .15s,color .15s}
-.burger:hover{background:var(--bg3);color:var(--text)}
-.burger svg{width:24px;height:24px;fill:currentColor}
-.logo-link{display:flex;align-items:center;padding:4px 8px;border-radius:10px;transition:background .15s}
-.logo-link:hover{background:var(--bg3)}
-.logo-img{height:56px;width:auto;mix-blend-mode:screen}
-.search-wrap{flex:0 0 420px;position:relative;margin:0 16px}
-.search-wrap input{width:100%;background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:10px 18px 10px 44px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
-.search-wrap input:focus{border-color:var(--accent)}
-.search-wrap input::placeholder{color:var(--text2)}
-.search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);pointer-events:none;display:flex}
-.search-ico svg{width:19px;height:19px;fill:currentColor}
-.hdr-r{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end}
-.ico-btn{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);background:none;border:none;transition:background .15s,color .15s;position:relative}
-.ico-btn:hover{background:var(--bg3);color:var(--text)}
-.ico-btn svg{width:24px;height:24px;fill:currentColor}
-.ndot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg2)}
-.hdiv{width:1px;height:24px;background:var(--border);margin:0 4px}
-.btn-login{background:var(--accent);border:none;color:#fff;padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;margin-left:4px}
-.btn-login:hover{background:var(--accent-h)}
+.header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:0;z-index:300;}
+.header-left{display:flex;align-items:center;gap:6px;flex:1;}
+.hamburger{width:40px;height:40px;flex-shrink:0;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:background 0.15s,color 0.15s;}
+.hamburger:hover{background:var(--bg3);color:var(--text);}
+.hamburger svg{width:24px;height:24px;fill:currentColor;}
+.header-logo{display:flex;align-items:center;padding:4px 8px;border-radius:10px;transition:background 0.15s;text-decoration:none;color:inherit;}
+.header-logo:hover{background:var(--bg3);}
+.logo-img{height:56px;width:auto;mix-blend-mode:screen;display:block;}
+.header-search{flex:0 0 420px;position:relative;margin:0 16px;}
+.header-search input{width:100%;background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:10px 18px 10px 44px;border-radius:10px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.header-search input:focus{border-color:var(--accent);}
+.header-search input::placeholder{color:var(--text2);}
+.search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);display:flex;align-items:center;pointer-events:none;}
+.search-ico svg{width:19px;height:19px;fill:currentColor;}
+.header-right{display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;}
+.icon-btn{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);background:transparent;border:none;transition:background 0.15s,color 0.15s;position:relative;}
+.icon-btn:hover{background:var(--bg3);color:var(--text);}
+.icon-btn svg{width:24px;height:24px;fill:currentColor;}
+.notif-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg2);}
+.header-divider{width:1px;height:24px;background:var(--border);margin:0 4px;}
+.btn-login{background:var(--accent);border:none;color:#fff;padding:10px 22px;border-radius:10px;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:background 0.2s;margin-left:4px;}
+.btn-login:hover{background:var(--accent-h);}
 /* ── Avatar size locks — belt-and-suspenders for all avatar contexts ── */
 #u-avatar{width:32px!important;height:32px!important;max-width:32px!important;max-height:32px!important;overflow:hidden!important;border-radius:50%!important;flex-shrink:0!important}
 #u-avatar img,#u-avatar *{display:block!important;width:32px!important;height:32px!important;max-width:32px!important;max-height:32px!important;object-fit:cover!important;border-radius:50%!important}
@@ -61,48 +61,48 @@ a{text-decoration:none;color:inherit}
 .avatar-opt{overflow:hidden!important;aspect-ratio:1!important;border-radius:12px!important;max-width:72px!important;max-height:72px!important}
 .avatar-opt img{display:block!important;width:100%!important;height:100%!important;max-width:72px!important;max-height:72px!important;object-fit:cover!important}
 /* Clip header so any avatar overflow can't escape */
-.hdr{overflow:hidden}
+.header{overflow:hidden}
 /* ── LAYOUT: sidebar + one-scroll area ── */
 .layout{display:flex;height:calc(100vh - var(--hh));margin-top:var(--hh);overflow:hidden}
 
 /* sidebar */
-body.sb-on  .sidebar{width:var(--sw)}
-body.sb-off .sidebar{width:0;border-right:none}
+body.sidebar-on .sidebar{width:var(--sw)}
+body.sidebar-off.sidebar{width:0;border-right:none}
 .sidebar{flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);height:100%;overflow:hidden;display:flex;flex-direction:column;transition:width var(--ease),box-shadow var(--ease)}
-body.sb-on .sidebar:hover{width:230px;box-shadow:4px 0 32px rgba(0,0,0,.5)}
+body.sidebar-on.sidebar:hover{width:230px;box-shadow:4px 0 32px rgba(0,0,0,.5)}
 .sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 7px 4px;display:flex;flex-direction:column}
 .sb-scroll::-webkit-scrollbar{width:0}
 .sb-group{display:flex;flex-direction:column;gap:2px}
 .sb-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);padding:10px 8px 4px;white-space:nowrap;opacity:0;transition:opacity var(--ease)}
-body.sb-on .sidebar:hover .sb-lbl{opacity:1}
+body.sidebar-on.sidebar:hover .sb-lbl{opacity:1}
 .sb-item{display:flex;align-items:center;gap:13px;padding:11px 9px;border-radius:9px;cursor:pointer;color:var(--text2);font-size:.875rem;font-weight:500;white-space:nowrap;overflow:hidden;transition:background .15s,color .15s}
 .sb-item:hover,.sb-item.active{background:var(--bg3);color:var(--text)}
 .sb-item .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .sb-item .ico svg{width:22px;height:22px;fill:currentColor}
 .sb-item .lbl{opacity:0;transition:opacity var(--ease);pointer-events:none}
-body.sb-on .sidebar:hover .sb-item .lbl{opacity:1}
+body.sidebar-on.sidebar:hover .sb-item .lbl{opacity:1}
 .sb-bot{border-top:1px solid var(--border);padding:8px 7px 10px;display:flex;flex-direction:column;gap:2px}
 .sb-cta{display:flex;align-items:center;gap:13px;padding:10px 9px;border-radius:9px;cursor:pointer;background:var(--accent);color:#fff;font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;transition:background .15s}
 .sb-cta:hover{background:var(--accent-h)}
 .sb-cta .ico{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .sb-cta .ico svg{width:22px;height:22px;fill:#fff}
 .sb-cta .lbl{opacity:0;transition:opacity var(--ease)}
-body.sb-on .sidebar:hover .sb-cta .lbl{opacity:1}
+body.sidebar-on.sidebar:hover .sb-cta .lbl{opacity:1}
 .sb-foot{padding:0 8px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;overflow:hidden;max-height:0;opacity:0;pointer-events:none;transition:max-height .25s ease,opacity .25s ease;transition-delay:.15s}
-body.sb-on .sidebar:hover .sb-foot{max-height:300px;opacity:1;pointer-events:auto;padding:10px 8px 4px;transition-delay:0s}
+body.sidebar-on.sidebar:hover .sb-foot{max-height:300px;opacity:1;pointer-events:auto;padding:10px 8px 4px;transition-delay:0s}
 .sb-ft{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);white-space:nowrap;opacity:0;transition:opacity var(--ease);padding:0 8px}
-body.sb-on .sidebar:hover .sb-ft{opacity:1}
+body.sidebar-on.sidebar:hover .sb-ft{opacity:1}
 .sb-socs{display:flex;gap:6px;padding:0 4px;opacity:0;transition:opacity var(--ease);flex-wrap:wrap}
-body.sb-on .sidebar:hover .sb-socs{opacity:1}
+body.sidebar-on.sidebar:hover .sb-socs{opacity:1}
 .sb-soc{width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:background .2s,color .2s}
 .sb-soc:hover{background:var(--bg4);color:var(--text)}
 .sb-soc svg{width:16px;height:16px;fill:currentColor}
 .sb-lks{display:flex;gap:16px;padding:4px 8px 6px;opacity:0;transition:opacity var(--ease);flex-wrap:wrap}
-body.sb-on .sidebar:hover .sb-lks{opacity:1}
+body.sidebar-on.sidebar:hover .sb-lks{opacity:1}
 .sb-lks a{color:var(--text2);font-size:.75rem;transition:color .2s;white-space:nowrap}
 .sb-lks a:hover{color:var(--text)}
 .sb-copy{padding:0 8px 8px;opacity:0;transition:opacity var(--ease)}
-body.sb-on .sidebar:hover .sb-copy{opacity:1}
+body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .sb-copy span{font-size:.72rem;color:var(--text2);white-space:nowrap}
 
 /* ── ONE SCROLL CONTAINER ── */
@@ -193,45 +193,55 @@ body.sb-on .sidebar:hover .sb-copy{opacity:1}
 .pn-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .pn-name{font-size:.72rem;font-weight:700;padding:5px 7px 7px;line-height:1.3;color:var(--text)}
 
-/* ── NOTIF PANEL ── */
-#no{display:none;position:fixed;top:var(--hh);left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:298;backdrop-filter:blur(3px)}
-#no.open{display:block}
-#np{position:fixed;top:var(--hh);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
-#np.open{transform:translateX(0)}
-.nph{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
-.npt{font-size:1rem;font-weight:800;text-align:center}
-.npc{background:none;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;justify-self:end}
-.npc:hover{background:var(--bg3);color:var(--text)}
-.nscroll{flex:1;overflow-y:auto;padding:12px}
-.nc{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px}
-.nc img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
-.ncb{padding:12px 14px 14px}
-.nctag{font-size:.68rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
-.nctit{font-size:.92rem;font-weight:800;margin-bottom:10px;line-height:1.3}
-.ncbtn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s}
-.ncbtn:hover{background:var(--accent-h)}
-.ncbtn svg{width:14px;height:14px;fill:#fff}
+/* ── NOTIFICATION PANEL ── */
+#notif-overlay{display:none;position:fixed;top:var(--hh);left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:298;backdrop-filter:blur(3px);}
+#notif-overlay.open{display:block;}
+#notif-panel{position:fixed;top:var(--hh);right:0;bottom:0;width:340px;max-width:100vw;background:var(--bg2);border-left:1px solid var(--border);z-index:299;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
+#notif-panel.open{transform:translateX(0);}
+.notif-panel-head{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;padding:18px 16px 14px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.notif-panel-title{font-size:1rem;font-weight:800;text-align:center;}
+.notif-panel-close{background:transparent;border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;justify-self:end;}
+.notif-panel-close:hover{background:var(--bg3);color:var(--text);}
+.notif-scroll{flex:1;overflow-y:auto;padding:12px;}
+.notif-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.notif-card-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;}
+.notif-card-body{padding:12px 14px 14px;}
+.notif-card-tag{font-size:0.68rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.notif-card-title{font-size:0.92rem;font-weight:800;color:var(--text);margin-bottom:10px;line-height:1.3;}
+.notif-play-btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s;}
+.notif-play-btn:hover{background:var(--accent-h);}
+.notif-play-btn svg{width:14px;height:14px;fill:#fff;}
 </style>
 </head>
-<body class="sb-on">
+<body class="sidebar-on">
 
 <!-- HEADER -->
-<header class="hdr">
-  <div class="hdr-l">
-    <button class="burger" id="sbToggle"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
-    <a class="logo-link" href="/"><img src="../../assets/logo.png" alt="BonkerGames" class="logo-img"></a>
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" id="sidebarToggle">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <a class="header-logo" href="/">
+      <img src="../../assets/logo.png" alt="BonkerGames" class="logo-img">
+    </a>
   </div>
-  <div class="search-wrap">
+  <div class="header-search">
     <span class="search-ico"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
     <input type="text" placeholder="Search games and categories">
   </div>
-  <div class="hdr-r">
-    <button class="ico-btn" id="btn-notif" onclick="openNotif()"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span class="ndot"></span></button>
-    <button class="ico-btn" onclick="window._openFavPanel&&window._openFavPanel()"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
-    <div class="hdiv"></div>
+  <div class="header-right">
+    <button class="icon-btn" id="btn-notif" title="Notifications" onclick="openNotifPanel()">
+      <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <button class="icon-btn" title="Favorites" onclick="window._openFavPanel&&window._openFavPanel()">
+      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </button>
+    <div class="header-divider"></div>
     <button class="btn-login" id="btn-header-login" onclick="window._openAuthPanel&&window._openAuthPanel()">Log in</button>
     <div class="user-badge" id="user-badge" style="display:none" onclick="window._openProfilePanel&&window._openProfilePanel()">
-      <div class="u-avatar" id="u-avatar"></div><span class="u-name" id="u-name"></span>
+      <div class="u-avatar" id="u-avatar"></div>
+      <span class="u-name" id="u-name"></span>
     </div>
   </div>
 </header>
@@ -478,29 +488,38 @@ body.sb-on .sidebar:hover .sb-copy{opacity:1}
   </div><!-- /page-scroll -->
 </div><!-- /layout -->
 
-<!-- NOTIF PANEL -->
-<div id="no" onclick="closeNotif()"></div>
-<div id="np">
-  <div class="nph"><div></div><div class="npt">Notifications</div><button class="npc" onclick="closeNotif()">✕</button></div>
-  <div class="nscroll">
-    <div class="nc">
-      <img src="/games/bonker-survival/thumb.png" alt="Bonker Survival">
-      <div class="ncb"><div class="nctag">New Release</div><div class="nctit">Bonker Survival is live — survive the chaos!</div><a class="ncbtn" href="/game/bonker-survival"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Play Now</a></div>
+<!-- NOTIFICATION PANEL -->
+<div id="notif-overlay" onclick="closeNotifPanel()"></div>
+<div id="notif-panel">
+  <div class="notif-panel-head">
+    <div></div>
+    <div class="notif-panel-title">Notifications</div>
+    <button class="notif-panel-close" onclick="closeNotifPanel()">✕</button>
+  </div>
+  <div class="notif-scroll">
+    <div class="notif-card">
+      <img class="notif-card-img" src="/games/bonker-survival/thumb.png" alt="Bonker Survival">
+      <div class="notif-card-body">
+        <div class="notif-card-tag">New Release</div>
+        <div class="notif-card-title">Bonker Survival is live — survive the chaos!</div>
+        <a class="notif-play-btn" href="/game/bonker-survival"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Play Now</a>
+      </div>
     </div>
-    <div class="nc"><div class="ncb" style="display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text2);font-size:.85rem">No more notifications</div></div>
+    <div class="notif-card">
+      <div class="notif-card-body" style="display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text2);font-size:0.85rem;">No more notifications</div>
+    </div>
   </div>
 </div>
 
 <script>
 window.CURRENT_GAME_ID='bonker-survival';
-function openNotif(){window._closeAllPanels&&window._closeAllPanels();document.getElementById('no').classList.add('open');document.getElementById('np').classList.add('open');const d=document.querySelector('.ndot');if(d)d.style.display='none'}
-function closeNotif(){document.getElementById('no').classList.remove('open');document.getElementById('np').classList.remove('open')}
-window._closeAllPanels=(function(p){return function(){if(p)p();closeNotif()}})(window._closeAllPanels||null);
-function openAuthPanel(){const p=document.getElementById('auth-panel'),o=document.getElementById('auth-overlay');if(p){o.classList.add('open');p.classList.add('open');document.body.style.overflow='hidden'}}
-function closeAuthPanel(){const p=document.getElementById('auth-panel'),o=document.getElementById('auth-overlay');if(p){o.classList.remove('open');p.classList.remove('open');document.body.style.overflow=''}}
+function openNotifPanel(){window._closeAllPanels&&window._closeAllPanels();document.getElementById('notif-overlay').classList.add('open');document.getElementById('notif-panel').classList.add('open');const d=document.querySelector('.notif-dot');if(d)d.style.display='none';}
+function closeNotifPanel(){document.getElementById('notif-overlay').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');}
+window._closeAllPanels=(function(prev){return function(){if(prev)prev();closeNotifPanel();};})(window._closeAllPanels||null);
+function openAuthPanel(){const p=document.getElementById('auth-panel');const o=document.getElementById('auth-overlay');if(p){o.classList.add('open');p.classList.add('open');document.body.style.overflow='hidden';}}
+function closeAuthPanel(){const p=document.getElementById('auth-panel');const o=document.getElementById('auth-overlay');if(p){o.classList.remove('open');p.classList.remove('open');document.body.style.overflow='';}}
 window._openAuthPanel=openAuthPanel;window._closeAuthPanel=closeAuthPanel;
-
-document.getElementById('sbToggle').addEventListener('click',()=>{document.body.classList.toggle('sb-on');document.body.classList.toggle('sb-off')});
+document.getElementById('sidebarToggle').addEventListener('click',()=>{document.body.classList.toggle('sidebar-on');document.body.classList.toggle('sidebar-off');});
 
 let lk=false,dlk=false,fv=false;
 function tLike(){lk=!lk;if(lk)dlk=false;document.getElementById('likeBtn').style.color=lk?'#4ade80':'';document.getElementById('dislikeBtn').style.color=''}
