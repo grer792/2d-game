@@ -19,7 +19,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --sw:62px;--hh:64px;--bar:52px;--rc:290px;
+  --sw:62px;--hh:64px;--bar:52px;--rc:300px;--lbd:106px;
   --bg:#13131f;--bg2:#1c1c2e;--bg3:#252538;--bg4:#2e2e45;
   --accent:#7c5cfc;--accent-h:#6a4de0;
   --text:#fff;--text2:#9898b8;--border:rgba(255,255,255,.07);
@@ -118,7 +118,7 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .game-col{flex:1;min-width:0;padding:12px 8px 12px 12px;display:flex;flex-direction:column}
 
 /* Game frame fills viewport on load */
-.game-frame-wrap{position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;height:calc(100vh - var(--hh) - var(--bar) - 12px)}
+.game-frame-wrap{position:relative;background:#000;border-radius:12px 12px 0 0;overflow:hidden;height:calc(100vh - var(--hh) - var(--bar) - 12px - var(--lbd))}
 .game-iframe{width:100%;height:100%;border:none;display:block}
 
 /* Game bar */
@@ -132,9 +132,13 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 .bar-btn svg{width:17px;height:17px;fill:currentColor;flex-shrink:0}
 .bar-sep{width:1px;height:22px;background:var(--border);margin:0 2px}
 
+/* ── TOP LEADERBOARD AD ── */
+.leaderboard-wrap{display:flex;justify-content:center;padding:8px 12px;width:100%}
+.leaderboard-ad{width:100%;max-width:728px;height:90px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+
 /* ── ADS UNDER GAME ── */
-.ad-row{display:flex;gap:12px;margin-bottom:20px}
-.ad-rect{flex:1;height:130px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;overflow:hidden;min-width:0}
+.ad-row{display:flex;justify-content:center;margin-bottom:20px}
+.ad-rect{width:100%;max-width:728px;height:90px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .ad-lbl{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);opacity:.55;position:absolute;top:7px;left:10px}
 
 /* ── GAME INFO ── */
@@ -180,8 +184,8 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 /* ── RIGHT COL ── */
 .right-col{width:var(--rc);flex-shrink:0;padding:12px 12px 24px 4px;display:flex;flex-direction:column;gap:12px}
 
-/* Big ad at top of right col */
-.ad-big{width:100%;height:260px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+/* Right col 300×250 standard IAB ad */
+.ad-big{width:100%;height:250px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .ad-big .ad-lbl{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);opacity:.55;position:absolute;top:7px;left:10px}
 
 /* Play next */
@@ -290,6 +294,15 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
 
   <!-- ── ONE SCROLL ── -->
   <div class="page-scroll">
+
+    <!-- TOP LEADERBOARD BANNER AD (728×90) -->
+    <div class="leaderboard-wrap">
+      <div class="leaderboard-ad">
+        <span class="ad-lbl">Advertisement</span>
+        <!-- 728×90 leaderboard ad slot -->
+      </div>
+    </div>
+
     <div class="page-inner">
 
       <!-- LEFT: game + ads + info -->
@@ -324,15 +337,11 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
           </div>
         </div>
 
-        <!-- TWO ADS directly under game -->
+        <!-- LEADERBOARD AD BELOW GAME (728×90) -->
         <div class="ad-row">
           <div class="ad-rect">
             <span class="ad-lbl">Advertisement</span>
-            <!-- Ad slot 1: e.g. 336×280 or responsive -->
-          </div>
-          <div class="ad-rect">
-            <span class="ad-lbl">Advertisement</span>
-            <!-- Ad slot 2 -->
+            <!-- 728×90 leaderboard ad slot -->
           </div>
         </div>
 
@@ -453,10 +462,10 @@ body.sidebar-on.sidebar:hover .sb-copy{opacity:1}
       <!-- RIGHT COL: big ad + 2-col game grid -->
       <div class="right-col">
 
-        <!-- Big ad at top -->
+        <!-- RIGHT RECTANGLE AD (300×250) -->
         <div class="ad-big">
           <span class="ad-lbl">Advertisement</span>
-          <!-- Paste ad code here (e.g. 300×250 Google AdSense unit) -->
+          <!-- 300×250 rectangle ad slot -->
         </div>
 
         <div class="pn-head">Play next</div>
